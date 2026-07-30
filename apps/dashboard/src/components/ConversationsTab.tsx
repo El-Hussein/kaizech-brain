@@ -1,0 +1,726 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  MessageSquare,
+  Search,
+  RefreshCw,
+  Download,
+  Send,
+  Phone,
+  Terminal,
+  Bot,
+  User,
+  UserCheck,
+  CheckCircle2,
+} from 'lucide-react';
+import axios from 'axios';
+import { FormattedMessage } from './FormattedMessage';
+
+interface ConversationsProps {
+  apiKey: string;
+}
+
+export interface MessageItem {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  createdAt?: string;
+  channelType?: string;
+}
+
+export interface ConversationItem {
+  id: string;
+  channelType: 'whatsapp' | 'api';
+  channelUserId: string;
+  messageCount: number;
+  status: 'active' | 'handed_off' | 'closed';
+  summary?: string;
+  lastMessageAt: string;
+}
+
+const QUICK_REPLIES = [
+  'أهلاً بك! يمكنك تتبع حالة المزاد ريماً من خلال تبويب المزادات المباشرة.',
+  'تم التحقق من عملية الشراء وتأكيد التوكنات في حسابك الآن.',
+  'نود إعلامك بأنه تم إسناد الطلب لدعم مركون المالي وسنتواصل معك فوراً.',
+  'Your API webhook settings have been verified and are active.',
+];
+
+export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [selectedConv, setSelectedConv] = useState<ConversationItem | null>(null);
+  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'handed_off' | 'closed'>('all');
+  const [channelFilter, setChannelFilter] = useState<'all' | 'whatsapp' | 'api'>('all');
+  const [replyInput, setReplyInput] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+
+  // Fetch live conversations list from backend API
+  const fetchConversations = useCallback(
+    async (isManual = false) => {
+      try {
+        if (isManual) setRefreshing(true);
+        else setLoading(true);
+
+        const res = await axios.get('/api/v1/conversations', {
+          headers: { 'x-api-key': apiKey },
+        });
+
+        const liveList: ConversationItem[] = res.data?.data || [];
+        setConversations(liveList);
+
+        if (liveList.length > 0) {
+          // If selectedConv is already in list, keep it, else select first
+          const currentId = selectedConv?.id;
+          const found = liveList.find((c) => c.id === currentId);
+          if (found) {
+            loadConversationDetail(found.id);
+          } else {
+            loadConversationDetail(liveList[0].id);
+          }
+        } else {
+          setSelectedConv(null);
+          setMessages([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch live conversations from API', err);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [apiKey, selectedConv],
+  );
+
+  useEffect(() => {
+    fetchConversations();
+  }, [apiKey]);
+
+  // Load detail and messages for selected conversation ID from live backend API
+  const loadConversationDetail = async (convId: string) => {
+    try {
+      setLoadingDetail(true);
+      const res = await axios.get(`/api/v1/conversations/${convId}`, {
+        headers: { 'x-api-key': apiKey },
+      });
+
+      if (res.data?.conversation) {
+        setSelectedConv(res.data.conversation);
+      }
+      if (res.data?.messages) {
+        setMessages(res.data.messages);
+      }
+    } catch (err) {
+      console.error(`Failed to load details for conversation ${convId}`, err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  // Filtered Conversations List
+  const filteredConversations = useMemo(() => {
+    return conversations.filter((item) => {
+      const matchesSearch =
+        item.channelUserId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.summary && item.summary.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      const matchesChannel = channelFilter === 'all' || item.channelType === channelFilter;
+
+      return matchesSearch && matchesStatus && matchesChannel;
+    });
+  }, [conversations, searchQuery, statusFilter, channelFilter]);
+
+  // Statistics counters
+  const counts = useMemo(() => {
+    return {
+      total: conversations.length,
+      active: conversations.filter((c) => c.status === 'active').length,
+      handedOff: conversations.filter((c) => c.status === 'handed_off').length,
+      closed: conversations.filter((c) => c.status === 'closed').length,
+    };
+  }, [conversations]);
+
+  // Handle sending human operator reply to live API
+  const handleSendReply = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!replyInput.trim() || !selectedConv || sendingReply) return;
+
+    const messageText = replyInput.trim();
+    setReplyInput('');
+    setSendingReply(true);
+
+    try {
+      await axios.post(
+        `/api/v1/conversations/${selectedConv.id}/messages`,
+        { role: 'assistant', content: messageText },
+        { headers: { 'x-api-key': apiKey } },
+      );
+
+      // Reload conversation messages & thread list from live database
+      await loadConversationDetail(selectedConv.id);
+      const resList = await axios.get('/api/v1/conversations', {
+        headers: { 'x-api-key': apiKey },
+      });
+      if (resList.data?.data) {
+        setConversations(resList.data.data);
+      }
+    } catch (err) {
+      console.error('Error posting message to live API', err);
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
+  // Toggle conversation status (active, handed_off, closed) on live API
+  const handleUpdateStatus = async (newStatus: 'active' | 'handed_off' | 'closed') => {
+    if (!selectedConv) return;
+
+    try {
+      await axios.patch(
+        `/api/v1/conversations/${selectedConv.id}/status`,
+        { status: newStatus },
+        { headers: { 'x-api-key': apiKey } },
+      );
+
+      // Also append system status message in database
+      const statusMsgText =
+        newStatus === 'handed_off'
+          ? '⚠️ تم إسناد المحادثة لممثل خدمة العملاء البشري (Human Agent Assigned)'
+          : newStatus === 'closed'
+            ? '✅ تم إغلاق التذكرة بنجاح'
+            : '🔄 تم إعادة فتح المحادثة للذكاء الاصطناعي';
+
+      await axios.post(
+        `/api/v1/conversations/${selectedConv.id}/messages`,
+        { role: 'system', content: statusMsgText },
+        { headers: { 'x-api-key': apiKey } },
+      );
+
+      await loadConversationDetail(selectedConv.id);
+      const resList = await axios.get('/api/v1/conversations', {
+        headers: { 'x-api-key': apiKey },
+      });
+      if (resList.data?.data) {
+        setConversations(resList.data.data);
+      }
+    } catch (err) {
+      console.error('Error updating conversation status on live API', err);
+    }
+  };
+
+  // Export transcript as text file
+  const handleExportTranscript = () => {
+    if (!selectedConv) return;
+
+    let transcript = `Kaizech Brain — Live Conversation Transcript\n`;
+    transcript += `Thread ID: ${selectedConv.id}\n`;
+    transcript += `User: ${selectedConv.channelUserId}\n`;
+    transcript += `Channel: ${selectedConv.channelType.toUpperCase()}\n`;
+    transcript += `Status: ${selectedConv.status}\n`;
+    transcript += `--------------------------------------------------\n\n`;
+
+    messages.forEach((m) => {
+      const time = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+      transcript += `[${time}] ${m.role.toUpperCase()}:\n${m.content}\n\n`;
+    });
+
+    const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `live-transcript-${selectedConv.channelUserId}-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* ── Page Title & Actions ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Conversations & Support Tickets</h2>
+          <p style={{ color: 'var(--text-muted)', marginTop: '4px', fontSize: '14px' }}>
+            Live customer support management connected to PostgreSQL & WhatsApp API.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => fetchConversations(true)}
+            disabled={refreshing}
+            style={{ fontSize: '13px', padding: '7px 14px', gap: '6px' }}
+          >
+            <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+            {refreshing ? 'Refreshing...' : 'Refresh Live Data'}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Stat Badges ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+        <div
+          onClick={() => setStatusFilter('all')}
+          className="glass-card"
+          style={{
+            padding: '14px 18px',
+            cursor: 'pointer',
+            borderLeft: '3px solid var(--accent-primary)',
+            background: statusFilter === 'all' ? 'var(--bg-surface-elevated)' : undefined,
+          }}
+        >
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Total Threads</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '4px' }}>
+            {counts.total}
+          </div>
+        </div>
+
+        <div
+          onClick={() => setStatusFilter('active')}
+          className="glass-card"
+          style={{
+            padding: '14px 18px',
+            cursor: 'pointer',
+            borderLeft: '3px solid var(--accent-emerald)',
+            background: statusFilter === 'active' ? 'var(--bg-surface-elevated)' : undefined,
+          }}
+        >
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Active Threads</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent-emerald)', marginTop: '4px' }}>
+            {counts.active}
+          </div>
+        </div>
+
+        <div
+          onClick={() => setStatusFilter('handed_off')}
+          className="glass-card"
+          style={{
+            padding: '14px 18px',
+            cursor: 'pointer',
+            borderLeft: '3px solid var(--accent-amber)',
+            background: statusFilter === 'handed_off' ? 'var(--bg-surface-elevated)' : undefined,
+          }}
+        >
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Human Handoffs</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent-amber)', marginTop: '4px' }}>
+            {counts.handedOff}
+          </div>
+        </div>
+
+        <div
+          onClick={() => setStatusFilter('closed')}
+          className="glass-card"
+          style={{
+            padding: '14px 18px',
+            cursor: 'pointer',
+            borderLeft: '3px solid #94a3b8',
+            background: statusFilter === 'closed' ? 'var(--bg-surface-elevated)' : undefined,
+          }}
+        >
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Closed Tickets</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: '#94a3b8', marginTop: '4px' }}>
+            {counts.closed}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Layout: Split view (Threads List + Message Detail) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', height: '660px' }}>
+        {/* Left Column: Active Threads List */}
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
+          {/* Search & Filters */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                placeholder="Search user, phone or message..."
+                className="input-field"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ paddingLeft: '34px', fontSize: '13px' }}
+              />
+            </div>
+
+            {/* Filter Tabs */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {(['all', 'active', 'handed_off', 'closed'] as const).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    textTransform: 'capitalize',
+                    border: '1px solid',
+                    borderColor: statusFilter === st ? 'var(--accent-primary)' : 'transparent',
+                    background: statusFilter === st ? 'var(--accent-primary)' : 'rgba(255,255,255,0.04)',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {st === 'handed_off' ? 'Handoff' : st}
+                </button>
+              ))}
+
+              <select
+                value={channelFilter}
+                onChange={(e) => setChannelFilter(e.target.value as any)}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  background: 'rgba(255,255,255,0.04)',
+                  color: 'var(--text-main)',
+                  border: '1px solid var(--border-glass)',
+                  cursor: 'pointer',
+                  marginLeft: 'auto',
+                }}
+              >
+                <option value="all">All Channels</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="api">API</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Threads List Items */}
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+            {loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px' }}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} style={{ height: '70px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', animation: 'pulse 1.5s infinite' }} />
+                ))}
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                No live conversation threads found in database matching criteria.
+              </div>
+            ) : (
+              filteredConversations.map((c) => {
+                const isSelected = selectedConv?.id === c.id;
+                const dateStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => loadConversationDetail(c.id)}
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      background: isSelected ? 'var(--bg-surface-elevated)' : 'rgba(255,255,255,0.02)',
+                      border: '1px solid',
+                      borderColor: isSelected ? 'var(--accent-primary)' : 'var(--border-glass)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: isSelected ? 'var(--glow-primary)' : 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px' }}>
+                        {c.channelType === 'whatsapp' ? (
+                          <Phone size={13} color="var(--accent-emerald)" />
+                        ) : (
+                          <Terminal size={13} color="var(--accent-primary)" />
+                        )}
+                        <span>{c.channelUserId}</span>
+                      </div>
+
+                      <span
+                        className="badge"
+                        style={{
+                          fontSize: '10px',
+                          padding: '2px 8px',
+                          background:
+                            c.status === 'active'
+                              ? 'rgba(16,185,129,0.15)'
+                              : c.status === 'handed_off'
+                                ? 'rgba(245,158,11,0.15)'
+                                : 'rgba(148,163,184,0.15)',
+                          color:
+                            c.status === 'active'
+                              ? 'var(--accent-emerald)'
+                              : c.status === 'handed_off'
+                                ? 'var(--accent-amber)'
+                                : '#94a3b8',
+                          border: `1px solid ${
+                            c.status === 'active'
+                              ? 'rgba(16,185,129,0.3)'
+                              : c.status === 'handed_off'
+                                ? 'rgba(245,158,11,0.3)'
+                                : 'rgba(148,163,184,0.3)'
+                          }`,
+                        }}
+                      >
+                        {c.status === 'handed_off' ? 'Handoff' : c.status}
+                      </span>
+                    </div>
+
+                    {c.summary && (
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: 'var(--text-muted)',
+                          marginTop: '6px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {c.summary}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-dim)', marginTop: '8px' }}>
+                      <span>{c.messageCount} messages</span>
+                      <span>{dateStr}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Selected Thread Details & Message Thread */}
+        <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {!selectedConv ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+              <MessageSquare size={36} color="var(--accent-primary)" style={{ opacity: 0.5, marginBottom: '12px' }} />
+              <p style={{ fontSize: '14px', fontWeight: 600 }}>Select a conversation from the list to view history</p>
+            </div>
+          ) : (
+            <>
+              {/* Header */}
+              <div style={{ paddingBottom: '14px', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h4 style={{ fontSize: '16px', fontWeight: 800 }}>{selectedConv.channelUserId}</h4>
+                    <span className="badge badge-purple" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
+                      {selectedConv.channelType}
+                    </span>
+                  </div>
+                  {selectedConv.summary && (
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{selectedConv.summary}</p>
+                  )}
+                </div>
+
+                {/* Quick Status & Action Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {selectedConv.status === 'handed_off' ? (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleUpdateStatus('active')}
+                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' }}
+                      title="Return thread control to AI Agent"
+                    >
+                      <Bot size={13} /> Resume AI
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleUpdateStatus('handed_off')}
+                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', borderColor: 'var(--accent-amber)', color: 'var(--accent-amber)' }}
+                      title="Assign Human Support Agent"
+                    >
+                      <UserCheck size={13} /> Handoff
+                    </button>
+                  )}
+
+                  {selectedConv.status !== 'closed' ? (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleUpdateStatus('closed')}
+                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', color: '#94a3b8' }}
+                      title="Mark Ticket Closed"
+                    >
+                      <CheckCircle2 size={13} /> Close Ticket
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleUpdateStatus('active')}
+                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', color: 'var(--accent-emerald)' }}
+                    >
+                      Re-open Thread
+                    </button>
+                  )}
+
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleExportTranscript}
+                    style={{ padding: '5px 10px', fontSize: '12px', gap: '4px' }}
+                    title="Export conversation history"
+                  >
+                    <Download size={13} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages History List */}
+              <div style={{ flex: 1, padding: '16px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {loadingDetail ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px' }}>
+                    <div style={{ height: '40px', width: '60%', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', alignSelf: 'flex-start' }} />
+                    <div style={{ height: '50px', width: '70%', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', alignSelf: 'flex-end' }} />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>
+                    No messages in this conversation thread yet.
+                  </div>
+                ) : (
+                  messages.map((msg) => {
+                    const isUser = msg.role === 'user';
+                    const isSystem = msg.role === 'system';
+
+                    if (isSystem) {
+                      return (
+                        <div
+                          key={msg.id}
+                          style={{
+                            alignSelf: 'center',
+                            background: 'rgba(245, 158, 11, 0.12)',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            color: 'var(--accent-amber)',
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            margin: '8px 0',
+                          }}
+                        >
+                          {msg.content}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={msg.id}
+                        style={{
+                          display: 'flex',
+                          gap: '10px',
+                          alignSelf: isUser ? 'flex-end' : 'flex-start',
+                          maxWidth: '82%',
+                        }}
+                      >
+                        {!isUser && (
+                          <div
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              background: 'var(--gradient-brand)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              marginTop: '2px',
+                            }}
+                          >
+                            <Bot size={16} color="#fff" />
+                          </div>
+                        )}
+
+                        <div>
+                          <div
+                            style={{
+                              padding: '12px 16px',
+                              borderRadius: '14px',
+                              fontSize: '14px',
+                              lineHeight: '1.5',
+                              background: isUser ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
+                              color: '#ffffff',
+                              border: isUser ? 'none' : '1px solid var(--border-glass)',
+                              boxShadow: isUser ? 'var(--glow-primary)' : 'none',
+                            }}
+                          >
+                            <FormattedMessage content={msg.content} />
+                          </div>
+                          {msg.createdAt && (
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: 'var(--text-dim)',
+                                marginTop: '4px',
+                                textAlign: isUser ? 'right' : 'left',
+                              }}
+                            >
+                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          )}
+                        </div>
+
+                        {isUser && (
+                          <div
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              background: 'var(--accent-cyan)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              marginTop: '2px',
+                            }}
+                          >
+                            <User size={16} color="#fff" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Quick Reply Chips */}
+              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px' }}>
+                {QUICK_REPLIES.map((reply, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setReplyInput(reply)}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '14px',
+                      fontSize: '11px',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    ⚡ {reply.substring(0, 24)}...
+                  </button>
+                ))}
+              </div>
+
+              {/* Live Reply Form */}
+              <form onSubmit={handleSendReply} style={{ paddingTop: '10px', borderTop: '1px solid var(--border-glass)', display: 'flex', gap: '10px' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Type a live reply to post directly to database..."
+                  value={replyInput}
+                  onChange={(e) => setReplyInput(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button type="submit" className="btn btn-primary" disabled={!replyInput.trim() || sendingReply} style={{ gap: '6px' }}>
+                  <Send size={15} /> Send Live Reply
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,16 @@
+{
+  "name": "@kaizech/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.0",
+    "class-validator": "^0.14.1",
+    "class-transformer": "^0.5.1"
+  }
+}

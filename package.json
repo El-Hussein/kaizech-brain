@@ -1,0 +1,37 @@
+{
+  "name": "kaizech-brain",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kaizech Brain — Multi-tenant AI Agent Platform",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:api": "pnpm --filter @kaizech/api build",
+    "build:dashboard": "pnpm --filter @kaizech/dashboard build",
+    "build:admin": "pnpm --filter @kaizech/admin build",
+    "start:api": "pnpm --filter @kaizech/api start:dev",
+    "start:dashboard": "pnpm --filter @kaizech/dashboard dev",
+    "start:admin": "pnpm --filter @kaizech/admin dev",
+    "start:dev": "pnpm --filter @kaizech/api start:dev",
+    "start:prod": "pnpm --filter @kaizech/api start:prod",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @kaizech/api test:e2e",
+    "migration:generate": "pnpm --filter @kaizech/database migration:generate",
+    "migration:run": "pnpm --filter @kaizech/database migration:run",
+    "migration:revert": "pnpm --filter @kaizech/database migration:revert",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "format": "prettier --write \"**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

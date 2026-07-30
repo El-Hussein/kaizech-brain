@@ -1,0 +1,337 @@
+{
+  "status": 1,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": 5,
+        "question": {
+          "en": "Who is Mrkoon ?",
+          "ar-EG": "مين مركون؟",
+          "ar-SA": "من هي مركون؟",
+          "fr": "Who is Mrkoon ?"
+        },
+        "explanation": {
+          "en": "<p><strong>Mrkoon is a digital marketplace that specializes in selling and buying scrap and surplus.</strong></p>",
+          "ar-EG": "<p><strong>مركون هي منصة إلكترونية مصرية متخصصة في بيع وشراء الخردة والرواكد.</strong></p>",
+          "ar-SA": "<p><strong data-start=\"50\" data-end=\"59\">مركون</strong> هي منصة إلكترونية متخصصة في بيع وشراء السكراب والرواكد.</p>",
+          "fr": "<p><strong>Mrkoon is a digital marketplace that specializes in selling and buying scrap and surplus.</strong></p>"
+        },
+        "sort": 1
+      },
+      {
+        "id": 6,
+        "question": {
+          "en": "What are the main requirements to sell or buy products on Mrkoon ?",
+          "ar-EG": "ايه المطلوب عشان أقدر أبيع أو أشتري على مركون؟",
+          "ar-SA": "ايش اللي تحتاجه عشان تبدأ البيع أو الشراء على مركون؟",
+          "fr": "What are the main requirements to sell or buy products on Mrkoon ?",
+          "ar": ""
+        },
+        "explanation": {
+          "en": "<p><strong>To sell or buy products on Mrkoon you have to sign up.</strong></p>",
+          "ar-EG": "<p><strong>عشان تقدر تبيع أو تشتري عن طريق مركون لازم يكون عندك حسـاب رسمـي على المنصة.</strong></p>",
+          "ar-SA": "<p>عشان تبيع أو تشتري على <strong data-start=\"156\" data-end=\"165\">مركون</strong>، تحتاج حساب رسمي.</p>",
+          "fr": "<p><strong>To sell or buy products on Mrkoon you have to sign up.</strong></p>"
+        },
+        "sort": 2
+      },
+      {
+        "id": 7,
+        "question": {
+          "en": "Is account registration free or paid ?",
+          "ar-EG": "هل تسجيل الحساب مجاني أم يحتـاج لـرسوم؟",
+          "ar-SA": "هل تسجيل الحساب مجاني ولا يحتاج رسوم؟",
+          "fr": "Is account registration free or paid ?"
+        },
+        "explanation": {
+          "en": "<p><strong>Account registration is completely free and does not require any fees.</strong></p>",
+          "ar-EG": "<p><strong>تسجيل الحساب مجاني تمامًا ولا يتطلب أي رسوم عند التسجيل.</strong></p>",
+          "ar-SA": "<p><strong>تسجيل الحساب مجاني تمامًا ولا يتطلب أي رسوم عند التسجيل.</strong></p>",
+          "fr": "",
+          "ar": "<p><strong>تسجيل الحساب مجاني تمامًا ولا يتطلب أي رسوم عند التسجيل.</strong></p>"
+        },
+        "sort": 3
+      },
+      {
+        "id": 8,
+        "question": {
+          "en": "How can I create a new account on Mrkoon ?",
+          "ar-EG": "ازاي أسجل حسـاب جديد على مركون؟",
+          "ar-SA": "كيف تسوي حساب جديد على مركون؟",
+          "fr": "How can I create a new account on Mrkoon ?"
+        },
+        "explanation": {
+          "en": "<ul class=\"nml__editor__content__bullet__list\"><li class=\"nml__editor__content__listItem\"><p><strong>Go to the \"Create New Account\" page fro</strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/signup\"><strong> </strong><u><strong>here</strong></u></a><strong>.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Choose whether you are a \"Seller\" or a \"Buyer\".</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Enter the name of your store or company.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Select the field you work in (e.g., steel and iron).</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Specify your work interests, such as electricity, steel, sheet metal, etc.&nbsp;</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Enter your name, phone number, email (if available), city, and your company/store address in detail.&nbsp;</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Create a password to secure your data and transactions with us.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Wait for the activation code, which will be sent to your WhatsApp number provided in step 6.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Activate your account by entering the verification code sent to you.</strong></p><p></p><p><strong>&nbsp;And that’s it! Your account is now ready, and you can start using the website!</strong></p><p></p></li></ul>",
+          "ar-EG": "<ul class=\"nml__editor__content__bullet__list\"><li class=\"nml__editor__content__listItem\"><strong>انتقل إلى صفحة إنشاء حساب جديد </strong><a class=\"nml__editor__content__link\" target=\"_blank\" rel=\"noopener noreferrer nofollow\"><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://www.mrkoonapp.com/signup\"><strong><u>من هنا</u></strong></a></a><strong>.</strong></li><li class=\"nml__editor__content__listItem\"><strong>حدد إذا كنت \"بائع\" أو \"مشتري\".</strong></li><li class=\"nml__editor__content__listItem\"><strong>اكتب اسم مخزنك أو شركتك و اختار كمان التخصص اللي إنته شغال فيه (مثال: الحديد والصلب).</strong></li><li class=\"nml__editor__content__listItem\"><strong>حدد اهتمامات شغلك مثل: الكهرباء، الحديد، الصاج وغيرها.</strong></li><li class=\"nml__editor__content__listItem\"><strong>اكتب اسمك، رقم تليفونك، البريد الإلكتروني (إن وجد)، المدينة السكنية، وعنوان الشركة أو المخزن بالتفصيل.</strong></li><li class=\"nml__editor__content__listItem\"><strong>قم بإنشاء كلمة سر خاصة بك تحمي بها بياناتك وتعاملاتك معنا.</strong></li><li class=\"nml__editor__content__listItem\"><strong>استنى كود التفعيل اللي هيوصل لك على واتساب الرقم اللي كتبته في الخطوة رقم 5.</strong></li><li class=\"nml__editor__content__listItem\"><p><strong>قم بتفعيل حسابك عن طريق إدخال كود التفعيل المرسل.</strong><br>&nbsp;</p><p><strong>وبكذا تكون سجلت حسابك بنجاح وتقدر تبدأ استخدام الموقع!</strong><br><br>&nbsp;</p><p><img class=\"nml__editor__content__image\" src=\"\"></p></li></ul>",
+          "ar-SA": "<ul><li data-start=\"69\" data-end=\"113\"><p data-start=\"72\" data-end=\"113\">انتقل لصفحة <strong data-start=\"84\" data-end=\"103\">إنشاء حساب جديد </strong><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://www.mrkoonapp.com/signup\"><strong><u>من هنا</u></strong></a></p></li><li data-start=\"114\" data-end=\"153\"><p data-start=\"117\" data-end=\"153\">حدد إذا كنت <strong data-start=\"129\" data-end=\"137\">بائع</strong> أو <strong data-start=\"141\" data-end=\"150\">مشتري</strong>.</p></li><li data-start=\"154\" data-end=\"232\"><p data-start=\"157\" data-end=\"232\">اكتب اسم مخزنك أو شركتك، وحدد التخصص اللي تعمل فيه (مثال: الحديد والصلب).</p></li><li data-start=\"233\" data-end=\"293\"><p data-start=\"236\" data-end=\"293\">اختر اهتمامات شغلك مثل: الكهرباء، الحديد، الصاج وغيرها.</p></li><li data-start=\"294\" data-end=\"392\"><p data-start=\"297\" data-end=\"392\">اكتب اسمك، رقم جوالك، البريد الإلكتروني (لو موجود)، المدينة، وعنوان شركتك أو المخزن بالتفصيل.</p></li><li data-start=\"393\" data-end=\"447\"><p data-start=\"396\" data-end=\"447\">أنشئ كلمة سر تحمي بياناتك وتعاملاتك مع <strong data-start=\"435\" data-end=\"444\">مركون</strong>.</p></li><li data-start=\"448\" data-end=\"524\"><p data-start=\"451\" data-end=\"524\">استنى كود التفعيل اللي يوصل لك على واتساب الرقم اللي كتبته في الخطوة 5.</p></li><li data-start=\"525\" data-end=\"574\"><p data-start=\"528\" data-end=\"574\">فعّل حسابك عن طريق إدخال كود التفعيل المرسل.</p></li><li><p data-start=\"576\" data-end=\"635\">وبكذا، يكون حسابك مسجل بنجاح وتقدر تبدأ استخدام الموقع!</p></li></ul>",
+          "fr": "<ul class=\"nml__editor__content__bullet__list\"><li class=\"nml__editor__content__listItem\"><strong>Go to the \"Create New Account\" page fro</strong><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://www.mrkoonapp.com/signup\"><strong> <u>here</u></strong></a><strong>.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Choose whether you are a \"Seller\" or a \"Buyer\".</strong></li><li class=\"nml__editor__content__listItem\"><strong>Enter the name of your store or company.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Select the field you work in (e.g., steel and iron).</strong></li><li class=\"nml__editor__content__listItem\"><strong>Specify your work interests, such as electricity, steel, sheet metal, etc.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Enter your name, phone number, email (if available), city, and your company/store address in detail.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Create a password to secure your data and transactions with us.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Wait for the activation code, which will be sent to your WhatsApp number provided in step 6.</strong></li><li class=\"nml__editor__content__listItem\"><p><strong>Activate your account by entering the verification code sent to you.</strong></p><p>&nbsp;</p><p><strong>&nbsp;And that’s it! Your account is now ready, and you can start using the website!</strong></p></li></ul>"
+        },
+        "sort": 4
+      },
+      {
+        "id": 12,
+        "question": {
+          "en": "What should I do if I forget my password ?",
+          "ar-EG": "نسيت الرقم السري بتاعي، أعمل ايه ؟",
+          "ar-SA": "نسيت الرقم السري حقي، وش أسوي؟",
+          "fr": "What should I do if I forget my password ?",
+          "ar": ""
+        },
+        "explanation": {
+          "en": "<ul class=\"nml__editor__content__bullet__list\"><li class=\"nml__editor__content__listItem\"><p><strong>Go to the login page </strong><a target=\"_blank\" rel=\"noopener\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/login\"><u><strong>here</strong></u></a><strong>.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Click on the \"Forgot Password\" option or click </strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/forget-password\"><u><strong>here</strong></u></a><strong>.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Enter your registered phone number.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Enter the verification code sent to your registered phone number.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Create a new password and confirm it in the next field.</strong></p></li></ul>",
+          "ar-EG": "<ul class=\"nml__editor__content__bullet__list\"><li class=\"nml__editor__content__listItem\"><p><strong>ادخل على صفحة تسجيل الدخول </strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/login\"><u><strong>من هنـا</strong></u></a><u><strong>.</strong></u></p></li><li class=\"nml__editor__content__listItem\"><p><strong>اختر أيقونة \"نسيت كلمة المرور\" أو اضغط </strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/forget-password\"><u><strong>هنا</strong></u></a><strong>.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>ادخل رقم الهاتف الخاص بك والمُسجل لدينا.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>قم بإدخـال كود التفعيـل المُرسـل على رقم الهاتف المُدخـل.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>قم بإنشـاء كلمة مرور جديدة ثم قم بتأكيده في الخانة التالية.</strong></p></li></ul><img class=\"nml__editor__content__image\" src=\"\">",
+          "ar-SA": "<ul class=\"nml__editor__content__bullet__list\"><li class=\"nml__editor__content__listItem\"><p><strong>ادخل على صفحة تسجيل الدخول </strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/login\"><u><strong>من هنـا</strong></u></a><u><strong>.</strong></u></p></li><li class=\"nml__editor__content__listItem\"><p><strong>اختر أيقونة \"نسيت كلمة المرور\" أو اضغط </strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/forget-password\"><u><strong>هنا</strong></u></a><strong>.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>ادخل رقم الهاتف الخاص بك والمُسجل لدينا.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>قم بإدخـال كود التفعيـل المُرسـل على رقم الهاتف المُدخـل.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>قم بإنشـاء كلمة مرور جديدة ثم قم بتأكيده في الخانة التالية.</strong></p></li></ul><img class=\"nml__editor__content__image\" src=\"\">",
+          "fr": "<ul class=\"nml__editor__content__bullet__list\"><li class=\"nml__editor__content__listItem\"><strong>Go to the login page </strong><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://www.mrkoonapp.com/login\"><strong><u>here</u></strong></a><strong>.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Click on the \"Forgot Password\" option or click </strong><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://www.mrkoonapp.com/forget-password\"><strong><u>here</u></strong></a><strong>.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Enter your registered phone number.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Enter the verification code sent to your registered phone number.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Create a new password and confirm it in the next field.</strong></li></ul>"
+        },
+        "sort": 5
+      },
+      {
+        "id": 13,
+        "question": {
+          "en": "What Services Does Mrkoon Offer ?",
+          "ar-EG": "ايه الخدمـات اللي بيقدمهـا مركون ؟",
+          "ar-SA": "وش الخدمات اللي أقدر أستفيد منها في مركون؟",
+          "fr": "What Services Does Mrkoon Offer ?"
+        },
+        "explanation": {
+          "en": "<p><strong>By creating a personal account on the Mrkoon platform, you can showcase the scrap and surplus materials from your store or company to over 4,000 trusted traders across various industries and specialties. This is facilitated through an Electronic price offers system.</strong></p>",
+          "ar-EG": "<p>لما تسجل حساب شخصي على موقع <strong data-start=\"78\" data-end=\"87\">مركون</strong>، تقدر تعرض السكراب والرواكد اللي عندك لمخزنك أو شركتك لأكثر من 4000 تاجر موثوق في جميع التخصصات، ضمن نظام عروض أسعار إلكتروني.</p>",
+          "ar-SA": "<p><strong>بتسجيل حسـاب شخصي لك على موقع مركون تقدر تعرض خردة ورواكد مخزنك أو شركتك لأكتر من 4000 تاجر موثوق في كافة التخصصات والمجالات ضمن نظام عروض أسعـار إلكترونية.</strong></p>",
+          "fr": "<p><strong>By creating a personal account on the Mrkoon platform, you can showcase the scrap and surplus materials from your store or company to over 4,000 trusted traders across various industries and specialties. This is facilitated through an Electronic price offers system.</strong></p>"
+        },
+        "sort": 6
+      },
+      {
+        "id": 14,
+        "question": {
+          "en": "Can I offer a price to buy a product without sign up/In ?",
+          "ar-EG": "ممكن أقدم عرض سعر لشراء منتج بدون تسجيل حسـاب / الدخول على مركون؟",
+          "ar-SA": "ممكن أقدم عرض سعر لشراء منتج بدون ما أسجل حساب أو أدخل على مركون؟",
+          "fr": "Can I offer a price to buy a product without sign up/In ?"
+        },
+        "explanation": {
+          "en": "<p><strong>No, you can not offer a price to buy any product without sign up/in Mrkoon platform</strong></p>",
+          "ar-EG": "<p><strong>لا، لا يُمكن تقديم سعـر لشراء منتج دون تسجيل حسـاب / الدخول إلى المنصة.</strong></p><p><strong><br></strong></p>",
+          "ar-SA": "<p><strong>لا، ما تقدر تقدم عرض شراء لأي منتج بدون تسجيل حساب أو الدخول للمنصة.</strong></p>",
+          "fr": "<p><strong>No, you can not offer a price to buy any product without sign up/in Mrkoon platform</strong></p>"
+        },
+        "sort": 7
+      },
+      {
+        "id": 15,
+        "question": {
+          "en": "Having Trouble Creating a New Account or Logging In?",
+          "ar-EG": "أواجه مشكلـة عند تسجيل حساب جديد أو تسجيل الدخول؟",
+          "ar-SA": "أواجه مشكلة عند تسجيل حساب جديد أو تسجيل الدخول، وش أسوي؟",
+          "fr": "Having Trouble Creating a New Account or Logging In?",
+          "ar": ""
+        },
+        "explanation": {
+          "en": "<p><strong>Feel free to reach out directly to our support team at </strong><u><strong>01154068667</strong></u><strong> for immediate assistance.</strong></p>",
+          "ar-EG": "<p>لا تتردد في التواصل مباشرة مع فريق الدعم الفني على الرقم <u><strong>01154068667</strong></u>، وسنكون سعداء بمساعدتك على الفور.</p><p><strong><br></strong></p>",
+          "ar-SA": "<p>لا تتردد في التواصل مباشرة مع فريق الدعم الفني على الرقم <u><strong>01154068667</strong></u>، وسنكون سعداء بمساعدتك على الفور.</p><p><strong><br></strong></p>",
+          "fr": "<p><strong>Feel free to reach out directly to our support team at <u>01154068667</u> for immediate assistance.</strong></p>"
+        },
+        "sort": 8
+      },
+      {
+        "id": 16,
+        "question": {
+          "en": "Can I Inspect the Product ?",
+          "ar-EG": "هل أقدر أعاين المنتج؟",
+          "ar-SA": "هل أقدر أعاين المنتج؟",
+          "fr": "Can I Inspect the Product ?"
+        },
+        "explanation": {
+          "en": "<p><strong>Absolutely! At Mrkoon, we ensure your the right to inspect the product through a comprehensive due diligence inspection before deciding to participate in Price offer session.</strong></p>",
+          "ar-EG": "<p><strong>طبعًَا، احنا في مركون بنضمنلك حقك الكامل في معاينة المنتج <em>معاينـة نـافيـة للجهـالة </em>قبل الإقدام على أي خطوة.</strong></p>",
+          "ar-SA": "<p>طبعًا، في <strong data-start=\"60\" data-end=\"69\">مركون</strong> نضمن لك حقك الكامل في معاينة المنتج بشكل كامل قبل ما تاخذ أي خطوة.</p>",
+          "fr": "<p><strong>Absolutely! At Mrkoon, we ensure your the right to inspect the product through a comprehensive due diligence inspection before deciding to participate in Price offer session.</strong></p>"
+        },
+        "sort": 9
+      },
+      {
+        "id": 17,
+        "question": {
+          "en": "I’m Interested in a specific Product and Want to Inspect It. What Should I Do?",
+          "ar-EG": "عجبني منتج وعايز أعاينه أعمل ايه؟",
+          "ar-SA": "عجبني منتج وودي أعاينه، وش أسوي؟",
+          "fr": "I’m Interested in a specific Product and Want to Inspect It. What Should I Do?"
+        },
+        "explanation": {
+          "en": "<p><strong>To request an inspection for a specific product on Mrkoon, simply click the \"</strong><u><strong>Request Inspection</strong></u><strong>\" button located below the product and pay the required fees.</strong></p>",
+          "ar-EG": "<p><strong>لطلب معـاينـة منتج مـا على مركون قم بالضغط على أيقونة </strong><u><strong>\"طـلب المعاينـة\"</strong></u><strong> أسفل المنتج ودفع الرسوم المطلوبة للمعـاينـة (إن وجدت).</strong></p>",
+          "ar-SA": "<p><strong>لطلب معـاينـة منتج مـا على مركون قم بالضغط على أيقونة </strong><u><strong>\"طـلب المعاينـة\"</strong></u><strong> أسفل المنتج ودفع الرسوم المطلوبة للمعـاينـة (إن وجدت).</strong></p>",
+          "fr": "",
+          "ar": "<p><strong>لطلب معـاينـة منتج مـا على مركون قم بالضغط على أيقونة </strong><u><strong>\"طـلب المعاينـة\"</strong></u><strong> أسفل المنتج ودفع الرسوم المطلوبة للمعـاينـة (إن وجدت).</strong></p>"
+        },
+        "sort": 10
+      },
+      {
+        "id": 18,
+        "question": {
+          "en": "What Are the Steps Required After Inspection to Participate in Price Offers for the Product?",
+          "ar-EG": "ايه الخطوات المطلوبة بعد المعاينة للمشاركة عروض الأسـعار على المنتج؟",
+          "ar-SA": "بعد ما أعاين المنتج، وش الخطوات عشان أشارك عروض الأسعار؟",
+          "fr": "What Are the Steps Required After Inspection to Participate in Price Offers for the Product?"
+        },
+        "explanation": {
+          "en": "<p>After the inspection, you must pay a <u>security deposit</u> to complete the registration process and submit a price offer to purchase the product.</p><p></p>",
+          "ar-EG": "<p>بعد المعاينة، يجب دفع <u>مبلغ تأميني</u> لإتمام عملية التسجيل والتمكن من تقديم عرض سعر لشراء المنتج.</p>",
+          "ar-SA": "<p>بعد ما تعاين المنتج، يتم دفع مبلغ تأميني لإكمال التسجيل وتمكينك من تقديم عرض شراء.</p>",
+          "fr": "<p>After the inspection, you must pay a <u>security deposit</u> to complete the registration process and submit a price offer to purchase the product.</p><p>&nbsp;</p>"
+        },
+        "sort": 11
+      },
+      {
+        "id": 28,
+        "question": {
+          "en": "Is the Security Deposit Amount the Same for Every Session?",
+          "ar-EG": "هل مقدار المبلغ التأميني ثابت في كل جلسة؟",
+          "ar-SA": "هل قيمة التأمين ثابتة لكل جلسة؟",
+          "fr": "Is the Security Deposit Amount the Same for Every Session?"
+        },
+        "explanation": {
+          "en": "<p><strong>No, the security deposit amount varies from one session to another, depending on the type and nature of the product being offered.</strong></p>",
+          "ar-EG": "<p><strong>لا، يختلف مقدار المبلغ التأميني من جلسة لأخرى بناءً على نوع وطبيعة المنتج المعروض.</strong></p><p><strong><br></strong></p>",
+          "ar-SA": "<p><strong>لا، يختلف مقدار المبلغ التأميني من جلسة لأخرى بناءً على نوع وطبيعة المنتج المعروض.</strong></p><p><strong><br></strong></p>",
+          "fr": "",
+          "ar": "<p><strong>لا، يختلف مقدار المبلغ التأميني من جلسة لأخرى بناءً على نوع وطبيعة المنتج المعروض.</strong></p><p><strong><br></strong></p>"
+        },
+        "sort": 11
+      },
+      {
+        "id": 27,
+        "question": {
+          "en": "What Does the Security Deposit Mean?",
+          "ar-EG": "ما المقصود بالمبلغ التأميني؟",
+          "ar-SA": "وش المقصود بالمبلغ التأميني؟",
+          "fr": "What Does the Security Deposit Mean?"
+        },
+        "explanation": {
+          "en": "<p>The security deposit is a financial amount (down payment) participants pay before submitting price offers. It ensures the participant's seriousness and ability to make the purchase and is a mandatory requirement for participation.</p>",
+          "ar-EG": "<p><strong>المبلغ التأميني هو </strong><u><strong>مبلغ مالي (عربون) </strong></u><strong>يُدفع من قِبَل المشاركين  قبل بدء عملية تقديم الأسـعار لضمـان جدية المُشترك وقدرته على الشراء، وهو شرط أساسي للمشاركة في لعمليـة.</strong></p><p><strong><br></strong></p>",
+          "ar-SA": "<p><strong>المبلغ التأميني عبارة عن عربون يُدفع قبل تقديم عروض الأسعار لضمان جدية المشترك وقدرته على الشراء، ولا يمكن المشاركة بدونه.</strong></p>",
+          "fr": "<p>The security deposit is a financial amount (down payment) participants pay before submitting price offers. It ensures the participant's seriousness and ability to make the purchase and is a mandatory requirement for participation.</p>"
+        },
+        "sort": 11
+      },
+      {
+        "id": 19,
+        "question": {
+          "en": "When Is the Date for Submitting Price Offers Set?",
+          "ar-EG": "متى يتم تحديد موعد تقديم عروض الأسـعار؟",
+          "ar-SA": "وش موعد تقديم عروض الأسعار وكيف يتم تحديده؟",
+          "fr": "When Is the Date for Submitting Price Offers Set?"
+        },
+        "explanation": {
+          "en": "<p>The date for submitting price offers is set once the required number of participants is reached and their security deposits are paid.</p>",
+          "ar-EG": "<p><strong>يتم تحديد موعد  تقديم عروض الأسـعار بعد مكتمل العدد المطلوب من المشاركين وسدادهم للمبالغ التأمينية.</strong></p>",
+          "ar-SA": "<p><strong>موعد تقديم عروض الأسعار يتحدد بعد ما يكتمل عدد المشاركين وتسدد المبالغ التأمينية.</strong></p>",
+          "fr": "<p>The date for submitting price offers is set once the required number of participants is reached and their security deposits are paid.</p>"
+        },
+        "sort": 12
+      },
+      {
+        "id": 20,
+        "question": {
+          "en": "How Can I Participate in the Price offer session?",
+          "ar-EG": "مـاهي طريقة المشـاركة في عملية عرض الأسـعار؟",
+          "ar-SA": "كيف أقدر أشارك في تقديم عروض الأسعار؟",
+          "fr": "How Can I Participate in the Price offer session?",
+          "ar": ""
+        },
+        "explanation": {
+          "en": "<p><strong>Log in to Markoun [</strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/login\"><u><strong>here</strong></u></a><strong>].</strong></p><p><strong> pay the associated fees of the product.</strong></p><p><strong>Schedule a suitable inspection date with the dedicated inspection team.</strong></p><p><strong>Confirm your participation by paying the deposit amount specified based on the type and nature of the product.</strong></p><p><strong>Place your estimated Price for the product on its dedicated page,</strong></p>",
+          "ar-EG": "<ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>تسجيل الدخول على مركون </strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/login\"><u><strong>من هنـا</strong></u></a><strong>.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>دفع الرسوم المُتعلقة بالمنتج.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>تحديد الموعد المُناسب لمعاينة المنتج مع الفريق المُختص بعملية المعاينة.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>تأكيد عملية المشاركة في الجلسة عن طريق دفع مبلغ تأميني يُحدد وفقًا لنوع وطبيعة المٌنتج المعروض.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>وضع سعر تقديري للمنتج على الصفحة الخاصة به.</strong></p><p style=\"text-align: right\"></p></li></ol>",
+          "ar-SA": "<ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>تسجيل الدخول على مركون </strong><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"nml__editor__content__link\" href=\"https://www.mrkoonapp.com/login\"><u><strong>من هنـا</strong></u></a><strong>.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>دفع الرسوم المُتعلقة بالمنتج.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>تحديد الموعد المُناسب لمعاينة المنتج مع الفريق المُختص بعملية المعاينة.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>تأكيد عملية المشاركة في الجلسة عن طريق دفع مبلغ تأميني يُحدد وفقًا لنوع وطبيعة المٌنتج المعروض.</strong></p></li><li class=\"nml__editor__content__listItem\"><p style=\"text-align: right\"><strong>وضع سعر تقديري للمنتج على الصفحة الخاصة به.</strong></p><p style=\"text-align: right\"></p></li></ol>",
+          "fr": "<p><strong>Log in to Markoun [</strong><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://www.mrkoonapp.com/login\"><strong><u>here</u></strong></a><strong>].</strong></p><p><strong>pay the associated fees of the product.</strong></p><p><strong>Schedule a suitable inspection date with the dedicated inspection team.</strong></p><p><strong>Confirm your participation by paying the deposit amount specified based on the type and nature of the product.</strong></p><p><strong>Place your estimated Price for the product on its dedicated page,</strong></p>"
+        },
+        "sort": 13
+      },
+      {
+        "id": 21,
+        "question": {
+          "en": "Is the Buying and Selling Process on Mrkoon Reliable?",
+          "ar-EG": "هل عملية البيع والشراء على مركون موثوقة؟",
+          "ar-SA": "هل عملية البيع والشراء على مركون موثوقة؟",
+          "fr": "Is the Buying and Selling Process on Mrkoon Reliable?"
+        },
+        "explanation": {
+          "en": "<p><strong>Yes, the buying and selling process on Mrkoon is completely safe and reliable. It fully adheres to Egyptian cybersecurity and information security standards to ensure the protection of your data and transactions.</strong></p>",
+          "ar-EG": "<p><strong>نعم، عملية البيع والشراء على مركون آمنة وموثوقة تمامًا، حيث تخضع لجميع معايير الأمن السيبراني وأمن المعلومات المصري لضمان حماية بياناتك ومعاملاتك.</strong></p>",
+          "ar-SA": "<p>نعم، البيع والشراء على <strong data-start=\"73\" data-end=\"82\">مركون</strong> آمن وموثوق 100%، لأنه يخضع لكل معايير الأمن السيبراني وأمن المعلومات لضمان حماية بياناتك وتعاملاتك.</p>",
+          "fr": "<p><strong>Yes, the buying and selling process on Mrkoon is completely safe and reliable. It fully adheres to Egyptian cybersecurity and information security standards to ensure the protection of your data and transactions.</strong></p>"
+        },
+        "sort": 14
+      },
+      {
+        "id": 24,
+        "question": {
+          "en": "What Does \"Minimum Threshold\" Mean ?",
+          "ar-EG": "ما المقصود بالحد الأدنى؟",
+          "ar-SA": "وش المقصود بالحد الأدنى؟",
+          "fr": "What Does \"Minimum Threshold\" Mean ?"
+        },
+        "explanation": {
+          "en": "<p><strong>The </strong><u><strong>minimum threshold</strong></u><strong> is the fixed amount set as a requirement to start Price offering.</strong></p>",
+          "ar-EG": "<p><u><strong>الحد الأدنى</strong></u><strong> هو المبلغ الثابت الذي يحدد كشرط لبدء تقديم عرض الأسـعار.</strong></p><p><strong><br></strong></p>",
+          "ar-SA": "<p><u><strong>الحد الأدنى</strong></u><strong> هو المبلغ الثابت الذي يحدد كشرط لبدء تقديم عرض الأسـعار.</strong></p><p><strong><br></strong></p>",
+          "fr": "<p><strong>The <u>minimum threshold</u> is the fixed amount set as a requirement to start Price offering.</strong></p>"
+        },
+        "sort": 16
+      },
+      {
+        "id": 25,
+        "question": {
+          "en": "What Are the Steps After the price offering",
+          "ar-EG": "ما هي الإجراءات بعد انتهاء تقديم عروض السـعر؟",
+          "ar-SA": "بعد انتهاء تقديم عروض السعر، وش الخطوات الجاية؟",
+          "fr": "What Are the Steps After the price offering"
+        },
+        "explanation": {
+          "en": "<p></p><p><strong>The seller is consulted to obtain their final approval to sell at the highest price offered during the session.</strong></p><p><u><strong>Once the seller approves, the following steps are taken:</strong></u></p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p><strong>The buyer is requested to pay the remaining balance of the product's value after deducting the pre-session deposit.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>The seller must provide the required documents, including a copy of their ID and tax registration.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>Coordination with the buyer to ensure a fast and secure transaction.</strong></p></li></ol>",
+          "ar-EG": "<p><strong>يتم الرجوع إلى البائع للحصول على موافقته النهائية على البيع بأعلى سعر تم تقديمه.</strong></p><p><u><strong>بمجرد موافقة البائع، يتم اتخاذ الخطوات التالية:</strong></u></p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p><strong>مطالبة المشتري بتسديد المبلغ المتبقي من قيمة المنتج بعد خصم مبلغ التأمين المدفوع مسبقًا.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>استيفاء الأوراق المطلوبة من البائع، وتشمل نسخة من البطاقة الشخصية والسجل الضريبي.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>التنسيق مع المشتري لإتمام عملية التبادل بسرعة وأمان.</strong></p></li></ol>",
+          "ar-SA": "<p><strong>يتم الرجوع إلى البائع للحصول على موافقته النهائية على البيع بأعلى سعر تم تقديمه.</strong></p><p><u><strong>بمجرد موافقة البائع، يتم اتخاذ الخطوات التالية:</strong></u></p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p><strong>مطالبة المشتري بتسديد المبلغ المتبقي من قيمة المنتج بعد خصم مبلغ التأمين المدفوع مسبقًا.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>استيفاء الأوراق المطلوبة من البائع، وتشمل نسخة من البطاقة الشخصية والسجل الضريبي.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>التنسيق مع المشتري لإتمام عملية التبادل بسرعة وأمان.</strong></p></li></ol>",
+          "fr": "<p>&nbsp;</p><p><strong>The seller is consulted to obtain their final approval to sell at the highest price offered during the session.</strong></p><p><strong><u>Once the seller approves, the following steps are taken:</u></strong></p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><strong>The buyer is requested to pay the remaining balance of the product's value after deducting the pre-session deposit.</strong></li><li class=\"nml__editor__content__listItem\"><strong>The seller must provide the required documents, including a copy of their ID and tax registration.</strong></li><li class=\"nml__editor__content__listItem\"><strong>Coordination with the buyer to ensure a fast and secure transaction.</strong></li></ol>"
+        },
+        "sort": 17
+      },
+      {
+        "id": 26,
+        "question": {
+          "en": "What Happens If the Buyer Refuses to Complete the Payment?",
+          "ar-EG": "ما هو الإجراء في حالة عدم رغبة المشتري في إكمال مبلغ الشراء بعد إرساء البيع عليه؟",
+          "ar-SA": "وش يصير إذا المشتري ما رغب يكمل مبلغ الشراء بعد إرساء البيع عليه؟",
+          "fr": "What Happens If the Buyer Refuses to Complete the Payment?"
+        },
+        "explanation": {
+          "en": "<p>If the buyer declines to complete the payment after is awarded to them, the following actions are taken:</p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p>The buyer is permanently banned from the platform.</p></li><li class=\"nml__editor__content__listItem\"><p>The deposit paid by the buyer is forfeited as compensation.</p></li></ol>",
+          "ar-EG": "<p><strong>في حال عدم رغبة المشتري في استكمال مبلغ الشراء بعد إرساء  البيع عليه، يتم اتخاذ الإجراءات التالية:</strong></p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p><strong>حجب المشتري نهائيًا من استخدام المنصة.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>سحب مبلغ التأمين المدفوع من قبله كتعويض.</strong></p></li></ol><p><strong><br></strong></p>",
+          "ar-SA": "<p><strong>في حال عدم رغبة المشتري في استكمال مبلغ الشراء بعد إرساء  البيع عليه، يتم اتخاذ الإجراءات التالية:</strong></p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\"><p><strong>حجب المشتري نهائيًا من استخدام المنصة.</strong></p></li><li class=\"nml__editor__content__listItem\"><p><strong>سحب مبلغ التأمين المدفوع من قبله كتعويض.</strong></p></li></ol><p><strong><br></strong></p>",
+          "fr": "<p>If the buyer declines to complete the payment after is awarded to them, the following actions are taken:</p><ol class=\"nml__editor__content__ordered__list\"><li class=\"nml__editor__content__listItem\">The buyer is permanently banned from the platform.</li><li class=\"nml__editor__content__listItem\">The deposit paid by the buyer is forfeited as compensation.</li></ol>"
+        },
+        "sort": 18
+      },
+      {
+        "id": 29,
+        "question": {
+          "en": "If My Offer Is Rejected, Will I Get My Security Deposit Back?",
+          "ar-EG": "لو اترفض سعري هل هسترد المبلغ التأميني؟",
+          "ar-SA": "لو رفضوا سعري، وش يصير بالمبلغ التأميني حقي؟",
+          "fr": "If My Offer Is Rejected, Will I Get My Security Deposit Back?",
+          "ar": ""
+        },
+        "explanation": {
+          "en": "<p>Yes, if your offer is rejected, the security deposit will be fully refunded.</p>",
+          "ar-EG": "<p>طبعًا، في حال رفض السعر المُقدم، يتم استرداد المبلغ التأميني بالكامل.</p>",
+          "ar-SA": "<p>في حال رفض السعر المُقدم، يتم استرداد المبلغ التأميني بالكامل</p>",
+          "fr": "<p>Yes, if your offer is rejected, the security deposit will be fully refunded.</p>",
+          "ar": ""
+        },
+        "sort": 19
+      }
+    ]
+  }
+}

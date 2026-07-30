@@ -1,0 +1,29 @@
+{
+  "name": "@kaizech/knowledge",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/config": "^3.2.0",
+    "@nestjs/typeorm": "^10.0.2",
+    "@kaizech/shared": "workspace:*",
+    "@kaizech/database": "workspace:*",
+    "@kaizech/rag": "workspace:*",
+    "@kaizech/agent": "workspace:*",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.8.0",
+    "xlsx": "^0.18.5",
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0-rc.12",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/pdf-parse": "^1.1.4"
+  }
+}

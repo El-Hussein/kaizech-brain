@@ -1,0 +1,19 @@
+{
+  "name": "@kaizech/tickets",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/typeorm": "^10.0.2",
+    "@kaizech/shared": "workspace:*",
+    "@kaizech/database": "workspace:*",
+    "@kaizech/memory": "workspace:*",
+    "typeorm": "^0.3.20"
+  }
+}

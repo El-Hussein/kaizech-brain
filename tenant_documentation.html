@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaizech Brain — Tenant Integration Hub & Documentation</title>
+  <meta name="description" content="Official Tenant Onboarding, API Integration, and Knowledge Training Guide for Kaizech Brain AI Agent Platform.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(18, 26, 43, 0.7);
+      --bg-card-hover: rgba(26, 38, 63, 0.85);
+      --bg-glass: rgba(15, 23, 42, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.3);
+      
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.4);
+      --secondary: #8b5cf6;
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.3);
+      --success: #10b981;
+      --warning: #f59e0b;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-family: var(--font-sans);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    body {
+      overflow-x: hidden;
+      background: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+                  radial-gradient(circle at 85% 65%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+                  radial-gradient(circle at 50% 90%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                  var(--bg-dark);
+      background-attachment: fixed;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    /* Header & Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--bg-glass);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-main);
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.5rem 1rem 0.5rem 2.5rem;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      width: 220px;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      width: 280px;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.8rem;
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-dim);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      max-width: 1280px;
+      margin: 3rem auto 4rem;
+      padding: 0 2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 70%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 780px;
+      margin: 0 auto 2.5rem;
+      font-weight: 400;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.75rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Quick Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      max-width: 1280px;
+      margin: 0 auto 4rem;
+      padding: 0 2rem;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-accent);
+      background: var(--bg-card-hover);
+    }
+
+    .metric-card:hover::before {
+      opacity: 1;
+    }
+
+    .metric-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Main Documentation Layout */
+    .main-wrapper {
+      max-width: 1280px;
+      margin: 0 auto 5rem;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2.5rem;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 90px;
+      height: calc(100vh - 110px);
+      overflow-y: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .sidebar-heading {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin: 1.25rem 0 0.5rem 0.75rem;
+      font-weight: 700;
+    }
+
+    .sidebar-heading:first-child {
+      margin-top: 0;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-menu a:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-menu a.active {
+      color: #fff !important;
+      background: rgba(99, 102, 241, 0.2) !important;
+      border-left: 3px solid var(--primary) !important;
+      font-weight: 600;
+    }
+
+    /* Main Content Sections */
+    .content {
+      min-width: 0;
+    }
+
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      backdrop-filter: blur(12px);
+      scroll-margin-top: 100px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #a5b4fc;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Interactive Dashboard Tour Tabs */
+    .tab-container {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-top: 1.5rem;
+    }
+
+    .tab-buttons {
+      display: flex;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 0.85rem 1.25rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab-btn.active {
+      color: #a5b4fc;
+      border-bottom-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .tab-content {
+      padding: 1.75rem;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .dashboard-mockup {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    /* Feature Grid inside cards */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .feature-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .feature-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .feature-item-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .feature-item-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Code Blocks */
+    .code-box {
+      background: #060911;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 1.25rem 0;
+      position: relative;
+    }
+
+    .code-header {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.6rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    pre {
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .code-keyword { color: #f472b6; }
+    .code-string { color: #34d399; }
+    .code-number { color: #fbbf24; }
+    .code-comment { color: #64748b; font-style: italic; }
+    .code-function { color: #60a5fa; }
+
+    /* Interactive Checklist */
+    .checklist {
+      list-style: none;
+      margin-top: 1.5rem;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .checklist-item:hover {
+      background: rgba(99, 102, 241, 0.05);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .checklist-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .checklist-text {
+      flex: 1;
+    }
+
+    .checklist-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .checklist-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .checklist-item.completed {
+      opacity: 0.6;
+      background: rgba(16, 185, 129, 0.04);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .checklist-item.completed .checklist-title {
+      text-decoration: line-through;
+    }
+
+    /* Callouts */
+    .callout {
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      margin: 1.5rem 0;
+      display: flex;
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .callout-info {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: #67e8f9;
+    }
+
+    .callout-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fde68a;
+    }
+
+    .callout-success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .main-wrapper {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        display: none;
+      }
+      .hero-title {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Header -->
+  <header>
+    <a href="#" class="logo-container">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+          <path d="M12 12L2.1 12a10 10 0 0 1 9.9-10v10z"></path>
+          <path d="M12 12v9.9a10 10 0 0 1-9.9-9.9H12z"></path>
+        </svg>
+      </div>
+      <div>
+        <span class="logo-text">Kaizech Brain</span>
+        <span class="badge">Tenant Hub v1.0</span>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#dashboard-tour">Dashboard</a></li>
+      <li><a href="#knowledge-base">Knowledge RAG</a></li>
+      <li><a href="#prompt-builder">Prompt Builder</a></li>
+      <li><a href="#tools">API Tools</a></li>
+      <li><a href="#whatsapp-integration">WhatsApp</a></li>
+      <li><a href="#api-reference">REST API</a></li>
+      <li><a href="#checklist">Checklist</a></li>
+    </ul>
+
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="docSearch" class="search-input" placeholder="Search documentation...">
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="badge" style="margin-bottom: 1rem;">✨ Enterprise Multi-Tenant AI Platform</div>
+    <h1 class="hero-title">Tenant Onboarding & Integration Documentation</h1>
+    <p class="hero-subtitle">
+      Everything you need to train your AI model, connect your business APIs, configure dynamic prompts, and deploy across WhatsApp and Web Applications.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#dashboard-tour" class="btn btn-primary">
+        Explore Dashboard Tour
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#api-reference" class="btn btn-secondary">
+        API Reference
+      </a>
+    </div>
+  </section>
+
+  <!-- Quick Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-val" style="color: #818cf8;">99.9%</div>
+      <div class="metric-label">Resolution Capability</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color: #34d399;">&lt; 500ms</div>
+      <div class="metric-label">Average RAG Latency</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color: #38bdf8;">pgvector</div>
+      <div class="metric-label">1536-Dim Semantic Search</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color: #f472b6;">Dual Channel</div>
+      <div class="metric-label">WhatsApp + REST API</div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-heading">Getting Started</div>
+      <ul class="sidebar-menu">
+        <li><a href="#overview">Overview & Architecture</a></li>
+        <li><a href="#dashboard-tour">Dashboard Tour</a></li>
+      </ul>
+
+      <div class="sidebar-heading">Model Training</div>
+      <ul class="sidebar-menu">
+        <li><a href="#knowledge-base">Knowledge Base & RAG</a></li>
+        <li><a href="#prompt-builder">Prompt Builder System</a></li>
+      </ul>
+
+      <div class="sidebar-heading">Integrations</div>
+      <ul class="sidebar-menu">
+        <li><a href="#tools">Custom API Tools</a></li>
+        <li><a href="#whatsapp-integration">WhatsApp Integration</a></li>
+        <li><a href="#api-reference">Direct REST API</a></li>
+      </ul>
+
+      <div class="sidebar-heading">Testing & Deployment</div>
+      <ul class="sidebar-menu">
+        <li><a href="#playground">Playground Sandbox</a></li>
+        <li><a href="#checklist">Onboarding Checklist</a></li>
+      </ul>
+    </aside>
+
+    <!-- Content Area -->
+    <main class="content">
+
+      <!-- 1. Overview Section -->
+      <section id="overview" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Platform Overview & Architecture</h2>
+            <div class="badge">Multi-Tenant Isolation</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          <strong>Kaizech Brain</strong> provides isolated environments for tenant organizations. Each tenant operates with dedicated knowledge bases, custom system prompts, authentication keys, and API tool manifests.
+        </p>
+
+        <div class="callout callout-info">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>
+            <strong>Isolated Architecture:</strong> All database entities maintain strict <code>tenant_id</code> isolation, guaranteeing vector data, user profiles, and chat logs are completely separated.
+          </div>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-item-title">⚡ Real-time RAG Engine</div>
+            <div class="feature-item-desc">PostgreSQL pgvector extension performing cosine similarity search (1536 floats) over uploaded documents.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">🛠️ API Function Calling</div>
+            <div class="feature-item-desc">Allows the LLM to trigger tenant REST APIs on demand to fetch live data or execute business operations.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">🔐 Meta Webhook Security</div>
+            <div class="feature-item-desc">HMAC SHA-256 (<code>X-Hub-Signature-256</code>) verification ensuring valid incoming WhatsApp messages.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">📊 Token & Cost Tracking</div>
+            <div class="feature-item-desc">Real-time breakdown of prompt and completion tokens with estimated USD cost metrics.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Dashboard Tour -->
+      <section id="dashboard-tour" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Dashboard Visual Walkthrough</h2>
+            <div class="badge">Customer Control Panel</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Click through the tabs below to explore the features available in your tenant dashboard UI:
+        </p>
+
+        <!-- Interactive Tabs -->
+        <div class="tab-container">
+          <div class="tab-buttons">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-overview')">📊 Overview</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-knowledge')">📚 Knowledge</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-prompt')">✍️ Prompt Builder</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-tools')">🛠️ Tools</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-settings')">🔑 Settings</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-playground')">🧪 Playground</button>
+          </div>
+
+          <!-- Tab Content 1 -->
+          <div id="tab-overview" class="tab-content active">
+            <h3>Analytics Overview & Health Status</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+              Monitor total message volumes, resolution rates, average latency, prompt vs completion token consumption, and live system health.
+            </p>
+            <div class="dashboard-mockup">
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
+                  <div style="font-size: 0.75rem; color: var(--text-dim);">TOTAL MESSAGES</div>
+                  <div style="font-size: 1.5rem; font-weight: 700; color: #fff;">14,290</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
+                  <div style="font-size: 0.75rem; color: var(--text-dim);">RESOLUTION RATE</div>
+                  <div style="font-size: 1.5rem; font-weight: 700; color: #34d399;">98.4%</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
+                  <div style="font-size: 0.75rem; color: var(--text-dim);">ESTIMATED COST</div>
+                  <div style="font-size: 1.5rem; font-weight: 700; color: #818cf8;">$12.45</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 2 -->
+          <div id="tab-knowledge" class="tab-content">
+            <h3>Knowledge Base Ingestion Manager</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+              Upload PDF, DOCX, XLSX, or Markdown files, import Q&A FAQ pairs, or run the built-in web crawler to index public URL content.
+            </p>
+            <div class="dashboard-mockup">
+              <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">+ Upload PDF/DOCX</span>
+                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc;">+ Add FAQ Pair</span>
+                <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9;">+ Crawl Website</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Indexed Sources: 12 Documents | 450 Chunks | Status: Active</div>
+            </div>
+          </div>
+
+          <!-- Tab Content 3 -->
+          <div id="tab-prompt" class="tab-content">
+            <h3>System Prompt Builder</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+              Configure your AI Assistant's Identity, Business Policies, Safety Restrictions, and Tone of Voice. Features sticky live compiled prompt preview.
+            </p>
+            <div class="dashboard-mockup">
+              <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc;">
+                === SYSTEM IDENTITY ===<br>
+                You are Mrkoon Assistant, an expert advisor for online vehicle auctions...
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 4 -->
+          <div id="tab-tools" class="tab-content">
+            <h3>API Tool Manifest Manager & Tester</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+              Define function manifests (e.g. <code>getUserInfo</code>) and use the interactive tester to run sample payloads against your backend API.
+            </p>
+          </div>
+
+          <!-- Tab Content 5 -->
+          <div id="tab-settings" class="tab-content">
+            <h3>API Key & Channel Integration Settings</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+              Manage your secret <code>kb_live_...</code> API keys, configure Meta WhatsApp Webhook secrets, and view endpoint specifications.
+            </p>
+          </div>
+
+          <!-- Tab Content 6 -->
+          <div id="tab-playground" class="tab-content">
+            <h3>Interactive AI Sandbox</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+              Test your AI Agent live with real-time diagnostic sidebars showing retrieved RAG chunks, latency in ms, and tool call traces.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Knowledge Base & RAG -->
+      <section id="knowledge-base" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Teaching the Model (Knowledge RAG)</h2>
+            <div class="badge">Vector Ingestion</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          To ensure accurate, zero-hallucination answers, feed your company data into the Knowledge Base using three supported methods:
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-item-title">📄 Document Files</div>
+            <div class="feature-item-desc">Upload <code>.pdf</code>, <code>.docx</code>, <code>.xlsx</code>, or <code>.md</code> manuals and policies.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">❓ FAQ Key-Value Pairs</div>
+            <div class="feature-item-desc">Direct Q&A pairs for high-precision matching (e.g. refund rules, operating hours).</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">🌐 Website Crawler</div>
+            <div class="feature-item-desc">Scrapes HTML content from public documentation or help center web pages.</div>
+          </div>
+        </div>
+
+        <div class="callout callout-success">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div>
+            <strong>Chunk Inspector Feature:</strong> In the Knowledge tab, click <strong>View Chunks</strong> on any source to inspect extracted text snippets and verify chunk indexing quality.
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. System Prompt Builder -->
+      <section id="prompt-builder" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">System Prompt Builder System</h2>
+            <div class="badge">Persona & Rules</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Configure how your AI Agent responds, what tone it uses, and what safety guardrails it enforces using our structured 10-block builder:
+        </p>
+
+        <div class="code-box">
+          <div class="code-header">
+            <span>PROMPT_STRUCTURE.txt</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre>1. === SYSTEM IDENTITY ===          (Define bot persona and primary role)
+2. === BUSINESS CONTEXT ===         (Name, Timezone, Supported Languages)
+3. === BUSINESS RULES & POLICIES ===(Auction bidding, refund rules, working hours)
+4. === SAFETY & COMPLIANCE RULES ===(Prohibit revealing OTPs, keys, credentials)
+5. === TONE OF VOICE ===            (Professional, empathetic, concise)
+6. === SPECIAL INSTRUCTIONS ===     (Formatting rules, bullet points)
+7. === RETRIEVED KNOWLEDGE BASE === (Dynamically injected pgvector RAG chunks)</pre>
+        </div>
+      </section>
+
+      <!-- 5. Custom API Tools -->
+      <section id="tools" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Custom API Tools Integration</h2>
+            <div class="badge">Real-Time Backend Calls</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Register REST API endpoints that the AI Agent can invoke autonomously to fetch live data (e.g. user details, auction status) or perform actions.
+        </p>
+
+        <div class="code-box">
+          <div class="code-header">
+            <span>SAMPLE_TOOL_MANIFEST.json</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre>{
+  <span class="code-keyword">"name"</span>: <span class="code-string">"getUserInfo"</span>,
+  <span class="code-keyword">"description"</span>: <span class="code-string">"Fetches user profile details given their unique customer ID."</span>,
+  <span class="code-keyword">"apiEndpoint"</span>: <span class="code-string">"https://api.yourdomain.com/v1/users/profile"</span>,
+  <span class="code-keyword">"httpMethod"</span>: <span class="code-string">"POST"</span>,
+  <span class="code-keyword">"authType"</span>: <span class="code-string">"bearer"</span>,
+  <span class="code-keyword">"parameters"</span>: {
+    <span class="code-keyword">"type"</span>: <span class="code-string">"object"</span>,
+    <span class="code-keyword">"properties"</span>: {
+      <span class="code-keyword">"userId"</span>: { <span class="code-keyword">"type"</span>: <span class="code-string">"string"</span>, <span class="code-keyword">"description"</span>: <span class="code-string">"User unique ID"</span> }
+    },
+    <span class="code-keyword">"required"</span>: [<span class="code-string">"userId"</span>]
+  }
+}</pre>
+        </div>
+      </section>
+
+      <!-- 6. WhatsApp Business API -->
+      <section id="whatsapp-integration" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">WhatsApp Business API Integration</h2>
+            <div class="badge">Meta Cloud Webhooks</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Configure your Meta App Webhook Callback URL and Verify Token from the Settings tab:
+        </p>
+
+        <div class="code-box">
+          <div class="code-header">
+            <span>META_WEBHOOK_URL.txt</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre>POST https://your-brain-domain.com/api/v1/channels/whatsapp/webhook/YOUR_TENANT_ID
+Header: X-Hub-Signature-256: sha256={HMAC_SHA256_SIGNATURE}</pre>
+        </div>
+      </section>
+
+      <!-- 7. Direct REST API Reference -->
+      <section id="api-reference" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Direct REST API Reference</h2>
+            <div class="badge">REST Chat Endpoint</div>
+          </div>
+        </div>
+
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          Send messages directly from your web or mobile app using your secret tenant API key:
+        </p>
+
+        <div class="code-box">
+          <div class="code-header">
+            <span>POST /api/v1/channels/chat</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="code-keyword">curl</span> -X POST <span class="code-string">"https://your-brain-domain.com/api/v1/channels/chat"</span> \
+  -H <span class="code-string">"Content-Type: application/json"</span> \
+  -H <span class="code-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
+  -d <span class="code-string">'{
+    "message": "What are your operating hours?",
+    "sessionId": "session_user_98765"
+  }'</span></pre>
+        </div>
+
+        <div class="code-box">
+          <div class="code-header">
+            <span>RESPONSE_PAYLOAD.json</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre>{
+  <span class="code-keyword">"reply"</span>: <span class="code-string">"Our operating hours are Sunday to Thursday, 9:00 AM to 6:00 PM (AST)."</span>,
+  <span class="code-keyword">"sessionId"</span>: <span class="code-string">"session_user_98765"</span>,
+  <span class="code-keyword">"tenantId"</span>: <span class="code-string">"c39e248b-821a-4d7a-8b1e-089a85012345"</span>,
+  <span class="code-keyword">"tokens"</span>: {
+    <span class="code-keyword">"promptTokens"</span>: 142,
+    <span class="code-keyword">"completionTokens"</span>: 28,
+    <span class="code-keyword">"totalTokens"</span>: 170
+  }
+}</pre>
+        </div>
+      </section>
+
+      <!-- 8. Interactive AI Sandbox -->
+      <section id="playground" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.5M14 2v7.5M8.5 18h7M12 9.5l4.5 10.5H7.5L12 9.5z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Playground Sandbox & Diagnostics</h2>
+            <div class="badge">Real-Time Testing</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Use the interactive Playground tab in your dashboard to test customer queries live and inspect vector search retrieval scores, tool execution arguments, and latency diagnostics.
+        </p>
+      </section>
+
+      <!-- 9. Checklist Section -->
+      <section id="checklist" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Tenant Onboarding Checklist</h2>
+            <div class="badge">Interactive Progress</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Track your onboarding progress. Your checked items automatically save in your local browser storage:
+        </p>
+
+        <ul class="checklist">
+          <li class="checklist-item" onclick="toggleCheck(this, 'step1')">
+            <input type="checkbox" id="step1" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">1. Generate Tenant API Keys</div>
+              <div class="checklist-desc">Obtain your secret <code>kb_live_...</code> API key from Dashboard Settings.</div>
+            </div>
+          </li>
+          <li class="checklist-item" onclick="toggleCheck(this, 'step2')">
+            <input type="checkbox" id="step2" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">2. Ingest Knowledge Base Data</div>
+              <div class="checklist-desc">Upload core company documents, add FAQ pairs, and crawl help pages.</div>
+            </div>
+          </li>
+          <li class="checklist-item" onclick="toggleCheck(this, 'step3')">
+            <input type="checkbox" id="step3" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">3. Configure System Prompt & Persona</div>
+              <div class="checklist-desc">Set identity rules, tone of voice, safety rules, and fallback responses.</div>
+            </div>
+          </li>
+          <li class="checklist-item" onclick="toggleCheck(this, 'step4')">
+            <input type="checkbox" id="step4" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">4. Register API Function Tools (Optional)</div>
+              <div class="checklist-desc">Add custom tool manifests for backend system integration and test payloads.</div>
+            </div>
+          </li>
+          <li class="checklist-item" onclick="toggleCheck(this, 'step5')">
+            <input type="checkbox" id="step5" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">5. Test Sandbox Execution in Playground</div>
+              <div class="checklist-desc">Verify answer accuracy, retrieved RAG chunks, and latency metrics.</div>
+            </div>
+          </li>
+          <li class="checklist-item" onclick="toggleCheck(this, 'step6')">
+            <input type="checkbox" id="step6" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">6. Connect WhatsApp Webhooks & Web REST API</div>
+              <div class="checklist-desc">Subscribe Meta WhatsApp webhooks or embed REST API calls in your web app.</div>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Tab Switcher inside Dashboard section
+    function openTab(evt, tabName) {
+      const tabContents = document.getElementsByClassName("tab-content");
+      for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove("active");
+      }
+
+      const tabBtns = document.getElementsByClassName("tab-btn");
+      for (let i = 0; i < tabBtns.length; i++) {
+        tabBtns[i].classList.remove("active");
+      }
+
+      document.getElementById(tabName).classList.add("active");
+      evt.currentTarget.classList.add("active");
+    }
+
+    // Code Copy Helper
+    function copyCode(button) {
+      const codeBox = button.closest('.code-box');
+      const codeText = codeBox.querySelector('pre').innerText;
+      
+      navigator.clipboard.writeText(codeText).then(() => {
+        const originalText = button.innerText;
+        button.innerText = 'Copied!';
+        button.style.background = '#10b981';
+        button.style.color = '#fff';
+        
+        setTimeout(() => {
+          button.innerText = originalText;
+          button.style.background = '';
+          button.style.color = '';
+        }, 2000);
+      });
+    }
+
+    // Interactive Checklist Persistent State
+    function toggleCheck(item, key) {
+      const checkbox = item.querySelector('.checklist-checkbox');
+      checkbox.checked = !checkbox.checked;
+      
+      if (checkbox.checked) {
+        item.classList.add('completed');
+        localStorage.setItem('kb_checklist_' + key, 'true');
+      } else {
+        item.classList.remove('completed');
+        localStorage.setItem('kb_checklist_' + key, 'false');
+      }
+    }
+
+    // Load Persistent Checklist State & ScrollSpy Init
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load checklist state
+      const items = document.querySelectorAll('.checklist-item');
+      items.forEach(item => {
+        const checkbox = item.querySelector('.checklist-checkbox');
+        const key = checkbox.id;
+        if (localStorage.getItem('kb_checklist_' + key) === 'true') {
+          checkbox.checked = true;
+          item.classList.add('completed');
+        }
+      });
+
+      // ScrollSpy via IntersectionObserver
+      const sectionCards = document.querySelectorAll('.section-card[id]');
+      const navLinks = document.querySelectorAll('.sidebar-menu a');
+
+      const updateActiveNav = (activeId) => {
+        navLinks.forEach(link => {
+          const href = link.getAttribute('href');
+          if (href === `#${activeId}`) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      };
+
+      const observerOptions = {
+        root: null,
+        rootMargin: '-15% 0px -65% 0px',
+        threshold: 0
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            updateActiveNav(entry.target.id);
+          }
+        });
+      }, observerOptions);
+
+      sectionCards.forEach(section => observer.observe(section));
+
+      // Handle direct manual clicks on sidebar menu links
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          navLinks.forEach(l => l.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+    });
+
+    // Real-time Search Filter
+    document.getElementById('docSearch').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      const sections = document.querySelectorAll('.section-card');
+
+      sections.forEach(section => {
+        const text = section.innerText.toLowerCase();
+        if (text.includes(query)) {
+          section.style.display = 'block';
+        } else {
+          section.style.display = query ? 'none' : 'block';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
