@@ -49,9 +49,11 @@ export class OpenAIProvider implements ILLMProvider {
   private openai: OpenAI;
   private defaultModel: string;
   private defaultEmbeddingModel: string;
+  private embeddingCache: Map<string, number[]> = new Map();
+  private readonly MAX_CACHE_SIZE = 500;
 
   constructor(private readonly configService: ConfigService) {
-    this.defaultModel = this.configService.get<string>('OPENAI_MODEL', 'gpt-4o');
+    this.defaultModel = this.configService.get<string>('OPENAI_MODEL', 'gpt-4o-mini');
     this.defaultEmbeddingModel = this.configService.get<string>(
       'OPENAI_EMBEDDING_MODEL',
       'text-embedding-3-small',
@@ -167,7 +169,7 @@ export class OpenAIProvider implements ILLMProvider {
           completionTokens: completion.usage?.completion_tokens || 0,
           totalTokens: completion.usage?.total_tokens || 0,
         },
-        finishReason: choice.finish_reason,
+        finishReason: choice.finish_reason || 'stop',
         model: completion.model,
       };
     } catch (error: any) {
@@ -176,7 +178,110 @@ export class OpenAIProvider implements ILLMProvider {
     }
   }
 
+  async chatCompletionStream(
+    options: ChatCompletionOptions,
+    onChunk: (chunk: string) => void,
+  ): Promise<ChatCompletionResult> {
+    try {
+      const client = this.getClient(options.apiKey);
+      if (!client) {
+        throw new AIProviderException(
+          'openai',
+          'OpenAI API key is missing. Please configure OPENAI_API_KEY in environment variables or tenant settings.',
+        );
+      }
+
+      const model = options.model || this.defaultModel;
+      const formattedMessages: any[] = options.messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content || '',
+        ...(msg.name ? { name: msg.name } : {}),
+        ...(msg.toolCallId ? { tool_call_id: msg.toolCallId } : {}),
+      }));
+
+      const requestBody: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
+        model,
+        messages: formattedMessages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens,
+        top_p: options.topP,
+        stream: true,
+      };
+
+      if (options.tools && options.tools.length > 0) {
+        requestBody.tools = options.tools as any;
+      }
+
+      const stream = await client.chat.completions.create(requestBody);
+      let fullContent = '';
+      let finishReason = 'stop';
+      const accumulatedToolCalls: Map<number, { id: string; name: string; arguments: string }> = new Map();
+
+      for await (const chunk of stream as any) {
+        const choice = chunk.choices[0];
+        if (!choice) continue;
+
+        if (choice.finish_reason) {
+          finishReason = choice.finish_reason;
+        }
+
+        const delta = choice.delta;
+        if (delta?.content) {
+          fullContent += delta.content;
+          onChunk(delta.content);
+        }
+
+        if (delta?.tool_calls) {
+          for (const tcDelta of delta.tool_calls) {
+            const index = tcDelta.index;
+            if (!accumulatedToolCalls.has(index)) {
+              accumulatedToolCalls.set(index, {
+                id: tcDelta.id || '',
+                name: tcDelta.function?.name || '',
+                arguments: tcDelta.function?.arguments || '',
+              });
+            } else {
+              const current = accumulatedToolCalls.get(index)!;
+              if (tcDelta.id) current.id = tcDelta.id;
+              if (tcDelta.function?.name) current.name += tcDelta.function.name;
+              if (tcDelta.function?.arguments) current.arguments += tcDelta.function.arguments;
+            }
+          }
+        }
+      }
+
+      const toolCalls: ToolCall[] = Array.from(accumulatedToolCalls.values()).map((tc) => ({
+        id: tc.id,
+        type: 'function',
+        function: {
+          name: tc.name,
+          arguments: tc.arguments,
+        },
+      }));
+
+      return {
+        content: fullContent || null,
+        toolCalls,
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+        },
+        finishReason,
+        model,
+      };
+    } catch (error: any) {
+      this.logger.error(`OpenAI Stream API error: ${error.message}`, error.stack);
+      throw new AIProviderException('openai', error.message);
+    }
+  }
+
   async generateEmbedding(text: string, model?: string, customApiKey?: string): Promise<number[]> {
+    const cacheKey = `${model || this.defaultEmbeddingModel}:${text}`;
+    if (this.embeddingCache.has(cacheKey)) {
+      return this.embeddingCache.get(cacheKey)!;
+    }
+
     const client = this.getClient(customApiKey);
     if (!client) {
       this.logger.warn('No OpenAI API key found. Using fallback vector embedding.');
@@ -188,7 +293,15 @@ export class OpenAIProvider implements ILLMProvider {
         model: model || this.defaultEmbeddingModel,
         input: text,
       });
-      return response.data[0].embedding;
+      const embedding = response.data[0].embedding;
+
+      if (this.embeddingCache.size >= this.MAX_CACHE_SIZE) {
+        const firstKey = this.embeddingCache.keys().next().value;
+        if (firstKey) this.embeddingCache.delete(firstKey);
+      }
+      this.embeddingCache.set(cacheKey, embedding);
+
+      return embedding;
     } catch (error: any) {
       this.logger.warn(`OpenAI Embedding error (${error.message}). Using fallback vector embedding.`);
       return generateFallbackEmbedding(text, 1536);
@@ -208,7 +321,16 @@ export class OpenAIProvider implements ILLMProvider {
         model: model || this.defaultEmbeddingModel,
         input: texts,
       });
-      return response.data.map((item) => item.embedding);
+      const embeddings = response.data.map((item) => item.embedding);
+
+      texts.forEach((text, i) => {
+        const cacheKey = `${model || this.defaultEmbeddingModel}:${text}`;
+        if (this.embeddingCache.size < this.MAX_CACHE_SIZE) {
+          this.embeddingCache.set(cacheKey, embeddings[i]);
+        }
+      });
+
+      return embeddings;
     } catch (error: any) {
       this.logger.warn(`OpenAI Embeddings error (${error.message}). Using fallback vector embeddings for batch.`);
       return texts.map((t) => generateFallbackEmbedding(t, 1536));

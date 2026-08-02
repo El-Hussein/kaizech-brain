@@ -106,7 +106,16 @@ export class VectorSearchService {
     return entities;
   }
 
+  private faqSourcesCache: Map<string, { hasFaqs: boolean; timestamp: number }> = new Map();
+  private faqChunksCache: Map<string, { chunks: any[]; timestamp: number }> = new Map();
+  private readonly CACHE_TTL_MS = 60_000; // 1 minute TTL
+
   async hasFaqSources(tenantId: string): Promise<boolean> {
+    const cached = this.faqSourcesCache.get(tenantId);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.hasFaqs;
+    }
+
     try {
       const result = await this.dataSource.query(
         `
@@ -119,7 +128,9 @@ export class VectorSearchService {
         [tenantId],
       );
       const count = parseInt(result?.[0]?.count || '0', 10);
-      return count > 0;
+      const hasFaqs = count > 0;
+      this.faqSourcesCache.set(tenantId, { hasFaqs, timestamp: Date.now() });
+      return hasFaqs;
     } catch (error: any) {
       this.logger.warn(`hasFaqSources check error: ${error.message}`);
       return false;
@@ -131,21 +142,28 @@ export class VectorSearchService {
       const cleanQuery = userQuery.trim().toLowerCase().replace(/[^\w\s\u0600-\u06FF]/g, '');
       if (!cleanQuery) return null;
 
-      const rawResults = await this.dataSource.query(
-        `
-        SELECT 
-          c.id, 
-          c.source_id as "sourceId", 
-          c.content, 
-          c.chunk_index as "chunkIndex", 
-          c.metadata
-        FROM knowledge_chunks c
-        LEFT JOIN knowledge_sources s ON c.source_id = s.id
-        WHERE c.tenant_id = $1
-          AND (LOWER(s.source_type) = 'faq' OR LOWER(c.metadata->>'sourceType') = 'faq')
-        `,
-        [tenantId],
-      );
+      let rawResults: any[];
+      const cachedChunks = this.faqChunksCache.get(tenantId);
+      if (cachedChunks && Date.now() - cachedChunks.timestamp < this.CACHE_TTL_MS) {
+        rawResults = cachedChunks.chunks;
+      } else {
+        rawResults = await this.dataSource.query(
+          `
+          SELECT 
+            c.id, 
+            c.source_id as "sourceId", 
+            c.content, 
+            c.chunk_index as "chunkIndex", 
+            c.metadata
+          FROM knowledge_chunks c
+          LEFT JOIN knowledge_sources s ON c.source_id = s.id
+          WHERE c.tenant_id = $1
+            AND (LOWER(s.source_type) = 'faq' OR LOWER(c.metadata->>'sourceType') = 'faq')
+          `,
+          [tenantId],
+        );
+        this.faqChunksCache.set(tenantId, { chunks: rawResults, timestamp: Date.now() });
+      }
 
       for (const row of rawResults) {
         const content = row.content || '';

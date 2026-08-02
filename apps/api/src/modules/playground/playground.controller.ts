@@ -4,12 +4,14 @@ import {
   Body,
   UseGuards,
   BadRequestException,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { AgentOrchestratorService } from '@kaizech/agent';
 import { TenantsService } from '../tenants/tenants.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { TenantContext, ITenantContext, MessageChannel } from '@kaizech/shared';
+import { Response } from 'express';
 
 @ApiTags('Playground')
 @ApiSecurity('api-key')
@@ -54,5 +56,43 @@ export class PlaygroundController {
       tokenUsage: result.tokenUsage,
       responseTimeMs: result.responseTimeMs,
     };
+  }
+
+  @Post('chat-stream')
+  @ApiOperation({ summary: 'AI Playground — Stream AI Assistant conversation response (SSE)' })
+  async chatStream(
+    @TenantContext() tenantContext: ITenantContext,
+    @Body() body: { message: string; userId?: string; name?: string; openaiApiKey?: string },
+    @Res() res: Response,
+  ) {
+    if (!body.message) {
+      throw new BadRequestException('message is required');
+    }
+
+    const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
+    if (body.openaiApiKey) {
+      tenant.settings = { ...(tenant.settings || {}), openaiApiKey: body.openaiApiKey };
+    }
+    const userId = body.userId || 'playground-test-user';
+
+    (res as any).setHeader('Content-Type', 'text/event-stream');
+    (res as any).setHeader('Cache-Control', 'no-cache');
+    (res as any).setHeader('Connection', 'keep-alive');
+
+    const result = await this.agentOrchestrator.processMessageStream(
+      {
+        tenant,
+        channelType: MessageChannel.PLAYGROUND,
+        channelUserId: userId,
+        userMessage: body.message,
+        displayName: body.name || 'Playground Tester',
+      },
+      (chunk: string) => {
+        (res as any).write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      },
+    );
+
+    (res as any).write(`data: ${JSON.stringify({ event: 'DONE', meta: result })}\n\n`);
+    (res as any).end();
   }
 }

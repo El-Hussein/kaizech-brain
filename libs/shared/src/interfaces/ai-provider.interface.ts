@@ -49,6 +49,10 @@ export interface ChatCompletionResult {
 export interface ILLMProvider {
   readonly providerName: string;
   chatCompletion(options: ChatCompletionOptions): Promise<ChatCompletionResult>;
+  chatCompletionStream?(
+    options: ChatCompletionOptions,
+    onChunk: (chunk: string) => void,
+  ): Promise<ChatCompletionResult>;
   generateEmbedding(text: string, model?: string, apiKey?: string): Promise<number[]>;
   generateEmbeddings(texts: string[], model?: string, apiKey?: string): Promise<number[][]>;
 }

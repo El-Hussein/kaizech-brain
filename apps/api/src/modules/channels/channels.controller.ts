@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Req,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity, ApiBody } from '@nestjs/swagger';
 import { WhatsAppService, MetaSignatureGuard } from '@kaizech/channels';
@@ -15,6 +16,7 @@ import { AgentOrchestratorService } from '@kaizech/agent';
 import { TenantsService } from '../tenants/tenants.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MessageChannel } from '@kaizech/shared';
+import { Response } from 'express';
 
 // ─────────────────────────────────────────────────────
 // Channel 1: WhatsApp Direct (Meta Webhook)
@@ -183,5 +185,49 @@ export class ChannelsController {
       handedOff: result.handedOff ?? false,
       tokens: result.tokenUsage?.totalTokens ?? null,
     };
+  }
+
+  @Post('chat-stream')
+  @UseGuards(ApiKeyGuard)
+  @ApiSecurity('api-key')
+  @ApiOperation({ summary: 'Stream AI assistant reply (SSE format)' })
+  async chatStream(
+    @Req() req: any,
+    @Body() body: { message: string; sessionId: string; channel?: string; displayName?: string },
+    @Res() res: Response,
+  ) {
+    const tenantContext = req.tenant;
+
+    if (!body.message || !body.message.trim()) {
+      (res as any).status(400).json({ error: 'Message content is empty' });
+      return;
+    }
+
+    const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
+    const channelType =
+      body.channel === 'whatsapp'
+        ? MessageChannel.WHATSAPP
+        : MessageChannel.API;
+
+    (res as any).setHeader('Content-Type', 'text/event-stream');
+    (res as any).setHeader('Cache-Control', 'no-cache');
+    (res as any).setHeader('Connection', 'keep-alive');
+
+    const result = await this.agentOrchestrator.processMessageStream(
+      {
+        tenant,
+        channelType,
+        channelUserId: body.sessionId,
+        userMessage: body.message.trim(),
+        displayName: body.displayName ?? body.sessionId,
+        metadata: { apiKeyId: tenantContext.apiKeyId },
+      },
+      (chunk: string) => {
+        (res as any).write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      },
+    );
+
+    (res as any).write(`data: ${JSON.stringify({ event: 'DONE', meta: result })}\n\n`);
+    (res as any).end();
   }
 }

@@ -5,7 +5,7 @@ import { MemoryService, UserProfileService } from '@kaizech/memory';
 import { ToolExecutorService } from '@kaizech/tools';
 import { VectorSearchService } from '@kaizech/rag';
 import { AIProviderFactory } from './providers/ai-provider.factory';
-import { ChatMessage, MessageRole, ToolCall, ConversationStatus } from '@kaizech/shared';
+import { ChatMessage, MessageRole, ToolCall, ConversationStatus, ChatCompletionResult } from '@kaizech/shared';
 
 export interface AgentProcessInput {
   tenant: TenantEntity;
@@ -53,22 +53,23 @@ export class AgentOrchestratorService {
 
     this.logger.log(`Processing message for tenant '${tenant.name}' user '${channelUserId}' via '${channelType}'`);
 
-    // 1. Get or Create User Profile
-    const userProfile = await this.userProfileService.getOrCreateProfile(
-      tenant.id,
-      channelUserId,
-      channelType,
-      displayName,
-    );
+    // 1 & 2 & Tool definitions: Execute initial DB operations in parallel ⚡
+    const [userProfile, conversation, toolDefinitions] = await Promise.all([
+      this.userProfileService.getOrCreateProfile(
+        tenant.id,
+        channelUserId,
+        channelType,
+        displayName,
+      ),
+      this.memoryService.getOrCreateConversation(
+        tenant.id,
+        channelType,
+        channelUserId,
+      ),
+      this.toolExecutor.getToolDefinitionsForTenant(tenant.id),
+    ]);
 
-    // 2. Get or Create Conversation
-    const conversation = await this.memoryService.getOrCreateConversation(
-      tenant.id,
-      channelType,
-      channelUserId,
-    );
-
-    // Determine limit (per-conversation override or tenant-level setting)
+    // Determine limit
     const maxLimit =
       typeof conversation.metadata?.maxMessages === 'number'
         ? conversation.metadata.maxMessages
@@ -78,7 +79,6 @@ export class AgentOrchestratorService {
         ? tenant.settings.maxConversationMessages
         : 0;
 
-    // Note: messageCount is incremented by memoryService.addMessage below
     const currentMessageCount = (conversation.messageCount || 0) + 1;
     const isLimitExceeded = maxLimit > 0 && currentMessageCount >= maxLimit;
 
@@ -91,7 +91,7 @@ export class AgentOrchestratorService {
       { metadata },
     );
 
-    // 3b. Check if conversation is already handed off to human support
+    // 3b. Check if conversation is already handed off
     if (conversation.status === ConversationStatus.HANDED_OFF) {
       this.logger.log(
         `Conversation ${conversation.id} for user '${channelUserId}' is HANDED_OFF to human support. AI reply paused.`,
@@ -111,20 +111,18 @@ export class AgentOrchestratorService {
       };
     }
 
-    // 3c. Check if conversation message limit is reached on this message turn
+    // 3c. Check message limit
     if (isLimitExceeded) {
       this.logger.log(
-        `Conversation ${conversation.id} reached message limit (${currentMessageCount}/${maxLimit}). Automatically transitioning to HANDED_OFF status (Hands-Off Mode).`,
+        `Conversation ${conversation.id} reached message limit (${currentMessageCount}/${maxLimit}). Automatically transitioning to HANDED_OFF status.`,
       );
 
-      // Transition conversation status to HANDED_OFF
       await this.memoryService.handoverConversation(conversation.id);
 
       const handoffNotice =
         tenant.settings?.handoffMessage ||
         `⚠️ Conversation message limit reached (${currentMessageCount}/${maxLimit}). AI chat stopped and handed off to human support.`;
 
-      // Save system handoff notification message in conversation history
       await this.memoryService.addMessage(
         conversation.id,
         MessageRole.SYSTEM,
@@ -149,113 +147,99 @@ export class AgentOrchestratorService {
       };
     }
 
-    // 4. Retrieve Memory (Summary + Recent Messages)
-    const summary = await this.memoryService.getConversationSummary(conversation.id);
-    const recentMessages = await this.memoryService.getRecentMessages(conversation.id, 10);
+    // 4 & 6. Parallelize Memory Summary, Recent Messages, FAQ check & Embedding Generation ⚡
+    const provider = this.providerFactory.getProvider('openai');
+    const openaiApiKey = tenant.settings?.openaiApiKey;
 
-    // 5. PRE-REPLY FAQ LAYER: Check Strict FAQ Mode & FAQ data existence
+    const [summary, recentMessages, hasFaqs, directMatch, userEmbedding] = await Promise.all([
+      this.memoryService.getConversationSummary(conversation.id),
+      this.memoryService.getRecentMessages(conversation.id, 10),
+      this.vectorSearch.hasFaqSources(tenant.id),
+      this.vectorSearch.findDirectFaqMatch(tenant.id, userMessage),
+      provider.generateEmbedding(userMessage, undefined, openaiApiKey),
+    ]);
+
+    // 5. PRE-REPLY FAQ LAYER
     const faqBotMode = tenant.settings?.faqBotMode || 'strict_first';
     const faqStrictThreshold =
       typeof tenant.settings?.faqStrictThreshold === 'number'
         ? tenant.settings.faqStrictThreshold
         : 0.75;
-    const openaiApiKey = tenant.settings?.openaiApiKey;
 
-    const provider = this.providerFactory.getProvider('openai');
-    let userEmbedding: number[] | null = null;
+    if (faqBotMode === 'strict_first' && hasFaqs) {
+      try {
+        let bestFaq = directMatch;
 
-    if (faqBotMode === 'strict_first') {
-      const hasFaqs = await this.vectorSearch.hasFaqSources(tenant.id);
-      if (hasFaqs) {
-        try {
-          // 1. Direct Question Match Check (Highest Priority)
-          const directMatch = await this.vectorSearch.findDirectFaqMatch(tenant.id, userMessage);
-          let bestFaq = directMatch;
-
-          // 2. Vector Semantic Search Fallback
-          if (!bestFaq) {
-            userEmbedding = await provider.generateEmbedding(userMessage, undefined, openaiApiKey);
-            const faqMatches = await this.vectorSearch.searchFaqs(
-              tenant.id,
-              userEmbedding,
-              1,
-              faqStrictThreshold,
-            );
-            if (faqMatches.length > 0) {
-              bestFaq = faqMatches[0];
-            }
+        if (!bestFaq) {
+          const faqMatches = await this.vectorSearch.searchFaqs(
+            tenant.id,
+            userEmbedding,
+            1,
+            faqStrictThreshold,
+          );
+          if (faqMatches.length > 0) {
+            bestFaq = faqMatches[0];
           }
-
-          if (bestFaq) {
-            this.logger.log(
-              `Strict FAQ match found for tenant '${tenant.name}' (similarity: ${bestFaq.similarity.toFixed(
-                4,
-              )})`,
-            );
-
-            // Extract clean Answer from FAQ chunk if present
-            let faqAnswer = bestFaq.content;
-            const answerMatch = faqAnswer.match(/Answer:\s*([\s\S]+?)(?:\nCategory:|\n\n---\n\n|$)/i);
-            if (answerMatch && answerMatch[1]) {
-              faqAnswer = answerMatch[1].trim();
-            }
-
-            const responseTimeMs = Date.now() - startTime;
-
-            // Save assistant response into memory
-            await this.memoryService.addMessage(
-              conversation.id,
-              MessageRole.ASSISTANT,
-              faqAnswer,
-              channelType,
-              {
-                tokenUsagePrompt: 0,
-                tokenUsageCompletion: 0,
-                responseTimeMs,
-                metadata: {
-                  faqDirectMatch: true,
-                  similarity: bestFaq.similarity,
-                },
-              },
-            );
-
-            return {
-              response: faqAnswer,
-              conversationId: conversation.id,
-              status: ConversationStatus.ACTIVE,
-              toolCallsExecuted: [],
-              knowledgeSourcesUsed: 1,
-              tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-              responseTimeMs,
-              handedOff: false,
-              limit: maxLimit,
-              messageCount: currentMessageCount + 1,
-              limitExceeded: false,
-            };
-          }
-        } catch (err: any) {
-          this.logger.warn(`Strict FAQ retrieval warning: ${err.message}`);
         }
+
+        if (bestFaq) {
+          this.logger.log(
+            `Strict FAQ match found for tenant '${tenant.name}' (similarity: ${bestFaq.similarity.toFixed(4)})`,
+          );
+
+          let faqAnswer = bestFaq.content;
+          const answerMatch = faqAnswer.match(/Answer:\s*([\s\S]+?)(?:\nCategory:|\n\n---\n\n|$)/i);
+          if (answerMatch && answerMatch[1]) {
+            faqAnswer = answerMatch[1].trim();
+          }
+
+          const responseTimeMs = Date.now() - startTime;
+
+          await this.memoryService.addMessage(
+            conversation.id,
+            MessageRole.ASSISTANT,
+            faqAnswer,
+            channelType,
+            {
+              tokenUsagePrompt: 0,
+              tokenUsageCompletion: 0,
+              responseTimeMs,
+              metadata: {
+                faqDirectMatch: true,
+                similarity: bestFaq.similarity,
+              },
+            },
+          );
+
+          return {
+            response: faqAnswer,
+            conversationId: conversation.id,
+            status: ConversationStatus.ACTIVE,
+            toolCallsExecuted: [],
+            knowledgeSourcesUsed: 1,
+            tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+            responseTimeMs,
+            handedOff: false,
+            limit: maxLimit,
+            messageCount: currentMessageCount + 1,
+            limitExceeded: false,
+          };
+        }
+      } catch (err: any) {
+        this.logger.warn(`Strict FAQ retrieval warning: ${err.message}`);
       }
     }
 
     // 6. RAG: Vector Search for relevant Knowledge
     let knowledgeTexts: string[] = [];
-
     try {
-      if (!userEmbedding) {
-        userEmbedding = await provider.generateEmbedding(userMessage, undefined, openaiApiKey);
-      }
       const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 5, 0.4);
       knowledgeTexts = chunks.map((c) => c.content);
     } catch (err: any) {
       this.logger.warn(`Knowledge retrieval warning: ${err.message}`);
     }
 
-    // 6. Retrieve Tenant Tools
-    const toolDefinitions = await this.toolExecutor.getToolDefinitionsForTenant(tenant.id);
-
-    // 7. Build Dynamic System Prompt
+    // 7. Build System Prompt
     const systemPrompt = await this.promptBuilder.buildSystemPrompt({
       tenant,
       userProfile,
@@ -264,7 +248,6 @@ export class AgentOrchestratorService {
       currentLanguage: userProfile.preferredLanguage,
     });
 
-    // Construct Messages array for LLM
     const llmMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...recentMessages,
@@ -274,11 +257,30 @@ export class AgentOrchestratorService {
     const totalTokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
     const toolCallsExecuted: Array<{ name: string; args: any; result: any }> = [];
 
-    let llmResult = await provider.chatCompletion({
-      messages: llmMessages,
-      tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-      apiKey: openaiApiKey,
-    });
+    let llmResult: ChatCompletionResult;
+    try {
+      llmResult = await provider.chatCompletion({
+        messages: llmMessages,
+        tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
+        apiKey: openaiApiKey,
+      });
+    } catch (err: any) {
+      this.logger.error(`AI completion error: ${err.message}`);
+      const errResponse = `⚠️ AI Provider Error: ${err.message}. Please verify your OPENAI_API_KEY in tenant settings or environment variables.`;
+      return {
+        response: errResponse,
+        conversationId: conversation.id,
+        status: ConversationStatus.ACTIVE,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: knowledgeTexts.length,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: false,
+        limit: maxLimit,
+        messageCount: currentMessageCount + 1,
+        limitExceeded: false,
+      };
+    }
 
     totalTokenUsage.promptTokens += llmResult.usage.promptTokens;
     totalTokenUsage.completionTokens += llmResult.usage.completionTokens;
@@ -290,7 +292,6 @@ export class AgentOrchestratorService {
       turns++;
       this.logger.log(`LLM requested ${llmResult.toolCalls.length} tool call(s) (Turn ${turns})`);
 
-      // Add assistant message with tool calls to conversation history
       llmMessages.push({
         role: 'assistant',
         content: llmResult.content || '',
@@ -317,7 +318,6 @@ export class AgentOrchestratorService {
 
         toolCallsExecuted.push({ name: toolName, args, result });
 
-        // Add tool execution result back to conversation
         llmMessages.push({
           role: 'tool',
           content: typeof result === 'string' ? result : JSON.stringify(result),
@@ -325,11 +325,16 @@ export class AgentOrchestratorService {
         });
       }
 
-      // Call LLM again with tool results
-      llmResult = await provider.chatCompletion({
-        messages: llmMessages,
-        tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-      });
+      try {
+        llmResult = await provider.chatCompletion({
+          messages: llmMessages,
+          tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
+          apiKey: openaiApiKey,
+        });
+      } catch (err: any) {
+        this.logger.error(`AI completion error in tool loop: ${err.message}`);
+        break;
+      }
 
       totalTokenUsage.promptTokens += llmResult.usage.promptTokens;
       totalTokenUsage.completionTokens += llmResult.usage.completionTokens;
@@ -360,6 +365,250 @@ export class AgentOrchestratorService {
       toolCallsExecuted,
       knowledgeSourcesUsed: knowledgeTexts.length,
       tokenUsage: totalTokenUsage,
+      responseTimeMs,
+      handedOff: false,
+      limit: maxLimit,
+      messageCount: currentMessageCount + 1,
+      limitExceeded: false,
+    };
+  }
+
+  async processMessageStream(
+    input: AgentProcessInput,
+    onChunk: (chunk: string) => void,
+  ): Promise<AgentProcessResult> {
+    const startTime = Date.now();
+    const { tenant, channelType, channelUserId, userMessage, displayName, metadata } = input;
+
+    // Execute initial DB operations in parallel ⚡
+    const [userProfile, conversation, toolDefinitions] = await Promise.all([
+      this.userProfileService.getOrCreateProfile(tenant.id, channelUserId, channelType, displayName),
+      this.memoryService.getOrCreateConversation(tenant.id, channelType, channelUserId),
+      this.toolExecutor.getToolDefinitionsForTenant(tenant.id),
+    ]);
+
+    const maxLimit =
+      typeof conversation.metadata?.maxMessages === 'number'
+        ? conversation.metadata.maxMessages
+        : typeof tenant.settings?.maxMessagesPerConversation === 'number'
+        ? tenant.settings.maxMessagesPerConversation
+        : typeof tenant.settings?.maxConversationMessages === 'number'
+        ? tenant.settings.maxConversationMessages
+        : 0;
+
+    const currentMessageCount = (conversation.messageCount || 0) + 1;
+    const isLimitExceeded = maxLimit > 0 && currentMessageCount >= maxLimit;
+
+    await this.memoryService.addMessage(
+      conversation.id,
+      MessageRole.USER,
+      userMessage,
+      channelType,
+      { metadata },
+    );
+
+    if (conversation.status === ConversationStatus.HANDED_OFF) {
+      const msg = 'Conversation is currently in hands-off mode for human support.';
+      onChunk(msg);
+      return {
+        response: msg,
+        conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: true,
+        limit: maxLimit,
+        messageCount: currentMessageCount,
+        limitExceeded: isLimitExceeded,
+      };
+    }
+
+    if (isLimitExceeded) {
+      await this.memoryService.handoverConversation(conversation.id);
+      const handoffNotice =
+        tenant.settings?.handoffMessage ||
+        `⚠️ Conversation message limit reached (${currentMessageCount}/${maxLimit}). AI chat stopped and handed off to human support.`;
+      onChunk(handoffNotice);
+      await this.memoryService.addMessage(
+        conversation.id,
+        MessageRole.SYSTEM,
+        handoffNotice,
+        channelType,
+      );
+      return {
+        response: handoffNotice,
+        conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: true,
+        limit: maxLimit,
+        messageCount: currentMessageCount,
+        limitExceeded: true,
+      };
+    }
+
+    const provider = this.providerFactory.getProvider('openai');
+    const openaiApiKey = tenant.settings?.openaiApiKey;
+
+    const [summary, recentMessages, hasFaqs, directMatch, userEmbedding] = await Promise.all([
+      this.memoryService.getConversationSummary(conversation.id),
+      this.memoryService.getRecentMessages(conversation.id, 10),
+      this.vectorSearch.hasFaqSources(tenant.id),
+      this.vectorSearch.findDirectFaqMatch(tenant.id, userMessage),
+      provider.generateEmbedding(userMessage, undefined, openaiApiKey),
+    ]);
+
+    const faqBotMode = tenant.settings?.faqBotMode || 'strict_first';
+    const faqStrictThreshold =
+      typeof tenant.settings?.faqStrictThreshold === 'number'
+        ? tenant.settings.faqStrictThreshold
+        : 0.75;
+
+    if (faqBotMode === 'strict_first' && hasFaqs) {
+      try {
+        let bestFaq = directMatch;
+        if (!bestFaq) {
+          const faqMatches = await this.vectorSearch.searchFaqs(
+            tenant.id,
+            userEmbedding,
+            1,
+            faqStrictThreshold,
+          );
+          if (faqMatches.length > 0) {
+            bestFaq = faqMatches[0];
+          }
+        }
+
+        if (bestFaq) {
+          let faqAnswer = bestFaq.content;
+          const answerMatch = faqAnswer.match(/Answer:\s*([\s\S]+?)(?:\nCategory:|\n\n---\n\n|$)/i);
+          if (answerMatch && answerMatch[1]) {
+            faqAnswer = answerMatch[1].trim();
+          }
+
+          onChunk(faqAnswer);
+          const responseTimeMs = Date.now() - startTime;
+
+          await this.memoryService.addMessage(
+            conversation.id,
+            MessageRole.ASSISTANT,
+            faqAnswer,
+            channelType,
+            {
+              tokenUsagePrompt: 0,
+              tokenUsageCompletion: 0,
+              responseTimeMs,
+              metadata: { faqDirectMatch: true, similarity: bestFaq.similarity },
+            },
+          );
+
+          return {
+            response: faqAnswer,
+            conversationId: conversation.id,
+            status: ConversationStatus.ACTIVE,
+            toolCallsExecuted: [],
+            knowledgeSourcesUsed: 1,
+            tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+            responseTimeMs,
+            handedOff: false,
+            limit: maxLimit,
+            messageCount: currentMessageCount + 1,
+            limitExceeded: false,
+          };
+        }
+      } catch (err: any) {
+        this.logger.warn(`Strict FAQ retrieval warning in stream: ${err.message}`);
+      }
+    }
+
+    let knowledgeTexts: string[] = [];
+    try {
+      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 5, 0.4);
+      knowledgeTexts = chunks.map((c) => c.content);
+    } catch (err: any) {
+      this.logger.warn(`Knowledge retrieval warning in stream: ${err.message}`);
+    }
+
+    const systemPrompt = await this.promptBuilder.buildSystemPrompt({
+      tenant,
+      userProfile,
+      summary,
+      knowledgeContext: knowledgeTexts,
+      currentLanguage: userProfile.preferredLanguage,
+    });
+
+    const llmMessages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...recentMessages,
+    ];
+
+    let llmResult: ChatCompletionResult;
+    try {
+      if (provider.chatCompletionStream) {
+        llmResult = await provider.chatCompletionStream(
+          {
+            messages: llmMessages,
+            tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
+            apiKey: openaiApiKey,
+          },
+          onChunk,
+        );
+      } else {
+        llmResult = await provider.chatCompletion({
+          messages: llmMessages,
+          tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
+          apiKey: openaiApiKey,
+        });
+        if (llmResult.content) {
+          onChunk(llmResult.content);
+        }
+      }
+    } catch (err: any) {
+      this.logger.error(`AI stream completion error: ${err.message}`);
+      const errResponse = `⚠️ AI Provider Error: ${err.message}. Please verify your OPENAI_API_KEY in tenant settings or environment variables.`;
+      onChunk(errResponse);
+      return {
+        response: errResponse,
+        conversationId: conversation.id,
+        status: ConversationStatus.ACTIVE,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: knowledgeTexts.length,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: false,
+        limit: maxLimit,
+        messageCount: currentMessageCount + 1,
+        limitExceeded: false,
+      };
+    }
+
+    const finalResponse = llmResult.content || 'I have completed your request.';
+    const responseTimeMs = Date.now() - startTime;
+
+    await this.memoryService.addMessage(
+      conversation.id,
+      MessageRole.ASSISTANT,
+      finalResponse,
+      channelType,
+      {
+        tokenUsagePrompt: llmResult.usage.promptTokens,
+        tokenUsageCompletion: llmResult.usage.completionTokens,
+        responseTimeMs,
+      },
+    );
+
+    return {
+      response: finalResponse,
+      conversationId: conversation.id,
+      status: ConversationStatus.ACTIVE,
+      toolCallsExecuted: [],
+      knowledgeSourcesUsed: knowledgeTexts.length,
+      tokenUsage: llmResult.usage,
       responseTimeMs,
       handedOff: false,
       limit: maxLimit,
