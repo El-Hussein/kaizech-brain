@@ -36,11 +36,14 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     setMessages((prev) => [...prev, { role: 'user', content: userText }]);
     setSending(true);
 
-    // Placeholder for streaming assistant response
+    // Placeholder for assistant response
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
+    const apiBase = axios.defaults.baseURL || (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
+    const streamUrl = `${apiBase.replace(/\/$/, '')}/api/v1/playground/chat-stream`;
+
     try {
-      const response = await fetch('/api/v1/playground/chat-stream', {
+      const response = await fetch(streamUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +53,20 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Fallback to standard POST endpoint if streaming route is not available (e.g., 404/405)
+        const res = await axios.post(
+          '/api/v1/playground/chat',
+          { message: userText },
+          { headers: { 'x-api-key': apiKey } },
+        );
+        const data = res.data;
+        setMessages((prev) => {
+          const newArr = [...prev];
+          newArr[newArr.length - 1] = { role: 'assistant', content: data.response };
+          return newArr;
+        });
+        setLastDebugInfo(data);
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -91,11 +107,27 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         }
       }
     } catch (err: any) {
-      const fallbackReply = err.message || 'Stream connection error';
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { role: 'assistant', content: `[Error]: ${fallbackReply}` },
-      ]);
+      // If streaming fails, try standard endpoint fallback
+      try {
+        const res = await axios.post(
+          '/api/v1/playground/chat',
+          { message: userText },
+          { headers: { 'x-api-key': apiKey } },
+        );
+        const data = res.data;
+        setMessages((prev) => {
+          const newArr = [...prev];
+          newArr[newArr.length - 1] = { role: 'assistant', content: data.response };
+          return newArr;
+        });
+        setLastDebugInfo(data);
+      } catch (fallbackErr: any) {
+        const fallbackReply = fallbackErr.response?.data?.message || fallbackErr.message || err.message;
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: 'assistant', content: `[Error]: ${fallbackReply}` },
+        ]);
+      }
     } finally {
       setSending(false);
       setTimeout(() => inputRef.current?.focus(), 50);
