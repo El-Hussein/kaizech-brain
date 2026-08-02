@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send, Bot, User, Cpu, Database, Wrench, Clock, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { FormattedMessage } from './FormattedMessage';
@@ -15,6 +15,17 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [lastDebugInfo, setLastDebugInfo] = useState<any>(null);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, sending]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +54,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
       ]);
     } finally {
       setSending(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
@@ -105,10 +117,12 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
                 <Sparkles size={14} className="animate-spin" /> Thinking & executing decision flow...
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           <form onSubmit={handleSend} style={{ padding: '16px', borderTop: '1px solid var(--border-glass)', display: 'flex', gap: '10px' }}>
             <input
+              ref={inputRef}
               type="text"
               className="input-field"
               placeholder="Ask a question or request a business operation..."

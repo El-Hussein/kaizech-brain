@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   MessageSquare,
   Search,
@@ -92,12 +92,23 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
   const [replyInput, setReplyInput] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const replyInputRef = useRef<HTMLInputElement>(null);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  };
+
+  useEffect(() => {
+    scrollToBottom('smooth');
+  }, [messages, loadingDetail]);
+
   // Fetch live conversations list from backend API
   const fetchConversations = useCallback(
     async (isManual = false) => {
       try {
         if (isManual) setRefreshing(true);
-        else setLoading(true);
+        else if (conversations.length === 0) setLoading(true);
 
         const res = await axios.get('/api/v1/conversations', {
           headers: { 'x-api-key': apiKey },
@@ -107,13 +118,12 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         setConversations(liveList);
 
         if (liveList.length > 0) {
-          // If selectedConv is already in list, keep it, else select first
           const currentId = selectedConv?.id;
           const found = liveList.find((c) => c.id === currentId);
           if (found) {
-            loadConversationDetail(found.id);
-          } else {
-            loadConversationDetail(liveList[0].id);
+            loadConversationDetail(found.id, false);
+          } else if (!selectedConv) {
+            loadConversationDetail(liveList[0].id, true);
           }
         } else {
           setSelectedConv(null);
@@ -126,17 +136,22 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         setRefreshing(false);
       }
     },
-    [apiKey, selectedConv],
+    [apiKey, selectedConv, conversations.length],
   );
 
+  // Periodic polling for live updates every 8 seconds
   useEffect(() => {
-    fetchConversations();
+    fetchConversations(false);
+    const interval = setInterval(() => {
+      fetchConversations(false);
+    }, 8000);
+    return () => clearInterval(interval);
   }, [apiKey]);
 
   // Load detail and messages for selected conversation ID from live backend API
-  const loadConversationDetail = async (convId: string) => {
+  const loadConversationDetail = async (convId: string, showSpinner = true) => {
     try {
-      setLoadingDetail(true);
+      if (showSpinner) setLoadingDetail(true);
       const res = await axios.get(`/api/v1/conversations/${convId}`, {
         headers: { 'x-api-key': apiKey },
       });
@@ -150,7 +165,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     } catch (err) {
       console.error(`Failed to load details for conversation ${convId}`, err);
     } finally {
-      setLoadingDetail(false);
+      if (showSpinner) setLoadingDetail(false);
     }
   };
 
@@ -195,13 +210,17 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       );
 
       // Reload conversation messages & thread list from live database
-      await loadConversationDetail(selectedConv.id);
+      await loadConversationDetail(selectedConv.id, false);
       const resList = await axios.get('/api/v1/conversations', {
         headers: { 'x-api-key': apiKey },
       });
       if (resList.data?.data) {
         setConversations(resList.data.data);
       }
+      setTimeout(() => {
+        scrollToBottom('smooth');
+        replyInputRef.current?.focus();
+      }, 50);
     } catch (err) {
       console.error('Error posting message to live API', err);
     } finally {
@@ -939,6 +958,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                       );
                     })
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Structured Quick Reply Options Bar */}
@@ -952,7 +972,10 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                         key={reply.id}
                         type="button"
                         variant="secondary"
-                        onClick={() => setReplyInput(reply.text)}
+                        onClick={() => {
+                          setReplyInput(reply.text);
+                          replyInputRef.current?.focus();
+                        }}
                         title={reply.text}
                         style={{
                           padding: '4px 10px',
@@ -972,6 +995,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                 {/* Live Reply Form */}
                 <form onSubmit={handleSendReply} style={{ paddingTop: '10px', borderTop: '1px solid var(--border-glass)', display: 'flex', gap: '10px' }}>
                   <input
+                    ref={replyInputRef}
                     type="text"
                     className="input-field"
                     placeholder="Type a live reply to post directly to database..."
