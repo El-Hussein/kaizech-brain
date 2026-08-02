@@ -106,8 +106,11 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
     return `${start}••••••••••••${end}`;
   };
 
+  const [openaiSaveError, setOpenaiSaveError] = useState<string | null>(null);
+
   const handleSaveOpenAiConfig = async () => {
     setSavingOpenAi(true);
+    setOpenaiSaveError(null);
     try {
       await axios.put(
         `${API_BASE}/tenants/${TENANT_ID}`,
@@ -119,10 +122,13 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
         },
         { headers: { 'x-api-key': apiKey } },
       );
-    } catch {}
-    setOpenaiSaved(true);
-    setTimeout(() => setOpenaiSaved(false), 2000);
-    setSavingOpenAi(false);
+      setOpenaiSaved(true);
+      setTimeout(() => setOpenaiSaved(false), 3000);
+    } catch (err: any) {
+      setOpenaiSaveError(err.response?.data?.message || err.message);
+    } finally {
+      setSavingOpenAi(false);
+    }
   };
 
   // ── FAQ & AI Reply Behavior ───────────────────────────────────────────────

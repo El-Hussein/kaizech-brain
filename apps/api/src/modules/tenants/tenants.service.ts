@@ -64,10 +64,24 @@ export class TenantsService {
 
   async findOne(idOrSlug: string) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
-    const tenant = await this.tenantRepository.findOne({
+    let tenant = await this.tenantRepository.findOne({
       where: isUuid ? { id: idOrSlug } : { slug: idOrSlug },
       relations: ['knowledgeSources', 'toolManifests', 'promptTemplates'],
     });
+
+    if (!tenant && idOrSlug === 'mrkoon-auctions') {
+      tenant = await this.tenantRepository.save(
+        this.tenantRepository.create({
+          name: 'Mrkoon Auctions',
+          slug: 'mrkoon-auctions',
+          status: 'active',
+          languages: ['ar', 'en'],
+          timezone: 'Asia/Riyadh',
+          greetingMessage: 'Welcome to Mrkoon Auctions! How can I help you today?',
+        }),
+      );
+    }
+
     if (!tenant) {
       throw new NotFoundException(`Tenant '${idOrSlug}' not found`);
     }
