@@ -143,10 +143,10 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const computedWebhook = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/whatsapp/webhook`;
 
   const [verifyToken, setVerifyToken] = useState(() => {
-    return localStorage.getItem('kaizech_verify_token') || 'kaizech_mrkoon_verify_2026';
+    return localStorage.getItem('kaizech_verify_token') || '';
   });
   const [appSecret, setAppSecret] = useState(() => {
-    return localStorage.getItem('kaizech_app_secret') || 'd8f53c7edd2fade1ebf20b0a99d47c9f';
+    return localStorage.getItem('kaizech_app_secret') || '';
   });
   const [showAppSecret, setShowAppSecret] = useState(false);
   const [whatsappSaved, setWhatsappSaved] = useState(false);

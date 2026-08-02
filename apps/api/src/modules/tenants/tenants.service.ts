@@ -78,26 +78,12 @@ export class TenantsService {
           languages: ['ar', 'en'],
           timezone: 'Asia/Riyadh',
           greetingMessage: 'Welcome to Mrkoon Auctions! How can I help you today?',
-          settings: {
-            whatsappVerifyToken: 'kaizech_mrkoon_verify_2026',
-            whatsappAppSecret: encryptSecret('d8f53c7edd2fade1ebf20b0a99d47c9f'),
-          },
         }),
       );
     }
 
     if (!tenant) {
       throw new NotFoundException(`Tenant '${idOrSlug}' not found`);
-    }
-
-    // Ensure default tenant has a valid whatsappAppSecret setting if not yet set
-    if (tenant.slug === 'mrkoon-auctions' && !tenant.settings?.whatsappAppSecret) {
-      tenant.settings = {
-        ...(tenant.settings || {}),
-        whatsappVerifyToken: tenant.settings?.whatsappVerifyToken || 'kaizech_mrkoon_verify_2026',
-        whatsappAppSecret: encryptSecret('d8f53c7edd2fade1ebf20b0a99d47c9f'),
-      };
-      await this.tenantRepository.save(tenant);
     }
 
     return tenant;

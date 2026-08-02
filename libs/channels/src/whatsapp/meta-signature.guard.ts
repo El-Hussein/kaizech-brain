@@ -46,17 +46,16 @@ export class MetaSignatureGuard implements CanActivate {
     }
 
     if (!rawAppSecret) {
-      rawAppSecret = this.configService.get<string>(
-        'WHATSAPP_APP_SECRET',
-        'd8f53c7edd2fade1ebf20b0a99d47c9f',
-      );
+      rawAppSecret = this.configService.get<string>('WHATSAPP_APP_SECRET', '');
     }
 
-    const appSecret = decryptSecret(rawAppSecret || 'd8f53c7edd2fade1ebf20b0a99d47c9f');
+    const appSecret = decryptSecret(rawAppSecret || '');
 
     if (!appSecret) {
       this.logger.error('WHATSAPP_APP_SECRET is not configured — cannot validate Meta signature');
-      throw new ForbiddenException('WhatsApp App Secret is not configured. Please save it under Settings & API Keys in Dashboard.');
+      throw new ForbiddenException(
+        'WhatsApp App Secret is not configured. Please save it under Settings & API Keys in Dashboard or set WHATSAPP_APP_SECRET environment variable.',
+      );
     }
 
     // rawBody is populated by NestFactory.create({ rawBody: true })
