@@ -233,7 +233,7 @@ export class AgentOrchestratorService {
     // 6. RAG: Vector Search for relevant Knowledge
     let knowledgeTexts: string[] = [];
     try {
-      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 5, 0.4);
+      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 3, 0.4);
       knowledgeTexts = chunks.map((c) => c.content);
     } catch (err: any) {
       this.logger.warn(`Knowledge retrieval warning: ${err.message}`);
@@ -528,7 +528,7 @@ export class AgentOrchestratorService {
 
     let knowledgeTexts: string[] = [];
     try {
-      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 5, 0.4);
+      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 3, 0.4);
       knowledgeTexts = chunks.map((c) => c.content);
     } catch (err: any) {
       this.logger.warn(`Knowledge retrieval warning in stream: ${err.message}`);

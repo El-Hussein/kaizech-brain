@@ -36,20 +36,64 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     setMessages((prev) => [...prev, { role: 'user', content: userText }]);
     setSending(true);
 
-    try {
-      const res = await axios.post(
-        '/api/v1/playground/chat',
-        { message: userText },
-        { headers: { 'x-api-key': apiKey } },
-      );
+    // Placeholder for streaming assistant response
+    setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
-      const data = res.data;
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.response }]);
-      setLastDebugInfo(data);
+    try {
+      const response = await fetch('/api/v1/playground/chat-stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+        },
+        body: JSON.stringify({ message: userText }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = '';
+
+      if (reader) {
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('data: ')) {
+              const rawJson = trimmed.slice(6);
+              try {
+                const parsed = JSON.parse(rawJson);
+                if (parsed.chunk) {
+                  assistantContent += parsed.chunk;
+                  setMessages((prev) => {
+                    const newArr = [...prev];
+                    newArr[newArr.length - 1] = { role: 'assistant', content: assistantContent };
+                    return newArr;
+                  });
+                } else if (parsed.event === 'DONE' && parsed.meta) {
+                  setLastDebugInfo(parsed.meta);
+                }
+              } catch {
+                // Ignore incomplete frame JSON parse errors
+              }
+            }
+          }
+        }
+      }
     } catch (err: any) {
-      const fallbackReply = err.response?.data?.message || err.message;
+      const fallbackReply = err.message || 'Stream connection error';
       setMessages((prev) => [
-        ...prev,
+        ...prev.slice(0, -1),
         { role: 'assistant', content: `[Error]: ${fallbackReply}` },
       ]);
     } finally {
