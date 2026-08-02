@@ -227,6 +227,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             whatsappAccessToken: accessToken,
             whatsappPhoneNumberId: phoneNumberId,
             whatsappWebhookUrl: webhookUrl,
+            enabledChannels: ['whatsapp', 'api'],
           },
         },
         { headers: { 'x-api-key': apiKey } },

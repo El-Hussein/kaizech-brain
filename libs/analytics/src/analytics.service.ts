@@ -104,6 +104,21 @@ export class AnalyticsService {
     const vectorStore = tenant?.settings?.vectorStore || 'PostgreSQL pgvector';
     const channels: string[] = tenant?.settings?.enabledChannels || [];
 
+    // Check if WhatsApp has active conversations or credentials configured
+    const whatsappConversationsCount = await this.conversationRepository.count({
+      where: { tenantId, channelType: 'whatsapp' },
+    });
+
+    const isWhatsappConnected =
+      channels.includes('whatsapp') ||
+      Boolean(
+        tenant?.settings?.whatsappAccessToken ||
+        tenant?.settings?.whatsappPhoneNumberId ||
+        tenant?.settings?.whatsappAppSecret ||
+        tenant?.settings?.whatsappVerifyToken
+      ) ||
+      whatsappConversationsCount > 0;
+
     // Check agent is "online" by verifying tenant is active
     const isOnline = tenant?.status === 'active';
 
@@ -114,10 +129,10 @@ export class AnalyticsService {
       llmProvider,
       vectorStore,
       channels,
-      whatsappConnected: channels.includes('whatsapp'),
-      webConnected: channels.includes('web'),
-      languages: tenant?.languages || ['en'],
-      timezone: tenant?.timezone || 'UTC',
+      whatsappConnected: isWhatsappConnected,
+      webConnected: channels.includes('web') || Boolean(tenant?.apiEndpoint),
+      languages: tenant?.languages || ['ar', 'en'],
+      timezone: tenant?.timezone || 'Asia/Riyadh',
     };
   }
 }
