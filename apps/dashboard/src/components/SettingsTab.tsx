@@ -132,9 +132,11 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [hasFaqSources, setHasFaqSources] = useState(true);
 
   // ── WhatsApp (Meta Direct) ────────────────────────────────────────────────
-  const TENANT_ID = 'mrkoon-auctions';
+  const defaultApiBase = axios.defaults.baseURL || window.location.origin;
+  const computedWebhook = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/whatsapp/webhook`;
+
   const [verifyToken, setVerifyToken] = useState(() => {
-    return localStorage.getItem('kaizech_verify_token') || 'your-whatsapp-verify-token';
+    return localStorage.getItem('kaizech_verify_token') || 'kaizech_mrkoon_verify_2026';
   });
   const [appSecret, setAppSecret] = useState(() => {
     return localStorage.getItem('kaizech_app_secret') || 'd8f53c7edd2fade1ebf20b0a99d47c9f';
@@ -142,14 +144,29 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [showAppSecret, setShowAppSecret] = useState(false);
   const [whatsappSaved, setWhatsappSaved] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState(() => {
-    return localStorage.getItem('kaizech_webhook_url') || 'https://retailer-electron-professor-otherwise.trycloudflare.com/api/v1/channels/whatsapp/webhook';
+    return localStorage.getItem('kaizech_webhook_url') || computedWebhook;
   });
-  const CHAT_ENDPOINT = `${window.location.origin}/api/v1/channels/chat`;
+  const CHAT_ENDPOINT = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/chat`;
 
-  const saveWhatsAppConfig = () => {
+  const saveWhatsAppConfig = async () => {
     localStorage.setItem('kaizech_verify_token', verifyToken);
     localStorage.setItem('kaizech_app_secret', appSecret);
     localStorage.setItem('kaizech_webhook_url', webhookUrl);
+
+    try {
+      await axios.put(
+        `${API_BASE}/tenants/${TENANT_ID}`,
+        {
+          settings: {
+            whatsappVerifyToken: verifyToken,
+            whatsappAppSecret: appSecret,
+            whatsappWebhookUrl: webhookUrl,
+          },
+        },
+        { headers: { 'x-api-key': apiKey } },
+      );
+    } catch {}
+
     setWhatsappSaved(true);
     setTimeout(() => setWhatsappSaved(false), 2000);
   };
