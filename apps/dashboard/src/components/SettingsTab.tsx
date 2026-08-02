@@ -81,6 +81,7 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?:
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
+  const [subTab, setSubTab] = useState<'general' | 'limits_strategy' | 'whatsapp' | 'api_keys'>('general');
   const [tenantId, setTenantId] = useState('');
   const [tenantName, setTenantName] = useState('Active Tenant Workspace');
   const [timezone, setTimezone] = useState('Asia/Riyadh');
@@ -438,11 +439,45 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
       <div>
         <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Settings & Integration</h2>
         <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
-          Configure your business profile and connect both integration channels.
+          Configure your business profile, bot behavior limits, WhatsApp integration, and developer API keys.
         </p>
       </div>
 
-      {/* ── Row 1: Business Profile + Auth Architecture overview ───────────── */}
+      {/* ── Sub-Navigation Bar ───────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: '10px', borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px', flexWrap: 'wrap' }}>
+        <button
+          className={`btn ${subTab === 'general' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setSubTab('general')}
+          style={{ gap: '6px', fontSize: '13px' }}
+        >
+          <Globe size={15} /> General & Model
+        </button>
+        <button
+          className={`btn ${subTab === 'limits_strategy' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setSubTab('limits_strategy')}
+          style={{ gap: '6px', fontSize: '13px' }}
+        >
+          <Sliders size={15} /> Bot Strategy & Limits
+        </button>
+        <button
+          className={`btn ${subTab === 'whatsapp' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setSubTab('whatsapp')}
+          style={{ gap: '6px', fontSize: '13px' }}
+        >
+          <MessageSquare size={15} /> WhatsApp Channel
+        </button>
+        <button
+          className={`btn ${subTab === 'api_keys' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setSubTab('api_keys')}
+          style={{ gap: '6px', fontSize: '13px' }}
+        >
+          <Key size={15} /> API Keys & Developer Docs
+        </button>
+      </div>
+
+      {subTab === 'general' && (
+        <>
+          {/* ── Row 1: Business Profile + Auth Architecture overview ───────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
         {/* Business Profile */}
@@ -579,8 +614,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           </div>
         </div>
       </div>
+        </>
+      )}
 
-      {/* ── Row 2: Chatbot FAQ & AI Reply Strategy ─────────────────────────── */}
+      {subTab === 'limits_strategy' && (
+        <>
+          {/* ── Row 2: Chatbot FAQ & AI Reply Strategy ─────────────────────────── */}
       <div className="glass-card" style={{ padding: '24px' }}>
         <SectionHeader
           icon={<HelpCircle size={18} color="var(--accent-primary)" />}
@@ -776,11 +815,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           </div>
         </div>
       </div>
+        </>
+      )}
 
-      {/* ── Row 2: WhatsApp Integration + Direct API Integration ───────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-
-        {/* WhatsApp (Meta Direct) */}
+      {subTab === 'whatsapp' && (
+        <>
+          {/* WhatsApp (Meta Direct) */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <SectionHeader
             icon={<MessageSquare size={18} color="var(--accent-emerald)" />}
@@ -900,8 +940,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             </button>
           </div>
         </div>
+        </>
+      )}
 
-        {/* Direct API Integration & Developer Docs */}
+      {subTab === 'api_keys' && (
+        <>
+          {/* Direct API Integration & Developer Docs */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <SectionHeader
             icon={<Zap size={18} color="var(--accent-primary)" />}
@@ -983,7 +1027,6 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* ── Row 3: API Key Management ───────────────────────────────────────── */}
       <div className="glass-card" style={{ padding: '24px' }}>
@@ -1150,6 +1193,8 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };
