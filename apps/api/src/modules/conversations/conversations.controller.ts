@@ -184,8 +184,49 @@ export class ConversationsController {
     ]);
   }
 
+  @Get('by-user/:channelUserId')
+  @ApiOperation({ summary: 'Get conversation details, messages, and limit status by channelUserId / sessionId' })
+  async findByChannelUser(
+    @TenantContext() tenant: ITenantContext,
+    @Param('channelUserId') channelUserId: string,
+  ) {
+    const conversation = await this.conversationRepo.findOne({
+      where: { channelUserId, tenantId: tenant.tenantId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException(`No conversation found for user '${channelUserId}'`);
+    }
+
+    const messages = await this.messageRepo.find({
+      where: { conversationId: conversation.id },
+      order: { createdAt: 'ASC' },
+    });
+
+    const tenantEntity = await this.tenantRepo.findOne({ where: { id: tenant.tenantId } });
+    const maxLimit =
+      typeof conversation.metadata?.maxMessages === 'number'
+        ? conversation.metadata.maxMessages
+        : typeof tenantEntity?.settings?.maxMessagesPerConversation === 'number'
+        ? tenantEntity.settings.maxMessagesPerConversation
+        : typeof tenantEntity?.settings?.maxConversationMessages === 'number'
+        ? tenantEntity.settings.maxConversationMessages
+        : 0;
+
+    return {
+      conversation,
+      messages,
+      status: conversation.status,
+      messageCount: conversation.messageCount || 0,
+      limit: maxLimit,
+      limitExceeded: maxLimit > 0 && (conversation.messageCount || 0) >= maxLimit,
+      handedOff: conversation.status === 'handed_off',
+    };
+  }
+
   @Get(':id')
-  @ApiOperation({ summary: 'Get conversation details with messages' })
+  @ApiOperation({ summary: 'Get conversation details with messages and limit status' })
   async findOne(
     @TenantContext() tenant: ITenantContext,
     @Param('id') id: string,
@@ -194,14 +235,33 @@ export class ConversationsController {
       where: { id, tenantId: tenant.tenantId },
     });
 
+    if (!conversation) {
+      throw new NotFoundException(`Conversation with id '${id}' not found`);
+    }
+
     const messages = await this.messageRepo.find({
       where: { conversationId: id },
       order: { createdAt: 'ASC' },
     });
 
+    const tenantEntity = await this.tenantRepo.findOne({ where: { id: tenant.tenantId } });
+    const maxLimit =
+      typeof conversation.metadata?.maxMessages === 'number'
+        ? conversation.metadata.maxMessages
+        : typeof tenantEntity?.settings?.maxMessagesPerConversation === 'number'
+        ? tenantEntity.settings.maxMessagesPerConversation
+        : typeof tenantEntity?.settings?.maxConversationMessages === 'number'
+        ? tenantEntity.settings.maxConversationMessages
+        : 0;
+
     return {
       conversation,
       messages,
+      status: conversation.status,
+      messageCount: conversation.messageCount || 0,
+      limit: maxLimit,
+      limitExceeded: maxLimit > 0 && (conversation.messageCount || 0) >= maxLimit,
+      handedOff: conversation.status === 'handed_off',
     };
   }
 
@@ -295,6 +355,43 @@ export class ConversationsController {
     }
 
     return savedMsg;
+  }
+
+  @Patch(':id/limit')
+  @ApiOperation({ summary: 'Update per-conversation message limit (0 = unlimited)' })
+  async updateLimit(
+    @TenantContext() tenant: ITenantContext,
+    @Param('id') id: string,
+    @Body() body: { maxMessages: number },
+  ) {
+    const conversation = await this.conversationRepo.findOne({
+      where: { id, tenantId: tenant.tenantId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException(`Conversation with id '${id}' not found`);
+    }
+
+    const limit = typeof body.maxMessages === 'number' && body.maxMessages >= 0 ? body.maxMessages : 0;
+    conversation.metadata = {
+      ...(conversation.metadata || {}),
+      maxMessages: limit,
+    };
+
+    // If newly set limit is less than or equal to current messageCount, transition to handed_off
+    if (limit > 0 && (conversation.messageCount || 0) >= limit && conversation.status === 'active') {
+      conversation.status = 'handed_off';
+    }
+
+    await this.conversationRepo.save(conversation);
+
+    return {
+      conversation,
+      limit,
+      messageCount: conversation.messageCount || 0,
+      limitExceeded: limit > 0 && (conversation.messageCount || 0) >= limit,
+      status: conversation.status,
+    };
   }
 
   @Patch(':id/status')

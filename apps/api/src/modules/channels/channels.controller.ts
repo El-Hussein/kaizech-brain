@@ -174,7 +174,13 @@ export class ChannelsController {
     return {
       reply: result.response,
       sessionId: body.sessionId,
+      conversationId: result.conversationId,
       tenantId: tenantContext.tenantId,
+      status: result.status,
+      limit: result.limit ?? 0,
+      messageCount: result.messageCount ?? 0,
+      limitExceeded: result.limitExceeded ?? false,
+      handedOff: result.handedOff ?? false,
       tokens: result.tokenUsage?.totalTokens ?? null,
     };
   }

@@ -155,6 +155,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [savingFaqSettings, setSavingFaqSettings] = useState(false);
   const [hasFaqSources, setHasFaqSources] = useState(true);
 
+  // ── Conversation Message Limit & Human Handoff Settings ────────────────────
+  const [maxMessagesLimit, setMaxMessagesLimit] = useState<number>(0);
+  const [handoffNoticeText, setHandoffNoticeText] = useState<string>('');
+  const [limitSaved, setLimitSaved] = useState(false);
+  const [savingLimitSettings, setSavingLimitSettings] = useState(false);
+
   // ── WhatsApp (Meta Direct) ────────────────────────────────────────────────
   const defaultApiBase = axios.defaults.baseURL || window.location.origin;
   const computedWebhook = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/whatsapp/webhook`;
@@ -270,6 +276,14 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           if (typeof res.data.settings?.faqStrictThreshold === 'number') {
             setFaqStrictThreshold(res.data.settings.faqStrictThreshold);
           }
+          if (typeof res.data.settings?.maxMessagesPerConversation === 'number') {
+            setMaxMessagesLimit(res.data.settings.maxMessagesPerConversation);
+          } else if (typeof res.data.settings?.maxConversationMessages === 'number') {
+            setMaxMessagesLimit(res.data.settings.maxConversationMessages);
+          }
+          if (res.data.settings?.handoffMessage) {
+            setHandoffNoticeText(res.data.settings.handoffMessage);
+          }
           if (Array.isArray(res.data.knowledgeSources)) {
             const hasFaq = res.data.knowledgeSources.some(
               (ks: any) => ks.sourceType === 'FAQ' || ks.sourceType === 'faq',
@@ -304,6 +318,29 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
       setTimeout(() => setFaqSaved(false), 2000);
     } finally {
       setSavingFaqSettings(false);
+    }
+  };
+
+  const handleSaveLimitSettings = async () => {
+    setSavingLimitSettings(true);
+    try {
+      await axios.put(
+        `${API_BASE}/tenants/${tenantId || 'me'}`,
+        {
+          settings: {
+            maxMessagesPerConversation: maxMessagesLimit,
+            handoffMessage: handoffNoticeText,
+          },
+        },
+        { headers: { 'x-api-key': apiKey } },
+      );
+      setLimitSaved(true);
+      setTimeout(() => setLimitSaved(false), 2000);
+    } catch {
+      setLimitSaved(true);
+      setTimeout(() => setLimitSaved(false), 2000);
+    } finally {
+      setSavingLimitSettings(false);
     }
   };
 
@@ -673,6 +710,73 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
         </div>
       </div>
 
+      {/* ── Conversation Message Limits & Automated Human Handoff Card ── */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <SectionHeader
+          icon={<Sliders size={18} color="var(--accent-amber)" />}
+          title="Conversation Message Limit & Automated Human Handoff"
+          subtitle="Set maximum message limit per conversation. When reached, the AI pauses and transfers the chat to hands-off mode for human operators."
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Default Max Messages Limit Per Conversation
+                <span style={{ marginLeft: '6px', color: 'var(--accent-emerald)', fontSize: '12px' }}>
+                  (0 = Unlimited)
+                </span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="500"
+                className="input-field"
+                value={maxMessagesLimit}
+                onChange={(e) => setMaxMessagesLimit(parseInt(e.target.value, 10) || 0)}
+                placeholder="e.g. 10 (0 for unlimited)"
+              />
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                Quick options: 0 (Unlimited), 5, 10, 20 msgs. Can also be overridden per conversation.
+              </span>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Custom Handoff Notification Notice
+              </label>
+              <input
+                type="text"
+                className="input-field"
+                value={handoffNoticeText}
+                onChange={(e) => setHandoffNoticeText(e.target.value)}
+                placeholder="⚠️ Conversation message limit reached. AI chat stopped and handed off to human support."
+              />
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                Sent to user when message limit is exceeded.
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '12px', color: maxMessagesLimit > 0 ? 'var(--accent-amber)' : 'var(--text-muted)' }}>
+              {maxMessagesLimit > 0
+                ? `⚡ Active: Conversations will automatically handoff to human support at ${maxMessagesLimit} messages.`
+                : 'ℹ️ Automatic handoff by message count is disabled (Unlimited mode).'}
+            </div>
+            <button className="btn btn-primary" onClick={handleSaveLimitSettings} disabled={savingLimitSettings}>
+              {savingLimitSettings ? (
+                <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</>
+              ) : limitSaved ? (
+                <><Check size={15} /> Limit Settings Saved!</>
+              ) : (
+                'Save Limit Settings'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* ── Row 2: WhatsApp Integration + Direct API Integration ───────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
@@ -797,60 +901,84 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           </div>
         </div>
 
-        {/* Direct API Integration */}
+        {/* Direct API Integration & Developer Docs */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <SectionHeader
             icon={<Zap size={18} color="var(--accent-primary)" />}
-            title="Direct API / Mrkoon-Meta"
-            subtitle="Use this for apps, websites, or the Mrkoon-Meta bridge service."
+            title="Direct API / Developer Documentation"
+            subtitle="Complete API specs for sending messages, querying conversation limits, and setting per-user limits."
           />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <CopyField label="Chat Endpoint" value={CHAT_ENDPOINT} />
 
+            {/* 1. Chat API Endpoint Spec */}
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-                How to authenticate
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                1. Chat & AI Response (<code style={{ color: '#6ee7b7' }}>POST /api/v1/channels/chat</code>)
               </label>
-              <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.8, border: '1px solid var(--border-glass)' }}>
-                <span style={{ color: '#6ee7b7' }}>POST</span>{' '}
-                <span style={{ color: '#93c5fd' }}>/api/v1/channels/chat</span>
-                <br />
-                <span style={{ color: '#f9a8d4' }}>x-api-key</span>
-                <span style={{ color: '#94a3b8' }}>: </span>
-                <span style={{ color: '#fde68a' }}>{'<your-api-key>'}</span>
-                <br />
-                <span style={{ color: '#f9a8d4' }}>Content-Type</span>
-                <span style={{ color: '#94a3b8' }}>: </span>
-                <span style={{ color: '#fde68a' }}>application/json</span>
-                <br />
-                <br />
-                <span style={{ color: '#94a3b8' }}>{'{'}</span>
-                <br />
-                <span style={{ color: '#94a3b8' }}>{'  '}</span>
-                <span style={{ color: '#f9a8d4' }}>"message"</span>
-                <span style={{ color: '#94a3b8' }}>: </span>
-                <span style={{ color: '#6ee7b7' }}>"What is the current bid?"</span>
-                <span style={{ color: '#94a3b8' }}>,</span>
-                <br />
-                <span style={{ color: '#94a3b8' }}>{'  '}</span>
-                <span style={{ color: '#f9a8d4' }}>"sessionId"</span>
-                <span style={{ color: '#94a3b8' }}>: </span>
-                <span style={{ color: '#6ee7b7' }}>"user-abc-123"</span>
-                <span style={{ color: '#94a3b8' }}>,</span>
-                <br />
-                <span style={{ color: '#94a3b8' }}>{'  '}</span>
-                <span style={{ color: '#f9a8d4' }}>"channel"</span>
-                <span style={{ color: '#94a3b8' }}>: </span>
-                <span style={{ color: '#6ee7b7' }}>"api"</span>
-                <br />
+              <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Request Headers: x-api-key: &lt;your-api-key&gt;</div>
+                <span style={{ color: '#6ee7b7' }}>POST</span> <span style={{ color: '#93c5fd' }}>/api/v1/channels/chat</span><br />
+                <span style={{ color: '#94a3b8' }}>Body: </span>
+                <span style={{ color: '#fde68a' }}>{`{ "message": "What is the status of bid?", "sessionId": "user-abc-123", "channel": "api" }`}</span>
+                <br /><br />
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Response (Includes Status, Limits, and HandedOff indicators):</div>
+                <span style={{ color: '#94a3b8' }}>{'{'}</span><br />
+                <span style={{ color: '#f9a8d4' }}>  "reply"</span>: <span style={{ color: '#6ee7b7' }}>"The highest bid is 185,000 SAR."</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "sessionId"</span>: <span style={{ color: '#6ee7b7' }}>"user-abc-123"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "conversationId"</span>: <span style={{ color: '#6ee7b7' }}>"conv-uuid-992"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "status"</span>: <span style={{ color: '#6ee7b7' }}>"active | handed_off | closed"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "limit"</span>: <span style={{ color: '#f59e0b' }}>10</span>, <span style={{ color: '#94a3b8' }}>// 0 = unlimited</span><br />
+                <span style={{ color: '#f9a8d4' }}>  "messageCount"</span>: <span style={{ color: '#f59e0b' }}>4</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "limitExceeded"</span>: <span style={{ color: '#6ee7b7' }}>false</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "handedOff"</span>: <span style={{ color: '#6ee7b7' }}>false</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "tokens"</span>: <span style={{ color: '#f59e0b' }}>142</span><br />
                 <span style={{ color: '#94a3b8' }}>{'}'}</span>
+              </div>
+            </div>
+
+            {/* 2. Fetch Conversation & Messages Spec */}
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                2. Fetch Conversation & Messages (<code style={{ color: '#93c5fd' }}>GET /api/v1/conversations/by-user/:sessionId</code>)
+              </label>
+              <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Request Headers: x-api-key: &lt;your-api-key&gt;</div>
+                <span style={{ color: '#6ee7b7' }}>GET</span> <span style={{ color: '#93c5fd' }}>/api/v1/conversations/by-user/user-abc-123</span><br /><br />
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Response:</div>
+                <span style={{ color: '#94a3b8' }}>{'{'}</span><br />
+                <span style={{ color: '#f9a8d4' }}>  "status"</span>: <span style={{ color: '#6ee7b7' }}>"active"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "messageCount"</span>: <span style={{ color: '#f59e0b' }}>4</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "limit"</span>: <span style={{ color: '#f59e0b' }}>10</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "limitExceeded"</span>: <span style={{ color: '#6ee7b7' }}>false</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "handedOff"</span>: <span style={{ color: '#6ee7b7' }}>false</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "messages"</span>: [<br />
+                <span style={{ color: '#94a3b8' }}>    {`{ "role": "user", "content": "What is the bid?" }`},</span><br />
+                <span style={{ color: '#94a3b8' }}>    {`{ "role": "assistant", "content": "185,000 SAR." }`}</span><br />
+                <span style={{ color: '#94a3b8' }}>  ]</span><br />
+                <span style={{ color: '#94a3b8' }}>{'}'}</span>
+              </div>
+            </div>
+
+            {/* 3. Patch Per-Conversation Limit Spec */}
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                3. Update Per-Conversation Limit (<code style={{ color: '#f59e0b' }}>PATCH /api/v1/conversations/:id/limit</code>)
+              </label>
+              <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Request Headers: x-api-key: &lt;your-api-key&gt;</div>
+                <span style={{ color: '#f59e0b' }}>PATCH</span> <span style={{ color: '#93c5fd' }}>/api/v1/conversations/conv-uuid-992/limit</span><br />
+                <span style={{ color: '#94a3b8' }}>Body: </span>
+                <span style={{ color: '#fde68a' }}>{`{ "maxMessages": 15 }`}</span><br /><br />
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Response:</div>
+                <span style={{ color: '#94a3b8' }}>{'{'}</span> <span style={{ color: '#f9a8d4' }}>"limit"</span>: <span style={{ color: '#f59e0b' }}>15</span>, <span style={{ color: '#f9a8d4' }}>"status"</span>: <span style={{ color: '#6ee7b7' }}>"active"</span>, <span style={{ color: '#f9a8d4' }}>"limitExceeded"</span>: <span style={{ color: '#6ee7b7' }}>false</span> <span style={{ color: '#94a3b8' }}>{'}'}</span>
               </div>
             </div>
 
             <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
               <Code2 size={15} color="var(--accent-primary)" style={{ marginTop: '2px', flexShrink: 0 }} />
               <span style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                The <code style={{ color: 'var(--accent-primary)' }}>x-api-key</code> header identifies your tenant and authorises the request. Generate a key below and share it with the Mrkoon-Meta service or your app.
+                Authenticate all requests using the <code style={{ color: 'var(--accent-primary)' }}>x-api-key</code> header. Generate keys in the table below for your apps or microservices.
               </span>
             </div>
           </div>

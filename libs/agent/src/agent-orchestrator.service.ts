@@ -19,6 +19,7 @@ export interface AgentProcessInput {
 export interface AgentProcessResult {
   response: string;
   conversationId: string;
+  status: string;
   toolCallsExecuted: Array<{ name: string; args: any; result: any }>;
   knowledgeSourcesUsed: number;
   tokenUsage: {
@@ -28,6 +29,9 @@ export interface AgentProcessResult {
   };
   responseTimeMs: number;
   handedOff?: boolean;
+  limit?: number;
+  messageCount?: number;
+  limitExceeded?: boolean;
 }
 
 @Injectable()
@@ -64,6 +68,20 @@ export class AgentOrchestratorService {
       channelUserId,
     );
 
+    // Determine limit (per-conversation override or tenant-level setting)
+    const maxLimit =
+      typeof conversation.metadata?.maxMessages === 'number'
+        ? conversation.metadata.maxMessages
+        : typeof tenant.settings?.maxMessagesPerConversation === 'number'
+        ? tenant.settings.maxMessagesPerConversation
+        : typeof tenant.settings?.maxConversationMessages === 'number'
+        ? tenant.settings.maxConversationMessages
+        : 0;
+
+    // Note: messageCount is incremented by memoryService.addMessage below
+    const currentMessageCount = (conversation.messageCount || 0) + 1;
+    const isLimitExceeded = maxLimit > 0 && currentMessageCount >= maxLimit;
+
     // 3. Save incoming user message
     await this.memoryService.addMessage(
       conversation.id,
@@ -73,19 +91,61 @@ export class AgentOrchestratorService {
       { metadata },
     );
 
-    // 3b. Check if conversation is handed off to human support
+    // 3b. Check if conversation is already handed off to human support
     if (conversation.status === ConversationStatus.HANDED_OFF) {
       this.logger.log(
         `Conversation ${conversation.id} for user '${channelUserId}' is HANDED_OFF to human support. AI reply paused.`,
       );
       return {
-        response: '',
+        response: 'Conversation is currently in hands-off mode for human support.',
         conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
         toolCallsExecuted: [],
         knowledgeSourcesUsed: 0,
         tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
         responseTimeMs: Date.now() - startTime,
         handedOff: true,
+        limit: maxLimit,
+        messageCount: currentMessageCount,
+        limitExceeded: isLimitExceeded,
+      };
+    }
+
+    // 3c. Check if conversation message limit is reached on this message turn
+    if (isLimitExceeded) {
+      this.logger.log(
+        `Conversation ${conversation.id} reached message limit (${currentMessageCount}/${maxLimit}). Automatically transitioning to HANDED_OFF status (Hands-Off Mode).`,
+      );
+
+      // Transition conversation status to HANDED_OFF
+      await this.memoryService.handoverConversation(conversation.id);
+
+      const handoffNotice =
+        tenant.settings?.handoffMessage ||
+        `⚠️ Conversation message limit reached (${currentMessageCount}/${maxLimit}). AI chat stopped and handed off to human support.`;
+
+      // Save system handoff notification message in conversation history
+      await this.memoryService.addMessage(
+        conversation.id,
+        MessageRole.SYSTEM,
+        handoffNotice,
+        channelType,
+      );
+
+      const responseTimeMs = Date.now() - startTime;
+
+      return {
+        response: handoffNotice,
+        conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs,
+        handedOff: true,
+        limit: maxLimit,
+        messageCount: currentMessageCount,
+        limitExceeded: true,
       };
     }
 
@@ -162,10 +222,15 @@ export class AgentOrchestratorService {
             return {
               response: faqAnswer,
               conversationId: conversation.id,
+              status: ConversationStatus.ACTIVE,
               toolCallsExecuted: [],
               knowledgeSourcesUsed: 1,
               tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
               responseTimeMs,
+              handedOff: false,
+              limit: maxLimit,
+              messageCount: currentMessageCount + 1,
+              limitExceeded: false,
             };
           }
         } catch (err: any) {
@@ -291,10 +356,15 @@ export class AgentOrchestratorService {
     return {
       response: finalResponse,
       conversationId: conversation.id,
+      status: ConversationStatus.ACTIVE,
       toolCallsExecuted,
       knowledgeSourcesUsed: knowledgeTexts.length,
       tokenUsage: totalTokenUsage,
       responseTimeMs,
+      handedOff: false,
+      limit: maxLimit,
+      messageCount: currentMessageCount + 1,
+      limitExceeded: false,
     };
   }
 }

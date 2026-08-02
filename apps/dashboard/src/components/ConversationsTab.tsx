@@ -35,6 +35,9 @@ export interface ConversationItem {
   status: 'active' | 'handed_off' | 'closed';
   summary?: string;
   lastMessageAt: string;
+  metadata?: Record<string, any>;
+  limit?: number;
+  limitExceeded?: boolean;
 }
 
 const QUICK_REPLIES = [
@@ -208,6 +211,46 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       }
     } catch (err) {
       console.error('Error updating conversation status on live API', err);
+    }
+  };
+
+  // Update per-conversation message limit via backend API
+  const handleUpdateLimit = async (newLimit: number) => {
+    if (!selectedConv) return;
+    try {
+      const res = await axios.patch(
+        `/api/v1/conversations/${selectedConv.id}/limit`,
+        { maxMessages: newLimit },
+        { headers: { 'x-api-key': apiKey } },
+      );
+
+      const updatedMetadata = {
+        ...(selectedConv.metadata || {}),
+        maxMessages: newLimit,
+      };
+
+      const newStatus = res.data?.status || selectedConv.status;
+
+      const updatedConv: ConversationItem = {
+        ...selectedConv,
+        metadata: updatedMetadata,
+        status: newStatus,
+        limit: newLimit,
+        limitExceeded: newLimit > 0 && selectedConv.messageCount >= newLimit,
+      };
+
+      setSelectedConv(updatedConv);
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConv.id
+            ? { ...c, metadata: updatedMetadata, status: newStatus, limit: newLimit }
+            : c,
+        ),
+      );
+
+      await loadConversationDetail(selectedConv.id);
+    } catch (err) {
+      console.error('Error updating conversation limit on live API', err);
     }
   };
 
@@ -500,10 +543,25 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
               {/* Header */}
               <div style={{ paddingBottom: '14px', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <h4 style={{ fontSize: '16px', fontWeight: 800 }}>{selectedConv.channelUserId}</h4>
                     <span className="badge badge-purple" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
                       {selectedConv.channelType}
+                    </span>
+                    {selectedConv.status === 'handed_off' && (
+                      <span className="badge" style={{ fontSize: '11px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                        ✋ Hands-Off (Human Agent)
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      Messages: <strong style={{ color: 'var(--text-primary)' }}>{selectedConv.messageCount}</strong>
+                      {typeof (selectedConv.limit ?? selectedConv.metadata?.maxMessages) === 'number' && (selectedConv.limit ?? selectedConv.metadata?.maxMessages) > 0 ? (
+                        <> / {(selectedConv.limit ?? selectedConv.metadata?.maxMessages)} msgs limit</>
+                      ) : (
+                        <> (Unlimited)</>
+                      )}
                     </span>
                   </div>
                   {selectedConv.summary && (
@@ -512,7 +570,26 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                 </div>
 
                 {/* Quick Status & Action Buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {/* Limit control dropdown */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-glass)', padding: '3px 8px', borderRadius: '8px', fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Limit:</span>
+                    <select
+                      value={selectedConv.metadata?.maxMessages ?? selectedConv.limit ?? 0}
+                      onChange={(e) => handleUpdateLimit(parseInt(e.target.value, 10))}
+                      style={{ background: 'transparent', color: 'var(--text-primary)', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+                      title="Set max conversation message limit before human handoff"
+                    >
+                      <option value={0} style={{ background: '#1e293b' }}>Unlimited (0)</option>
+                      <option value={3} style={{ background: '#1e293b' }}>3 msgs</option>
+                      <option value={5} style={{ background: '#1e293b' }}>5 msgs</option>
+                      <option value={10} style={{ background: '#1e293b' }}>10 msgs</option>
+                      <option value={15} style={{ background: '#1e293b' }}>15 msgs</option>
+                      <option value={20} style={{ background: '#1e293b' }}>20 msgs</option>
+                      <option value={50} style={{ background: '#1e293b' }}>50 msgs</option>
+                    </select>
+                  </div>
+
                   {selectedConv.status === 'handed_off' ? (
                     <button
                       className="btn btn-secondary"
