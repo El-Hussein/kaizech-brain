@@ -16,9 +16,18 @@ export class AuthService {
   ) {}
 
   async login(dto: { slug?: string; email?: string; password?: string }) {
-    const slug = dto.slug?.trim().toLowerCase();
+    let slug = dto.slug?.trim().toLowerCase();
     const email = dto.email?.trim().toLowerCase();
     const password = dto.password?.trim();
+
+    // Normalize slug aliases to canonical DB slugs
+    if (slug) {
+      if (['mrkoon', 'mrkoon-auction', 'mrkoon_auction', 'mrkoon_auctions', 'mrkoonauctions'].includes(slug)) {
+        slug = 'mrkoon-auctions';
+      } else if (['medan', 'medanglobal', 'medan_global'].includes(slug)) {
+        slug = 'medan-global';
+      }
+    }
 
     if (!email && !slug) {
       throw new UnauthorizedException('Please enter your account email or workspace ID.');
@@ -30,7 +39,7 @@ export class AuthService {
 
     let tenant: TenantEntity | null = null;
 
-    // 1. Try finding tenant by slug
+    // 1. Try finding tenant by normalized slug
     if (slug) {
       tenant = await this.tenantRepository.findOne({ where: { slug } });
     }

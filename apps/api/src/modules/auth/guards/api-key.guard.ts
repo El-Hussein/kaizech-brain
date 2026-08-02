@@ -31,7 +31,15 @@ export class ApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('API key is required');
     }
 
-    const tenantSlug = request.headers['x-tenant-slug'] || request.query?.tenant;
+    let tenantSlug = (request.headers['x-tenant-slug'] || request.query?.tenant || '') as string;
+    if (tenantSlug) {
+      tenantSlug = tenantSlug.trim().toLowerCase();
+      if (['mrkoon', 'mrkoon-auction', 'mrkoon_auction', 'mrkoon_auctions', 'mrkoonauctions'].includes(tenantSlug)) {
+        tenantSlug = 'mrkoon-auctions';
+      } else if (['medan', 'medanglobal', 'medan_global'].includes(tenantSlug)) {
+        tenantSlug = 'medan-global';
+      }
+    }
     const tenantIdHeader = request.headers['x-tenant-id'];
 
     const keyHash = hashApiKey(apiKey);

@@ -424,12 +424,6 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Timezone</label>
               <input type="text" className="input-field" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
             </div>
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                Customer API Base Endpoint
-              </label>
-              <input type="url" className="input-field" value={apiEndpoint} onChange={(e) => setApiEndpoint(e.target.value)} />
-            </div>
             <button className="btn btn-primary" style={{ marginTop: '8px' }} onClick={handleSaveProfile}>
               {profileSaved ? <><Check size={15} /> Saved!</> : 'Save Profile'}
             </button>

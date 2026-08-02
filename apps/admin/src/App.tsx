@@ -973,17 +973,6 @@ export const App: React.FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Customer API Base Endpoint</label>
-                  <input
-                    type="url"
-                    placeholder="https://api.client.com/chatbot/v1"
-                    className="input-field"
-                    value={apiEndpoint}
-                    onChange={(e) => setApiEndpoint(e.target.value)}
-                  />
-                </div>
-
-                <div>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Welcome Greeting Message</label>
                   <textarea
                     placeholder="Welcome to Mrkoon Auctions! How can I help you today?"
@@ -1131,18 +1120,6 @@ export const App: React.FC = () => {
                   className="input-field"
                   value={editTimezone}
                   onChange={(e) => setEditTimezone(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                  Customer API Base Endpoint
-                </label>
-                <input
-                  type="url"
-                  className="input-field"
-                  value={editApiEndpoint}
-                  onChange={(e) => setEditApiEndpoint(e.target.value)}
                 />
               </div>
 
