@@ -87,6 +87,43 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [apiEndpoint, setApiEndpoint] = useState('https://api.mrkoon.com/v1/bot');
   const [profileSaved, setProfileSaved] = useState(false);
 
+  // ── AI Provider & Secret Keys ─────────────────────────────────────────────
+  const [openaiApiKey, setOpenaiApiKey] = useState(() => {
+    return localStorage.getItem('kaizech_openai_api_key') || '';
+  });
+  const [openaiModel, setOpenaiModel] = useState('gpt-4o');
+  const [showOpenAiKey, setShowOpenAiKey] = useState(false);
+  const [openaiSaved, setOpenaiSaved] = useState(false);
+  const [savingOpenAi, setSavingOpenAi] = useState(false);
+
+  const maskSecret = (key: string): string => {
+    if (!key) return 'Not configured';
+    if (key.length <= 8) return '••••••••';
+    const start = key.substring(0, 7);
+    const end = key.substring(key.length - 4);
+    return `${start}••••••••••••${end}`;
+  };
+
+  const handleSaveOpenAiConfig = async () => {
+    setSavingOpenAi(true);
+    localStorage.setItem('kaizech_openai_api_key', openaiApiKey);
+    try {
+      await axios.put(
+        `${API_BASE}/tenants/${TENANT_ID}`,
+        {
+          settings: {
+            openaiApiKey,
+            openaiModel,
+          },
+        },
+        { headers: { 'x-api-key': apiKey } },
+      );
+    } catch {}
+    setOpenaiSaved(true);
+    setTimeout(() => setOpenaiSaved(false), 2000);
+    setSavingOpenAi(false);
+  };
+
   // ── FAQ & AI Reply Behavior ───────────────────────────────────────────────
   const [faqBotMode, setFaqBotMode] = useState<'strict_first' | 'ai_only'>('strict_first');
   const [faqStrictThreshold, setFaqStrictThreshold] = useState<number>(0.75);
@@ -364,6 +401,85 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 Auth: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 6px', borderRadius: '4px' }}>x-api-key</code> header<br />
                 Reply: JSON response body
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── AI Provider & OpenAI Secret Key Configuration ───────────────────── */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <SectionHeader
+          icon={<Sparkles size={18} color="var(--accent-cyan)" />}
+          title="AI Model Provider & Secret API Keys"
+          subtitle="Configure your OpenAI API key and LLM model. Keys are masked for privacy and security."
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+              OpenAI API Key (Secret Variable)
+              <span style={{ marginLeft: '8px', color: 'var(--accent-amber)', fontSize: '12px' }}>
+                (e.g. sk-proj-...)
+              </span>
+            </label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type={showOpenAiKey ? 'text' : 'password'}
+                className="input-field"
+                value={openaiApiKey}
+                onChange={(e) => setOpenaiApiKey(e.target.value)}
+                placeholder="Paste your secret OpenAI API Key (sk-proj-...)"
+                style={{ flex: 1, fontFamily: 'monospace', fontSize: '13px' }}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowOpenAiKey(!showOpenAiKey)}
+                style={{ minWidth: '40px' }}
+                title={showOpenAiKey ? 'Mask Secret Key' : 'Reveal Secret Key'}
+              >
+                {showOpenAiKey ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+            {openaiApiKey && !showOpenAiKey && (
+              <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', marginTop: '6px', fontFamily: 'monospace' }}>
+                🔒 Secret Key Masked: {maskSecret(openaiApiKey)}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                LLM Model
+              </label>
+              <select
+                className="input-field"
+                value={openaiModel}
+                onChange={(e) => setOpenaiModel(e.target.value)}
+              >
+                <option value="gpt-4o">GPT-4o (Omni — Recommended)</option>
+                <option value="gpt-4o-mini">GPT-4o Mini (Fast & Cost Efficient)</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                className="btn btn-primary"
+                onClick={handleSaveOpenAiConfig}
+                disabled={savingOpenAi}
+                style={{ width: '100%' }}
+              >
+                {savingOpenAi ? (
+                  <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving Key…</>
+                ) : openaiSaved ? (
+                  <><Check size={15} /> Secret Key Saved!</>
+                ) : (
+                  'Save AI Key Settings'
+                )}
+              </button>
             </div>
           </div>
         </div>

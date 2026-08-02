@@ -25,8 +25,11 @@ export class OpenAIProvider implements ILLMProvider {
     );
   }
 
-  private getClient(): OpenAI {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY') || process.env.OPENAI_API_KEY;
+  private getClient(customApiKey?: string): OpenAI {
+    const apiKey =
+      customApiKey ||
+      this.configService.get<string>('OPENAI_API_KEY') ||
+      process.env.OPENAI_API_KEY;
     return new OpenAI({
       apiKey: apiKey || '',
     });
@@ -98,7 +101,7 @@ export class OpenAIProvider implements ILLMProvider {
         requestBody.tools = options.tools as any;
       }
 
-      const completion = await this.getClient().chat.completions.create(requestBody);
+      const completion = await this.getClient(options.apiKey).chat.completions.create(requestBody);
       const choice = completion.choices[0];
       const message = choice.message;
 
@@ -128,9 +131,9 @@ export class OpenAIProvider implements ILLMProvider {
     }
   }
 
-  async generateEmbedding(text: string, model?: string): Promise<number[]> {
+  async generateEmbedding(text: string, model?: string, customApiKey?: string): Promise<number[]> {
     try {
-      const response = await this.getClient().embeddings.create({
+      const response = await this.getClient(customApiKey).embeddings.create({
         model: model || this.defaultEmbeddingModel,
         input: text,
       });
@@ -141,9 +144,9 @@ export class OpenAIProvider implements ILLMProvider {
     }
   }
 
-  async generateEmbeddings(texts: string[], model?: string): Promise<number[][]> {
+  async generateEmbeddings(texts: string[], model?: string, customApiKey?: string): Promise<number[][]> {
     try {
-      const response = await this.getClient().embeddings.create({
+      const response = await this.getClient(customApiKey).embeddings.create({
         model: model || this.defaultEmbeddingModel,
         input: texts,
       });

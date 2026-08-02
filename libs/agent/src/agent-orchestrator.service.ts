@@ -82,6 +82,7 @@ export class AgentOrchestratorService {
       typeof tenant.settings?.faqStrictThreshold === 'number'
         ? tenant.settings.faqStrictThreshold
         : 0.75;
+    const openaiApiKey = tenant.settings?.openaiApiKey;
 
     const provider = this.providerFactory.getProvider('openai');
     let userEmbedding: number[] | null = null;
@@ -90,7 +91,7 @@ export class AgentOrchestratorService {
       const hasFaqs = await this.vectorSearch.hasFaqSources(tenant.id);
       if (hasFaqs) {
         try {
-          userEmbedding = await provider.generateEmbedding(userMessage);
+          userEmbedding = await provider.generateEmbedding(userMessage, undefined, openaiApiKey);
           const faqMatches = await this.vectorSearch.searchFaqs(
             tenant.id,
             userEmbedding,
@@ -141,13 +142,9 @@ export class AgentOrchestratorService {
               responseTimeMs,
             };
           }
-        } catch (faqErr: any) {
-          this.logger.warn(`FAQ pre-reply search warning: ${faqErr.message}`);
+        } catch (err: any) {
+          this.logger.warn(`Strict FAQ retrieval warning: ${err.message}`);
         }
-      } else {
-        this.logger.debug(
-          `Tenant '${tenant.name}' has strict FAQ enabled but no FAQ sources uploaded. Passing to AI handler.`,
-        );
       }
     }
 
@@ -156,7 +153,7 @@ export class AgentOrchestratorService {
 
     try {
       if (!userEmbedding) {
-        userEmbedding = await provider.generateEmbedding(userMessage);
+        userEmbedding = await provider.generateEmbedding(userMessage, undefined, openaiApiKey);
       }
       const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 5, 0.4);
       knowledgeTexts = chunks.map((c) => c.content);
@@ -189,7 +186,8 @@ export class AgentOrchestratorService {
     let llmResult = await provider.chatCompletion({
       messages: llmMessages,
       tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-    });
+      apiKey: openaiApiKey,
+    } as any);
 
     totalTokenUsage.promptTokens += llmResult.usage.promptTokens;
     totalTokenUsage.completionTokens += llmResult.usage.completionTokens;
