@@ -114,7 +114,7 @@ export class VectorSearchService {
         FROM knowledge_chunks c
         LEFT JOIN knowledge_sources s ON c.source_id = s.id
         WHERE c.tenant_id = $1
-          AND (s.source_type = 'FAQ' OR c.metadata->>'sourceType' = 'FAQ')
+          AND (LOWER(s.source_type) = 'faq' OR LOWER(c.metadata->>'sourceType') = 'faq')
         `,
         [tenantId],
       );
@@ -142,7 +142,7 @@ export class VectorSearchService {
         FROM knowledge_chunks c
         LEFT JOIN knowledge_sources s ON c.source_id = s.id
         WHERE c.tenant_id = $1
-          AND (s.source_type = 'FAQ' OR c.metadata->>'sourceType' = 'FAQ')
+          AND (LOWER(s.source_type) = 'faq' OR LOWER(c.metadata->>'sourceType') = 'faq')
         `,
         [tenantId],
       );
@@ -197,7 +197,7 @@ export class VectorSearchService {
         LEFT JOIN knowledge_sources s ON c.source_id = s.id
         WHERE c.tenant_id = $2
           AND c.embedding IS NOT NULL
-          AND (s.source_type = 'FAQ' OR c.metadata->>'sourceType' = 'FAQ')
+          AND (LOWER(s.source_type) = 'faq' OR LOWER(c.metadata->>'sourceType') = 'faq')
         ORDER BY c.embedding <=> $1::vector ASC
         LIMIT $3
         `,
