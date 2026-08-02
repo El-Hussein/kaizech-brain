@@ -8,14 +8,14 @@ import {
   MessageSquare,
   Settings,
   Brain,
-  ChevronDown,
   Building2,
   Lock,
   LogOut,
   UserCheck,
-  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 import axios from 'axios';
+import { LoginPage } from './components/LoginPage';
 import { OverviewTab } from './components/OverviewTab';
 import { PromptBuilderTab } from './components/PromptBuilderTab';
 import { KnowledgeTab } from './components/KnowledgeTab';
@@ -82,103 +82,78 @@ export const App: React.FC = () => {
     'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'conversations' | 'settings'
   >('overview');
 
-  const [tenants, setTenants] = useState<any[]>([]);
-  const [selectedTenantSlug, setSelectedTenantSlug] = useState<string>('medan-global');
-  const [apiKey, setApiKey] = useState('kb_demo_tenant_key');
-  const [tenantName, setTenantName] = useState('Medan');
-  const [ownerEmail, setOwnerEmail] = useState('medan@kaizech.com');
-
-  // Authentication State
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginSlug, setLoginSlug] = useState('medan-global');
-  const [loginPassword, setLoginPassword] = useState('');
+  // Auth Session State
+  const [session, setSession] = useState<{
+    token: string;
+    user: { email: string; name: string; role: string };
+    tenant: { id: string; name: string; slug: string; apiKey: string };
+  } | null>(() => {
+    try {
+      const saved = localStorage.getItem('kaizech_tenant_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    // Check URL parameters first (e.g. ?tenant=medan-global)
+    // Check URL parameters if passed from admin console with token / tenant
     const urlParams = new URLSearchParams(window.location.search);
     const paramTenant = urlParams.get('tenant');
     const paramKey = urlParams.get('apiKey');
 
-    const initialSlug = paramTenant || 'medan-global';
-    setSelectedTenantSlug(initialSlug);
-
-    if (paramKey) {
-      setApiKey(paramKey);
+    if (paramTenant && !session) {
+      const formattedName = paramTenant
+        .split(/[-_]/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+      const newSession = {
+        token: 'admin_link_token',
+        user: { email: `admin@${paramTenant}.com`, name: `${formattedName} Admin`, role: 'tenant_admin' },
+        tenant: {
+          id: 't-' + paramTenant,
+          name: formattedName,
+          slug: paramTenant,
+          apiKey: paramKey || `kb_live_sk_${paramTenant}`,
+        },
+      };
+      setSession(newSession);
+      localStorage.setItem('kaizech_tenant_session', JSON.stringify(newSession));
     }
-
-    fetchTenantsList(initialSlug, paramKey);
   }, []);
 
-  // Synchronize global Axios headers whenever active tenant changes
+  // Configure Axios global headers to lock requests strictly to authenticated tenant
   useEffect(() => {
-    if (selectedTenantSlug) {
-      axios.defaults.headers.common['x-tenant-slug'] = selectedTenantSlug;
+    if (session?.tenant) {
+      axios.defaults.headers.common['x-tenant-slug'] = session.tenant.slug;
+      axios.defaults.headers.common['x-api-key'] = session.tenant.apiKey;
     }
-    if (apiKey) {
-      axios.defaults.headers.common['x-api-key'] = apiKey;
-    }
-  }, [selectedTenantSlug, apiKey]);
+  }, [session]);
 
-  const fetchTenantsList = async (targetSlug?: string | null, targetApiKey?: string | null) => {
-    try {
-      const res = await axios.get('/api/v1/tenants');
-      const list = res.data || [];
-      if (list.length > 0) {
-        setTenants(list);
-        const match = targetSlug ? list.find((t: any) => t.slug === targetSlug) : list[0];
-        if (match) {
-          setSelectedTenantSlug(match.slug);
-          setTenantName(match.name);
-          setOwnerEmail(match.ownerEmail || match.settings?.ownerEmail || `${match.slug}@tenant.com`);
-          if (!targetApiKey && match.apiKey) {
-            setApiKey(match.apiKey);
-          }
-        }
-      }
-    } catch {
-      // Fallback mock tenant list
-      const mockList = [
-        { id: 't-1', name: 'Medan', slug: 'medan-global', ownerEmail: 'admin@medan.com', apiKey: 'kb_live_sk_medan' },
-        { id: 't-2', name: 'Mrkoon Auctions', slug: 'mrkoon', ownerEmail: 'admin@mrkoon.com', apiKey: 'kb_demo_tenant_key' },
-        { id: 't-3', name: 'E-Nursery Schools', slug: 'e-nursery', ownerEmail: 'support@enursery.app', apiKey: 'kb_live_sk_enursery' },
-        { id: 't-4', name: 'City Care Hospital', slug: 'city-care', ownerEmail: 'it@citycare.hospital', apiKey: 'kb_live_sk_citycare' },
-      ];
-      setTenants(mockList);
-      if (targetSlug) {
-        const match = mockList.find((t) => t.slug === targetSlug);
-        if (match) {
-          setSelectedTenantSlug(match.slug);
-          setTenantName(match.name);
-          setOwnerEmail(match.ownerEmail);
-        }
-      }
-    }
+  const handleLoginSuccess = (newSession: {
+    token: string;
+    user: { email: string; name: string; role: string };
+    tenant: { id: string; name: string; slug: string; apiKey: string };
+  }) => {
+    setSession(newSession);
+    localStorage.setItem('kaizech_tenant_session', JSON.stringify(newSession));
+    axios.defaults.headers.common['x-tenant-slug'] = newSession.tenant.slug;
+    axios.defaults.headers.common['x-api-key'] = newSession.tenant.apiKey;
   };
 
-  const handleSelectTenant = (slug: string) => {
-    setSelectedTenantSlug(slug);
-    const found = tenants.find((t) => t.slug === slug);
-    if (found) {
-      setTenantName(found.name);
-      setOwnerEmail(found.ownerEmail || found.settings?.ownerEmail || `${slug}@tenant.com`);
-      const keyToUse = found.apiKey || `kb_live_sk_${slug}`;
-      setApiKey(keyToUse);
-
-      axios.defaults.headers.common['x-tenant-slug'] = slug;
-      axios.defaults.headers.common['x-api-key'] = keyToUse;
-    }
+  const handleLogout = () => {
+    setSession(null);
+    localStorage.removeItem('kaizech_tenant_session');
+    delete axios.defaults.headers.common['x-tenant-slug'];
+    delete axios.defaults.headers.common['x-api-key'];
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const targetSlug = loginSlug || 'medan-global';
-    handleSelectTenant(targetSlug);
-    if (loginEmail) {
-      setOwnerEmail(loginEmail);
-    }
-    setShowLoginModal(false);
-  };
+  // Render Login Page if unauthenticated
+  if (!session) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  const { tenant, user } = session;
 
   return (
     <div className="app-container">
@@ -188,19 +163,19 @@ export const App: React.FC = () => {
           <Brain size={28} /> Kaizech Brain
         </div>
 
-        {/* Dynamic Tenant Switcher Dropdown */}
+        {/* Locked Active Workspace Badge */}
         <div
           style={{
             background: 'var(--bg-surface-elevated)',
-            padding: '12px',
+            padding: '14px',
             borderRadius: '12px',
-            border: '1px solid var(--border-glass)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
           }}
         >
           <div
             style={{
               fontSize: '11px',
-              color: 'var(--text-dim)',
+              color: 'var(--accent-emerald)',
               textTransform: 'uppercase',
               fontWeight: 700,
               marginBottom: '6px',
@@ -209,49 +184,13 @@ export const App: React.FC = () => {
               gap: '6px',
             }}
           >
-            <Building2 size={12} color="var(--accent-primary)" /> Active Workspace
+            <ShieldCheck size={13} color="var(--accent-emerald)" /> Verified Workspace
           </div>
-          <div style={{ position: 'relative' }}>
-            <select
-              value={selectedTenantSlug}
-              onChange={(e) => handleSelectTenant(e.target.value)}
-              style={{
-                width: '100%',
-                background: 'rgba(15, 23, 42, 0.8)',
-                color: 'var(--text-main)',
-                border: '1px solid var(--border-glass)',
-                borderRadius: '8px',
-                padding: '8px 30px 8px 10px',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                appearance: 'none',
-                outline: 'none',
-              }}
-            >
-              {tenants.length > 0 ? (
-                tenants.map((t) => (
-                  <option key={t.id || t.slug} value={t.slug} style={{ background: '#0f172a', color: '#fff' }}>
-                    {t.name} ({t.slug})
-                  </option>
-                ))
-              ) : (
-                <option value="medan-global" style={{ background: '#0f172a', color: '#fff' }}>
-                  Medan (medan-global)
-                </option>
-              )}
-            </select>
-            <ChevronDown
-              size={16}
-              color="var(--text-muted)"
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none',
-              }}
-            />
+          <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-main)' }}>
+            {tenant.name}
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            Slug: <code style={{ color: 'var(--accent-cyan)' }}>{tenant.slug}</code>
           </div>
         </div>
 
@@ -301,7 +240,7 @@ export const App: React.FC = () => {
           </li>
         </ul>
 
-        {/* User Account / Auth Section in Sidebar Footer */}
+        {/* Account & Logout Section */}
         <div
           style={{
             marginTop: 'auto',
@@ -309,133 +248,46 @@ export const App: React.FC = () => {
             borderTop: '1px solid var(--border-glass)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            gap: '10px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
             <UserCheck size={14} color="var(--accent-emerald)" />
-            <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {ownerEmail}
+            <span
+              style={{
+                color: 'var(--text-muted)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                fontWeight: 600,
+              }}
+              title={user.email}
+            >
+              {user.email}
             </span>
           </div>
           <button
             className="btn btn-secondary"
-            style={{ width: '100%', fontSize: '12px', padding: '6px 10px', justifyContent: 'center' }}
-            onClick={() => setShowLoginModal(true)}
+            style={{ width: '100%', fontSize: '12px', padding: '8px 10px', justifyContent: 'center' }}
+            onClick={handleLogout}
           >
-            <Lock size={12} /> Log In / Switch Account
+            <LogOut size={13} color="var(--accent-rose)" /> Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="main-content">
-        <ErrorBoundary key={`${activeTab}-${selectedTenantSlug}`}>
-          {activeTab === 'overview' && <OverviewTab apiKey={apiKey} />}
-          {activeTab === 'prompt' && <PromptBuilderTab apiKey={apiKey} />}
-          {activeTab === 'knowledge' && <KnowledgeTab apiKey={apiKey} />}
-          {activeTab === 'tools' && <ToolsTab apiKey={apiKey} />}
-          {activeTab === 'playground' && <PlaygroundTab apiKey={apiKey} />}
-          {activeTab === 'conversations' && <ConversationsTab apiKey={apiKey} />}
-          {activeTab === 'settings' && <SettingsTab apiKey={apiKey} />}
+        <ErrorBoundary key={`${activeTab}-${tenant.slug}`}>
+          {activeTab === 'overview' && <OverviewTab apiKey={tenant.apiKey} />}
+          {activeTab === 'prompt' && <PromptBuilderTab apiKey={tenant.apiKey} />}
+          {activeTab === 'knowledge' && <KnowledgeTab apiKey={tenant.apiKey} />}
+          {activeTab === 'tools' && <ToolsTab apiKey={tenant.apiKey} />}
+          {activeTab === 'playground' && <PlaygroundTab apiKey={tenant.apiKey} />}
+          {activeTab === 'conversations' && <ConversationsTab apiKey={tenant.apiKey} />}
+          {activeTab === 'settings' && <SettingsTab apiKey={tenant.apiKey} />}
         </ErrorBoundary>
       </main>
-
-      {/* Modal: Tenant Account Login Portal */}
-      {showLoginModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(10px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2000,
-            padding: '20px',
-          }}
-        >
-          <div
-            className="glass-card"
-            style={{
-              width: '100%',
-              maxWidth: '440px',
-              padding: '28px',
-              border: '1px solid var(--accent-primary)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <Brain size={24} color="var(--accent-primary)" />
-              <h2 style={{ fontSize: '20px', fontWeight: 800 }}>Tenant Account Sign In</h2>
-            </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-              Log in to your customer workspace or switch active tenant accounts.
-            </p>
-
-            <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                  Tenant Workspace Account
-                </label>
-                <select
-                  value={loginSlug}
-                  onChange={(e) => setLoginSlug(e.target.value)}
-                  className="input-field"
-                  style={{ background: '#0f172a', color: '#fff' }}
-                >
-                  {tenants.map((t) => (
-                    <option key={t.id || t.slug} value={t.slug}>
-                      {t.name} ({t.slug})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                  Account Owner Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="e.g. owner@medan.com"
-                  className="input-field"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                  Password / Access Token
-                </label>
-                <input
-                  type="password"
-                  placeholder="••••••••••••"
-                  className="input-field"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowLoginModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Sign In to Workspace
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

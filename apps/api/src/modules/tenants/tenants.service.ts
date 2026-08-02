@@ -91,8 +91,9 @@ export class TenantsService {
 
   async update(id: string, dto: UpdateTenantDto) {
     const tenant = await this.findOne(id);
-    if (dto.settings) {
-      const mergedSettings = { ...(tenant.settings || {}), ...dto.settings };
+    const ownerEmail = (dto as any).ownerEmail;
+    if (dto.settings || ownerEmail) {
+      const mergedSettings: Record<string, any> = { ...(tenant.settings || {}), ...(dto.settings || {}), ...(ownerEmail ? { ownerEmail } : {}) };
       if (mergedSettings.openaiApiKey && typeof mergedSettings.openaiApiKey === 'string' && !mergedSettings.openaiApiKey.startsWith('enc_v1:')) {
         mergedSettings.openaiApiKey = encryptSecret(mergedSettings.openaiApiKey);
       }
@@ -104,7 +105,7 @@ export class TenantsService {
       }
       tenant.settings = mergedSettings;
     }
-    const { settings, ...rest } = dto as any;
+    const { settings, ownerEmail: _, ...rest } = dto as any;
     Object.assign(tenant, rest);
     return this.tenantRepository.save(tenant);
   }

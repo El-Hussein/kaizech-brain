@@ -37,6 +37,11 @@ export class CreateTenantDto {
   @IsObject()
   branding?: Record<string, any>;
 
+  @ApiPropertyOptional({ description: 'Account Owner Email' })
+  @IsOptional()
+  @IsString()
+  ownerEmail?: string;
+
   @ApiPropertyOptional({ description: 'Additional settings' })
   @IsOptional()
   @IsObject()
