@@ -29,13 +29,18 @@ export class MetaSignatureGuard implements CanActivate {
       throw new ForbiddenException('Missing X-Hub-Signature-256 header');
     }
 
-    // Resolve the App Secret: tenant-level setting takes priority, fallback to global env
+    // Resolve the App Secret: tenant-level setting takes priority, fallback to default tenant & global env
     const tenantId = request.params?.tenantId;
     let appSecret: string | undefined;
 
     if (tenantId) {
       const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
       appSecret = tenant?.settings?.whatsappAppSecret;
+    }
+
+    if (!appSecret) {
+      const defaultTenant = await this.tenantRepository.findOne({ where: { slug: 'mrkoon-auctions' } });
+      appSecret = defaultTenant?.settings?.whatsappAppSecret;
     }
 
     if (!appSecret) {
