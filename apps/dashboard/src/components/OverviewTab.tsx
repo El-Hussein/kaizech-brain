@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Languages,
   Timer,
+  Info,
 } from 'lucide-react';
 import axios from 'axios';
 import { Button } from './ui/Button';
@@ -33,20 +34,26 @@ const SkeletonCard = () => (
   </div>
 );
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
+// ── Stat card with (i) Info Tooltip ─────────────────────────────────────────
 const StatCard: React.FC<{
   label: string;
   value: React.ReactNode;
   sub: React.ReactNode;
   icon: React.ReactNode;
   color: string;
-}> = ({ label, value, sub, icon, color }) => (
+  tooltip: string;
+}> = ({ label, value, sub, icon, color, tooltip }) => (
   <div
     className="glass-card"
     style={{ padding: '20px', borderLeft: `3px solid ${color}`, transition: 'box-shadow 0.2s' }}
   >
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>{label}</span>
+        <span title={tooltip} style={{ display: 'inline-flex', cursor: 'help', color: 'var(--text-muted)', opacity: 0.7 }}>
+          <Info size={13} />
+        </span>
+      </div>
       <span style={{ color }}>{icon}</span>
     </div>
     <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '12px', color }}>{value}</div>
@@ -211,6 +218,7 @@ export const OverviewTab: React.FC<OverviewProps> = ({ apiKey }) => {
               }
               icon={<MessageSquare size={20} />}
               color="var(--accent-primary)"
+              tooltip="Total count of customer and agent messages exchanged across all active and closed support threads."
             />
             <StatCard
               label="Resolution Rate"
@@ -222,6 +230,7 @@ export const OverviewTab: React.FC<OverviewProps> = ({ apiKey }) => {
               }
               icon={<CheckCircle2 size={20} />}
               color="var(--accent-emerald)"
+              tooltip="Percentage of conversations fully handled and resolved by the AI Agent without escalation to a human agent. Formula: ((Total Threads - Human Handoffs) / Total Threads) × 100"
             />
             <StatCard
               label="Avg Response Time"
@@ -229,6 +238,7 @@ export const OverviewTab: React.FC<OverviewProps> = ({ apiKey }) => {
               sub={<span style={{ color: 'var(--text-dim)', fontSize: '12px' }}>{responseSubLabel}</span>}
               icon={<Clock size={20} />}
               color="var(--accent-cyan)"
+              tooltip="Average latency taken by the AI Agent to retrieve knowledge (RAG), process tool calls, and generate responses."
             />
             <StatCard
               label="Estimated Cost"
@@ -240,6 +250,7 @@ export const OverviewTab: React.FC<OverviewProps> = ({ apiKey }) => {
               }
               icon={<DollarSign size={20} />}
               color="var(--accent-amber)"
+              tooltip="Estimated LLM API cost calculated from total input (prompt) and output (completion) tokens consumed."
             />
           </>
         )}
