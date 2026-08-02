@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Plus, Users, Cpu, Activity, Key, CheckCircle2, Search, Trash2, Copy, Check } from 'lucide-react';
 import axios from 'axios';
 
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
+axios.defaults.baseURL = (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
 
 
 export const App: React.FC = () => {

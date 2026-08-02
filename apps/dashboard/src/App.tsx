@@ -9,7 +9,7 @@ import { PlaygroundTab } from './components/PlaygroundTab';
 import { ConversationsTab } from './components/ConversationsTab';
 import { SettingsTab } from './components/SettingsTab';
 
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
+axios.defaults.baseURL = (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
 
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
