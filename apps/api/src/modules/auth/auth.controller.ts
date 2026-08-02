@@ -1,10 +1,22 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 import { AuthService } from './auth.service';
 
 export class LoginDto {
+  @ApiPropertyOptional({ description: 'Workspace ID / Slug', example: 'mrkoon' })
+  @IsOptional()
+  @IsString()
   slug?: string;
+
+  @ApiPropertyOptional({ description: 'Account Email', example: 'mrkoon@tenant.com' })
+  @IsOptional()
+  @IsString()
   email?: string;
+
+  @ApiPropertyOptional({ description: 'Account Password' })
+  @IsOptional()
+  @IsString()
   password?: string;
 }
 
