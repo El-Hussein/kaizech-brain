@@ -7,6 +7,7 @@ import {
   ChatCompletionResult,
   ToolCall,
   AIProviderException,
+  decryptSecret,
 } from '@kaizech/shared';
 
 @Injectable()
@@ -26,10 +27,12 @@ export class OpenAIProvider implements ILLMProvider {
   }
 
   private getClient(customApiKey?: string): OpenAI {
-    const apiKey =
+    const rawKey =
       customApiKey ||
       this.configService.get<string>('OPENAI_API_KEY') ||
-      process.env.OPENAI_API_KEY;
+      process.env.OPENAI_API_KEY ||
+      '';
+    const apiKey = decryptSecret(rawKey);
     return new OpenAI({
       apiKey: apiKey || '',
     });

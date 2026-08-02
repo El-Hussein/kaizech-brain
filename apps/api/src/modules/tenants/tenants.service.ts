@@ -2,7 +2,7 @@ import { Injectable, Logger, ConflictException, NotFoundException } from '@nestj
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantEntity, ApiKeyEntity } from '@kaizech/database';
-import { generateApiKey, hashApiKey } from '@kaizech/shared';
+import { generateApiKey, hashApiKey, encryptSecret } from '@kaizech/shared';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 
@@ -77,7 +77,11 @@ export class TenantsService {
   async update(id: string, dto: UpdateTenantDto) {
     const tenant = await this.findOne(id);
     if (dto.settings) {
-      tenant.settings = { ...(tenant.settings || {}), ...dto.settings };
+      const mergedSettings = { ...(tenant.settings || {}), ...dto.settings };
+      if (mergedSettings.openaiApiKey && typeof mergedSettings.openaiApiKey === 'string' && !mergedSettings.openaiApiKey.startsWith('enc_v1:')) {
+        mergedSettings.openaiApiKey = encryptSecret(mergedSettings.openaiApiKey);
+      }
+      tenant.settings = mergedSettings;
     }
     const { settings, ...rest } = dto as any;
     Object.assign(tenant, rest);

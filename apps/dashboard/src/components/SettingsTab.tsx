@@ -108,7 +108,6 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
   const handleSaveOpenAiConfig = async () => {
     setSavingOpenAi(true);
-    localStorage.setItem('kaizech_openai_api_key', openaiApiKey);
     try {
       await axios.put(
         `${API_BASE}/tenants/${TENANT_ID}`,
