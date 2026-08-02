@@ -224,6 +224,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           headers: { 'x-api-key': apiKey },
         });
         if (res.data) {
+          if (res.data.settings?.whatsappVerifyToken) {
+            setVerifyToken(res.data.settings.whatsappVerifyToken);
+          }
+          if (res.data.settings?.whatsappAppSecret) {
+            setAppSecret(res.data.settings.whatsappAppSecret);
+          }
           if (res.data.settings?.faqBotMode) {
             setFaqBotMode(res.data.settings.faqBotMode);
           }
