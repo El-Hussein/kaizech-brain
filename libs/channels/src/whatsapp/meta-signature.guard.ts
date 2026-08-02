@@ -11,6 +11,8 @@ import { Repository } from 'typeorm';
 import { TenantEntity } from '@kaizech/database';
 import * as crypto from 'crypto';
 
+import { decryptSecret } from '@kaizech/shared';
+
 @Injectable()
 export class MetaSignatureGuard implements CanActivate {
   private readonly logger = new Logger(MetaSignatureGuard.name);
@@ -31,25 +33,27 @@ export class MetaSignatureGuard implements CanActivate {
 
     // Resolve the App Secret: tenant-level setting takes priority, fallback to default tenant & global env
     const tenantId = request.params?.tenantId;
-    let appSecret: string | undefined;
+    let rawAppSecret: string | undefined;
 
     if (tenantId) {
       const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
-      appSecret = tenant?.settings?.whatsappAppSecret;
+      rawAppSecret = tenant?.settings?.whatsappAppSecret;
     }
 
-    if (!appSecret) {
+    if (!rawAppSecret) {
       const defaultTenant = await this.tenantRepository.findOne({ where: { slug: 'mrkoon-auctions' } });
-      appSecret = defaultTenant?.settings?.whatsappAppSecret;
+      rawAppSecret = defaultTenant?.settings?.whatsappAppSecret;
     }
 
-    if (!appSecret) {
-      appSecret = this.configService.get<string>('WHATSAPP_APP_SECRET', '');
+    if (!rawAppSecret) {
+      rawAppSecret = this.configService.get<string>('WHATSAPP_APP_SECRET', '');
     }
+
+    const appSecret = decryptSecret(rawAppSecret || '');
 
     if (!appSecret) {
       this.logger.error('WHATSAPP_APP_SECRET is not configured — cannot validate Meta signature');
-      throw new ForbiddenException('WhatsApp App Secret is not configured on this tenant');
+      throw new ForbiddenException('WhatsApp App Secret is not configured. Please save it under Settings & API Keys in Dashboard.');
     }
 
     // rawBody is populated by NestFactory.create({ rawBody: true })
