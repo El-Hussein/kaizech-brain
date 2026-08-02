@@ -91,16 +91,25 @@ export class AgentOrchestratorService {
       const hasFaqs = await this.vectorSearch.hasFaqSources(tenant.id);
       if (hasFaqs) {
         try {
-          userEmbedding = await provider.generateEmbedding(userMessage, undefined, openaiApiKey);
-          const faqMatches = await this.vectorSearch.searchFaqs(
-            tenant.id,
-            userEmbedding,
-            1,
-            faqStrictThreshold,
-          );
+          // 1. Direct Question Match Check (Highest Priority)
+          const directMatch = await this.vectorSearch.findDirectFaqMatch(tenant.id, userMessage);
+          let bestFaq = directMatch;
 
-          if (faqMatches.length > 0) {
-            const bestFaq = faqMatches[0];
+          // 2. Vector Semantic Search Fallback
+          if (!bestFaq) {
+            userEmbedding = await provider.generateEmbedding(userMessage, undefined, openaiApiKey);
+            const faqMatches = await this.vectorSearch.searchFaqs(
+              tenant.id,
+              userEmbedding,
+              1,
+              faqStrictThreshold,
+            );
+            if (faqMatches.length > 0) {
+              bestFaq = faqMatches[0];
+            }
+          }
+
+          if (bestFaq) {
             this.logger.log(
               `Strict FAQ match found for tenant '${tenant.name}' (similarity: ${bestFaq.similarity.toFixed(
                 4,

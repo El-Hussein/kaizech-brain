@@ -126,6 +126,55 @@ export class VectorSearchService {
     }
   }
 
+  async findDirectFaqMatch(tenantId: string, userQuery: string): Promise<VectorSearchResult | null> {
+    try {
+      const cleanQuery = userQuery.trim().toLowerCase().replace(/[^\w\s\u0600-\u06FF]/g, '');
+      if (!cleanQuery) return null;
+
+      const rawResults = await this.dataSource.query(
+        `
+        SELECT 
+          c.id, 
+          c.source_id as "sourceId", 
+          c.content, 
+          c.chunk_index as "chunkIndex", 
+          c.metadata
+        FROM knowledge_chunks c
+        LEFT JOIN knowledge_sources s ON c.source_id = s.id
+        WHERE c.tenant_id = $1
+          AND (s.source_type = 'FAQ' OR c.metadata->>'sourceType' = 'FAQ')
+        `,
+        [tenantId],
+      );
+
+      for (const row of rawResults) {
+        const content = row.content || '';
+        const qMatch = content.match(/Question:\s*([^\n]+)/i);
+        if (qMatch && qMatch[1]) {
+          const faqQuestion = qMatch[1].trim().toLowerCase().replace(/[^\w\s\u0600-\u06FF]/g, '');
+          if (
+            faqQuestion === cleanQuery ||
+            cleanQuery.includes(faqQuestion) ||
+            faqQuestion.includes(cleanQuery)
+          ) {
+            return {
+              id: row.id,
+              sourceId: row.sourceId,
+              content: row.content,
+              chunkIndex: row.chunkIndex,
+              similarity: 1.0,
+              metadata: row.metadata,
+            };
+          }
+        }
+      }
+      return null;
+    } catch (error: any) {
+      this.logger.warn(`findDirectFaqMatch error: ${error.message}`);
+      return null;
+    }
+  }
+
   async searchFaqs(
     tenantId: string,
     queryEmbedding: number[],
