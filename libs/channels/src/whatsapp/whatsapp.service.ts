@@ -26,24 +26,52 @@ export class WhatsAppService {
   async handleIncomingPayload(payload: any, tenant: TenantEntity): Promise<void> {
     try {
       console.log('📲 Processing WhatsApp Payload for Tenant:', tenant?.name || tenant?.id);
+
+      // 1. Validate envelope payload
+      if (!payload || typeof payload !== 'object') {
+        console.log('⚠️ Invalid WhatsApp payload received (null or non-object). Skipping.');
+        return;
+      }
+
       const entry = payload?.entry?.[0];
       const changes = entry?.changes?.[0];
       const value = changes?.value;
-      const statuses = value?.statuses;
-      const message = value?.messages?.[0];
 
-      if (statuses) {
+      if (!value) {
+        console.log('⚠️ Webhook payload missing changes[0].value. Skipping.');
+        return;
+      }
+
+      // 2. Ignore status updates (delivered, read, sent, failed)
+      const statuses = value?.statuses;
+      if (statuses && (!value?.messages || value.messages.length === 0)) {
         console.log('ℹ️ WhatsApp Status Update (sent/delivered/read):', statuses[0]?.status, 'for recipient:', statuses[0]?.recipient_id);
         return;
       }
 
-      if (!message || message.type !== 'text') {
-        console.log('⚠️ Non-text or empty WhatsApp payload received:', JSON.stringify(value));
+      // 3. Check if an actual inbound message array exists and contains items
+      const messages = value?.messages;
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        console.log('ℹ️ No inbound message payload found in webhook event. Skipping response.');
+        return;
+      }
+
+      const message = messages[0];
+
+      // 4. Validate message object and text body presence
+      if (!message || message.type !== 'text' || !message.text?.body) {
+        console.log('⚠️ Non-text message or missing text body in WhatsApp payload. Skipping response.');
+        return;
+      }
+
+      // 5. Check if the message is empty or whitespace only
+      const userText = message.text.body.trim();
+      if (!userText || userText.length === 0) {
+        console.log('⚠️ Empty message received in WhatsApp payload. Skipping response.');
         return;
       }
 
       const fromNumber = message.from; // User WhatsApp Phone Number
-      const userText = message.text.body;
       const contactName = value?.contacts?.[0]?.profile?.name || fromNumber;
       const phoneNumberId = value?.metadata?.phone_number_id;
 

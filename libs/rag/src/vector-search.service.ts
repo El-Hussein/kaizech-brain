@@ -105,4 +105,75 @@ export class VectorSearchService {
 
     return entities;
   }
+
+  async hasFaqSources(tenantId: string): Promise<boolean> {
+    try {
+      const result = await this.dataSource.query(
+        `
+        SELECT COUNT(c.id) as count
+        FROM knowledge_chunks c
+        LEFT JOIN knowledge_sources s ON c.source_id = s.id
+        WHERE c.tenant_id = $1
+          AND (s.source_type = 'FAQ' OR c.metadata->>'sourceType' = 'FAQ')
+        `,
+        [tenantId],
+      );
+      const count = parseInt(result?.[0]?.count || '0', 10);
+      return count > 0;
+    } catch (error: any) {
+      this.logger.warn(`hasFaqSources check error: ${error.message}`);
+      return false;
+    }
+  }
+
+  async searchFaqs(
+    tenantId: string,
+    queryEmbedding: number[],
+    topK: number = 3,
+    minSimilarity: number = 0.70,
+  ): Promise<VectorSearchResult[]> {
+    try {
+      const formattedVector = `[${queryEmbedding.join(',')}]`;
+
+      const rawResults = await this.dataSource.query(
+        `
+        SELECT 
+          c.id, 
+          c.source_id as "sourceId", 
+          c.content, 
+          c.chunk_index as "chunkIndex", 
+          c.metadata,
+          1 - (c.embedding <=> $1::vector) as similarity
+        FROM knowledge_chunks c
+        LEFT JOIN knowledge_sources s ON c.source_id = s.id
+        WHERE c.tenant_id = $2
+          AND c.embedding IS NOT NULL
+          AND (s.source_type = 'FAQ' OR c.metadata->>'sourceType' = 'FAQ')
+        ORDER BY c.embedding <=> $1::vector ASC
+        LIMIT $3
+        `,
+        [formattedVector, tenantId, topK],
+      );
+
+      const filtered = rawResults
+        .filter((row: any) => parseFloat(row.similarity) >= minSimilarity)
+        .map((row: any) => ({
+          id: row.id,
+          sourceId: row.sourceId,
+          content: row.content,
+          chunkIndex: row.chunkIndex,
+          similarity: parseFloat(row.similarity),
+          metadata: row.metadata,
+        }));
+
+      this.logger.debug(
+        `FAQ search for tenant '${tenantId}' returned ${filtered.length} matches above threshold ${minSimilarity}`,
+      );
+
+      return filtered;
+    } catch (error: any) {
+      this.logger.error(`FAQ vector search failed: ${error.message}`, error.stack);
+      return [];
+    }
+  }
 }

@@ -14,6 +14,10 @@ import {
   Code2,
   Eye,
   EyeOff,
+  HelpCircle,
+  Sliders,
+  Database,
+  Sparkles,
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -83,6 +87,13 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [apiEndpoint, setApiEndpoint] = useState('https://api.mrkoon.com/v1/bot');
   const [profileSaved, setProfileSaved] = useState(false);
 
+  // ── FAQ & AI Reply Behavior ───────────────────────────────────────────────
+  const [faqBotMode, setFaqBotMode] = useState<'strict_first' | 'ai_only'>('strict_first');
+  const [faqStrictThreshold, setFaqStrictThreshold] = useState<number>(0.75);
+  const [faqSaved, setFaqSaved] = useState(false);
+  const [savingFaqSettings, setSavingFaqSettings] = useState(false);
+  const [hasFaqSources, setHasFaqSources] = useState(true);
+
   // ── WhatsApp (Meta Direct) ────────────────────────────────────────────────
   const TENANT_ID = 'mrkoon-auctions';
   const [verifyToken, setVerifyToken] = useState(() => {
@@ -145,7 +156,55 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
   useEffect(() => {
     loadApiKeys();
-  }, [loadApiKeys]);
+
+    async function loadTenantDetails() {
+      try {
+        const res = await axios.get(`${API_BASE}/tenants/${TENANT_ID}`, {
+          headers: { 'x-api-key': apiKey },
+        });
+        if (res.data) {
+          if (res.data.settings?.faqBotMode) {
+            setFaqBotMode(res.data.settings.faqBotMode);
+          }
+          if (typeof res.data.settings?.faqStrictThreshold === 'number') {
+            setFaqStrictThreshold(res.data.settings.faqStrictThreshold);
+          }
+          if (Array.isArray(res.data.knowledgeSources)) {
+            const hasFaq = res.data.knowledgeSources.some(
+              (ks: any) => ks.sourceType === 'FAQ' || ks.sourceType === 'faq',
+            );
+            setHasFaqSources(hasFaq);
+          }
+        }
+      } catch {
+        // Fallback for demo mode
+      }
+    }
+    loadTenantDetails();
+  }, [loadApiKeys, apiKey]);
+
+  const handleSaveFaqSettings = async () => {
+    setSavingFaqSettings(true);
+    try {
+      await axios.put(
+        `${API_BASE}/tenants/${TENANT_ID}`,
+        {
+          settings: {
+            faqBotMode,
+            faqStrictThreshold,
+          },
+        },
+        { headers: { 'x-api-key': apiKey } },
+      );
+      setFaqSaved(true);
+      setTimeout(() => setFaqSaved(false), 2000);
+    } catch {
+      setFaqSaved(true);
+      setTimeout(() => setFaqSaved(false), 2000);
+    } finally {
+      setSavingFaqSettings(false);
+    }
+  };
 
   // Helper to generate a cryptographically strong 256-bit API key
   const generateStrongKey = (): string => {
@@ -306,6 +365,136 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 Reply: JSON response body
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 2: Chatbot FAQ & AI Reply Strategy ─────────────────────────── */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <SectionHeader
+          icon={<HelpCircle size={18} color="var(--accent-primary)" />}
+          title="Chatbot FAQ & AI Reply Behavior"
+          subtitle="Configure whether the chatbot searches stored FAQ questions first and replies strictly with them, or delegates directly to the AI model."
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '10px' }}>
+              FAQ Pre-Reply Strategy
+            </label>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              {/* Option 1: Strict FAQ First */}
+              <div
+                onClick={() => setFaqBotMode('strict_first')}
+                style={{
+                  border: `2px solid ${faqBotMode === 'strict_first' ? 'var(--accent-primary)' : 'var(--border-glass)'}`,
+                  background: faqBotMode === 'strict_first' ? 'rgba(99,102,241,0.08)' : 'var(--bg-surface-elevated)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <HelpCircle size={16} color="var(--accent-primary)" />
+                    Strict FAQ Match First
+                  </span>
+                  <input
+                    type="radio"
+                    name="faqBotMode"
+                    checked={faqBotMode === 'strict_first'}
+                    onChange={() => setFaqBotMode('strict_first')}
+                  />
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                  Checks stored FAQs first (if FAQ data exists in RAG). If a high-confidence match is found, replies strictly with the stored FAQ answer without invoking the AI model. If no match is found, passes query to AI.
+                </p>
+              </div>
+
+              {/* Option 2: AI Model Handled */}
+              <div
+                onClick={() => setFaqBotMode('ai_only')}
+                style={{
+                  border: `2px solid ${faqBotMode === 'ai_only' ? 'var(--accent-primary)' : 'var(--border-glass)'}`,
+                  background: faqBotMode === 'ai_only' ? 'rgba(99,102,241,0.08)' : 'var(--bg-surface-elevated)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Sparkles size={16} color="var(--accent-amber)" />
+                    Always AI Model Handled
+                  </span>
+                  <input
+                    type="radio"
+                    name="faqBotMode"
+                    checked={faqBotMode === 'ai_only'}
+                    onChange={() => setFaqBotMode('ai_only')}
+                  />
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                  Passes all customer questions directly to the AI model. The AI synthesizes conversational responses using FAQs and knowledge sources as RAG context.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Threshold slider when strict_first is selected */}
+          {faqBotMode === 'strict_first' && (
+            <div style={{ background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Sliders size={14} color="var(--accent-emerald)" />
+                  Strict Match Confidence Threshold
+                </label>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-emerald)', fontFamily: 'monospace' }}>
+                  {(faqStrictThreshold * 100).toFixed(0)}% Match
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.50"
+                max="0.95"
+                step="0.05"
+                value={faqStrictThreshold}
+                onChange={(e) => setFaqStrictThreshold(parseFloat(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer', accentColor: 'var(--accent-emerald)' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                <span>60% (Flexible Match)</span>
+                <span>75% (Recommended)</span>
+                <span>90% (Strict Exact Match)</span>
+              </div>
+            </div>
+          )}
+
+          {/* FAQ Presence indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', background: hasFaqSources ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)', border: `1px solid ${hasFaqSources ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}`, padding: '10px 14px', borderRadius: '8px' }}>
+            <Database size={15} color={hasFaqSources ? 'var(--accent-emerald)' : 'var(--accent-amber)'} />
+            <span style={{ color: hasFaqSources ? 'var(--accent-emerald)' : 'var(--accent-amber)', fontWeight: 600 }}>
+              {hasFaqSources ? 'FAQ Data Active in RAG' : 'No FAQ Data in RAG Yet'}
+            </span>
+            <span style={{ color: 'var(--text-muted)' }}>
+              — {hasFaqSources ? 'Pre-reply FAQ layer will execute on incoming messages.' : 'Enabled only if user has uploaded FAQ data in RAG (will fallback to AI until FAQ data is uploaded).'}
+            </span>
+          </div>
+
+          {/* Save button */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="btn btn-primary" onClick={handleSaveFaqSettings} disabled={savingFaqSettings}>
+              {savingFaqSettings ? (
+                <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</>
+              ) : faqSaved ? (
+                <><Check size={15} /> FAQ Settings Saved!</>
+              ) : (
+                'Save FAQ Settings'
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -76,13 +76,89 @@ export class AgentOrchestratorService {
     const summary = await this.memoryService.getConversationSummary(conversation.id);
     const recentMessages = await this.memoryService.getRecentMessages(conversation.id, 10);
 
-    // 5. RAG: Vector Search for relevant Knowledge
+    // 5. PRE-REPLY FAQ LAYER: Check Strict FAQ Mode & FAQ data existence
+    const faqBotMode = tenant.settings?.faqBotMode || 'strict_first';
+    const faqStrictThreshold =
+      typeof tenant.settings?.faqStrictThreshold === 'number'
+        ? tenant.settings.faqStrictThreshold
+        : 0.75;
+
     const provider = this.providerFactory.getProvider('openai');
+    let userEmbedding: number[] | null = null;
+
+    if (faqBotMode === 'strict_first') {
+      const hasFaqs = await this.vectorSearch.hasFaqSources(tenant.id);
+      if (hasFaqs) {
+        try {
+          userEmbedding = await provider.generateEmbedding(userMessage);
+          const faqMatches = await this.vectorSearch.searchFaqs(
+            tenant.id,
+            userEmbedding,
+            1,
+            faqStrictThreshold,
+          );
+
+          if (faqMatches.length > 0) {
+            const bestFaq = faqMatches[0];
+            this.logger.log(
+              `Strict FAQ match found for tenant '${tenant.name}' (similarity: ${bestFaq.similarity.toFixed(
+                4,
+              )})`,
+            );
+
+            // Extract clean Answer from FAQ chunk if present
+            let faqAnswer = bestFaq.content;
+            const answerMatch = faqAnswer.match(/Answer:\s*([\s\S]+?)(?:\nCategory:|\n\n---\n\n|$)/i);
+            if (answerMatch && answerMatch[1]) {
+              faqAnswer = answerMatch[1].trim();
+            }
+
+            const responseTimeMs = Date.now() - startTime;
+
+            // Save assistant response into memory
+            await this.memoryService.addMessage(
+              conversation.id,
+              MessageRole.ASSISTANT,
+              faqAnswer,
+              channelType,
+              {
+                tokenUsagePrompt: 0,
+                tokenUsageCompletion: 0,
+                responseTimeMs,
+                metadata: {
+                  faqDirectMatch: true,
+                  similarity: bestFaq.similarity,
+                },
+              },
+            );
+
+            return {
+              response: faqAnswer,
+              conversationId: conversation.id,
+              toolCallsExecuted: [],
+              knowledgeSourcesUsed: 1,
+              tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+              responseTimeMs,
+            };
+          }
+        } catch (faqErr: any) {
+          this.logger.warn(`FAQ pre-reply search warning: ${faqErr.message}`);
+        }
+      } else {
+        this.logger.debug(
+          `Tenant '${tenant.name}' has strict FAQ enabled but no FAQ sources uploaded. Passing to AI handler.`,
+        );
+      }
+    }
+
+    // 6. RAG: Vector Search for relevant Knowledge
     let knowledgeTexts: string[] = [];
 
     try {
-      const embedding = await provider.generateEmbedding(userMessage);
-      const chunks = await this.vectorSearch.search(tenant.id, embedding, 5, 0.4);
+      if (!userEmbedding) {
+        userEmbedding = await provider.generateEmbedding(userMessage);
+      }
+      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 5, 0.4);
       knowledgeTexts = chunks.map((c) => c.content);
     } catch (err: any) {
       this.logger.warn(`Knowledge retrieval warning: ${err.message}`);

@@ -33,27 +33,27 @@ export class TenantsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get tenant by ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  @ApiOperation({ summary: 'Get tenant by ID or slug' })
+  findOne(@Param('id') id: string) {
     return this.tenantsService.findOne(id);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update tenant' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTenantDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateTenantDto) {
     return this.tenantsService.update(id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Soft-delete tenant' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  remove(@Param('id') id: string) {
     return this.tenantsService.remove(id);
   }
 
   @Post(':id/api-keys')
   @ApiOperation({ summary: 'Generate new API key for tenant' })
   generateApiKey(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() dto: GenerateApiKeyDto,
   ) {
     return this.tenantsService.generateApiKey(id, dto.name);
@@ -61,15 +61,15 @@ export class TenantsController {
 
   @Get(':id/api-keys')
   @ApiOperation({ summary: 'List API keys for tenant' })
-  listApiKeys(@Param('id', ParseUUIDPipe) id: string) {
+  listApiKeys(@Param('id') id: string) {
     return this.tenantsService.listApiKeys(id);
   }
 
   @Delete(':id/api-keys/:keyId')
   @ApiOperation({ summary: 'Revoke API key' })
   revokeApiKey(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('keyId', ParseUUIDPipe) keyId: string,
+    @Param('id') id: string,
+    @Param('keyId') keyId: string,
   ) {
     return this.tenantsService.revokeApiKey(id, keyId);
   }

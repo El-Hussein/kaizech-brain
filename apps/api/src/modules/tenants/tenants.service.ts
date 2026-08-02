@@ -62,13 +62,14 @@ export class TenantsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(idOrSlug: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
     const tenant = await this.tenantRepository.findOne({
-      where: { id },
+      where: isUuid ? { id: idOrSlug } : { slug: idOrSlug },
       relations: ['knowledgeSources', 'toolManifests', 'promptTemplates'],
     });
     if (!tenant) {
-      throw new NotFoundException(`Tenant with ID '${id}' not found`);
+      throw new NotFoundException(`Tenant '${idOrSlug}' not found`);
     }
     return tenant;
   }

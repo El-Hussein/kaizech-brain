@@ -134,6 +134,16 @@ export class ChannelsController {
   ) {
     const tenantContext = req.tenant; // injected by ApiKeyGuard
 
+    if (!body.message || !body.message.trim()) {
+      return {
+        reply: null,
+        sessionId: body.sessionId,
+        tenantId: tenantContext?.tenantId ?? null,
+        skipped: true,
+        reason: 'Message content is empty',
+      };
+    }
+
     const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
 
     const channelType =
@@ -145,7 +155,7 @@ export class ChannelsController {
       tenant,
       channelType,
       channelUserId: body.sessionId,
-      userMessage: body.message,
+      userMessage: body.message.trim(),
       displayName: body.displayName ?? body.sessionId,
       metadata: { apiKeyId: tenantContext.apiKeyId },
     });
