@@ -99,6 +99,9 @@ export class TenantsService {
       if (mergedSettings.whatsappAppSecret && typeof mergedSettings.whatsappAppSecret === 'string' && !mergedSettings.whatsappAppSecret.startsWith('enc_v1:')) {
         mergedSettings.whatsappAppSecret = encryptSecret(mergedSettings.whatsappAppSecret);
       }
+      if (mergedSettings.whatsappAccessToken && typeof mergedSettings.whatsappAccessToken === 'string' && !mergedSettings.whatsappAccessToken.startsWith('enc_v1:')) {
+        mergedSettings.whatsappAccessToken = encryptSecret(mergedSettings.whatsappAccessToken);
+      }
       tenant.settings = mergedSettings;
     }
     const { settings, ...rest } = dto as any;

@@ -3,7 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { AgentOrchestratorService } from '@kaizech/agent';
 import { TenantEntity } from '@kaizech/database';
-import { MessageChannel } from '@kaizech/shared';
+import { MessageChannel, decryptSecret } from '@kaizech/shared';
+
+function maskSecret(key: string): string {
+  if (!key) return 'NONE';
+  if (key.length <= 8) return '••••••••';
+  return `${key.substring(0, 4)}••••••••${key.substring(key.length - 4)}`;
+}
 
 @Injectable()
 export class WhatsAppService {
@@ -109,12 +115,26 @@ export class WhatsAppService {
   ): Promise<void> {
     const baseUrl = this.configService.get<string>('WHATSAPP_API_URL', 'https://graph.facebook.com/v19.0');
     const defaultPhoneNumberId = this.configService.get<string>('WHATSAPP_PHONE_NUMBER_ID', 'default_id');
-    const token = accessTokenOverride || this.configService.get<string>('WHATSAPP_ACCESS_TOKEN', '');
+    let rawToken =
+      accessTokenOverride ||
+      this.configService.get<string>('WHATSAPP_ACCESS_TOKEN', '') ||
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      '';
 
+    const token = decryptSecret(rawToken);
     const targetPhoneId = phoneNumberId || defaultPhoneNumberId;
     const url = `${baseUrl}/${targetPhoneId}/messages`;
 
-    console.log(`📤 Sending Outbound WhatsApp API Request to ${url}...`);
+    if (!token) {
+      this.logger.error(
+        'WHATSAPP_ACCESS_TOKEN is missing or empty. Please set your Meta System User Access Token under Settings & API Keys in Dashboard or set WHATSAPP_ACCESS_TOKEN env variable.',
+      );
+      return;
+    }
+
+    this.logger.log(
+      `📤 Sending Outbound WhatsApp API Request to ${url} (PhoneID: ${targetPhoneId}, Token: ${maskSecret(token)}, length: ${token.length})...`,
+    );
 
     try {
       const response = await axios.post(
@@ -133,10 +153,10 @@ export class WhatsAppService {
           },
         },
       );
-      console.log(`✅ Outbound WhatsApp message sent to ${to}:`, response.data);
+      this.logger.log(`✅ Outbound WhatsApp message sent to ${to}: ${JSON.stringify(response.data)}`);
     } catch (error: any) {
       const errDetail = error.response ? JSON.stringify(error.response.data) : error.message;
-      console.error(`❌ Failed to send WhatsApp message to ${to}: ${errDetail}`);
+      this.logger.error(`❌ Failed to send WhatsApp message to ${to}: ${errDetail}`);
     }
   }
 }

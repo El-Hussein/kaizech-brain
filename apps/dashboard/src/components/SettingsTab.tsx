@@ -148,7 +148,11 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [appSecret, setAppSecret] = useState(() => {
     return localStorage.getItem('kaizech_app_secret') || '';
   });
+  const [accessToken, setAccessToken] = useState(() => {
+    return localStorage.getItem('kaizech_access_token') || '';
+  });
   const [showAppSecret, setShowAppSecret] = useState(false);
+  const [showAccessToken, setShowAccessToken] = useState(false);
   const [whatsappSaved, setWhatsappSaved] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState(() => {
     return localStorage.getItem('kaizech_webhook_url') || computedWebhook;
@@ -158,6 +162,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const saveWhatsAppConfig = async () => {
     localStorage.setItem('kaizech_verify_token', verifyToken);
     localStorage.setItem('kaizech_app_secret', appSecret);
+    localStorage.setItem('kaizech_access_token', accessToken);
     localStorage.setItem('kaizech_webhook_url', webhookUrl);
 
     try {
@@ -167,6 +172,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           settings: {
             whatsappVerifyToken: verifyToken,
             whatsappAppSecret: appSecret,
+            whatsappAccessToken: accessToken,
             whatsappWebhookUrl: webhookUrl,
           },
         },
@@ -229,6 +235,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           }
           if (res.data.settings?.whatsappAppSecret) {
             setAppSecret(res.data.settings.whatsappAppSecret);
+          }
+          if (res.data.settings?.whatsappAccessToken) {
+            setAccessToken(res.data.settings.whatsappAccessToken);
           }
           if (res.data.settings?.faqBotMode) {
             setFaqBotMode(res.data.settings.faqBotMode);
@@ -712,6 +721,28 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 />
                 <button className="btn btn-secondary" onClick={() => setShowAppSecret(!showAppSecret)} style={{ minWidth: '40px' }}>
                   {showAppSecret ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Meta Permanent Access Token
+                <span style={{ marginLeft: '6px', fontWeight: 400, color: 'var(--accent-amber)', fontSize: '12px' }}>
+                  (System User Token for outbound messages)
+                </span>
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type={showAccessToken ? 'text' : 'password'}
+                  className="input-field"
+                  value={accessToken}
+                  onChange={(e) => setAccessToken(e.target.value)}
+                  placeholder="Paste Meta Permanent Access Token (EAAG...)"
+                  style={{ flex: 1 }}
+                />
+                <button className="btn btn-secondary" onClick={() => setShowAccessToken(!showAccessToken)} style={{ minWidth: '40px' }}>
+                  {showAccessToken ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
