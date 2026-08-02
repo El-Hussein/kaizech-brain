@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { KnowledgeSourceEntity, KnowledgeChunkEntity } from '@kaizech/database';
+import { KnowledgeSourceEntity, KnowledgeChunkEntity, TenantEntity } from '@kaizech/database';
 import { RAGModule } from '@kaizech/rag';
 import { AgentModule } from '@kaizech/agent';
 import { DocumentParserService } from './document-parser.service';
@@ -9,7 +9,7 @@ import { KnowledgeManagerService } from './knowledge-manager.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([KnowledgeSourceEntity, KnowledgeChunkEntity]),
+    TypeOrmModule.forFeature([KnowledgeSourceEntity, KnowledgeChunkEntity, TenantEntity]),
     RAGModule,
     AgentModule,
   ],

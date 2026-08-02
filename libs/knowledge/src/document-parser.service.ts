@@ -58,11 +58,15 @@ export class DocumentParserService {
   }
 
   parseFaqs(faqData: Array<{ question: string; answer: string; category?: string }>): string {
-    return faqData
+    const validFaqs = faqData.filter(
+      (faq) => (faq.question && faq.question.trim()) || (faq.answer && faq.answer.trim()),
+    );
+
+    return validFaqs
       .map(
         (faq, idx) =>
-          `FAQ #${idx + 1}:\nQuestion: ${faq.question}\nAnswer: ${faq.answer}${
-            faq.category ? `\nCategory: ${faq.category}` : ''
+          `FAQ #${idx + 1}:\nQuestion: ${faq.question?.trim() || ''}\nAnswer: ${faq.answer?.trim() || ''}${
+            faq.category?.trim() ? `\nCategory: ${faq.category.trim()}` : ''
           }`,
       )
       .join('\n\n---\n\n');

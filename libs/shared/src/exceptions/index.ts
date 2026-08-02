@@ -35,6 +35,6 @@ export class ToolExecutionException extends HttpException {
 
 export class AIProviderException extends HttpException {
   constructor(provider: string, message: string) {
-    super(`AI Provider '${provider}' error: ${message}`, HttpStatus.SERVICE_UNAVAILABLE);
+    super(`AI Provider '${provider}' error: ${message}`, HttpStatus.BAD_GATEWAY);
   }
 }

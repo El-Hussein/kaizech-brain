@@ -83,6 +83,14 @@ export class KnowledgeController {
       throw new BadRequestException('FAQ list cannot be empty');
     }
 
+    const validFaqs = body.faqs.filter(
+      (f) => (f.question && f.question.trim()) || (f.answer && f.answer.trim()),
+    );
+
+    if (validFaqs.length === 0) {
+      throw new BadRequestException('FAQ list must contain at least one non-empty question or answer');
+    }
+
     return this.knowledgeManager.processDocumentUpload(
       tenant.tenantId,
       body.name || 'FAQ Knowledge',
@@ -90,7 +98,7 @@ export class KnowledgeController {
       undefined,
       undefined,
       undefined,
-      body.faqs,
+      validFaqs,
     );
   }
 

@@ -1,12 +1,12 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { KnowledgeSourceEntity, KnowledgeChunkEntity } from '@kaizech/database';
+import { KnowledgeSourceEntity, KnowledgeChunkEntity, TenantEntity } from '@kaizech/database';
 import { VectorSearchService } from '@kaizech/rag';
 import { AIProviderFactory } from '@kaizech/agent';
 import { DocumentParserService } from './document-parser.service';
 import { WebsiteCrawlerService } from './website-crawler.service';
-import { KnowledgeSourceType, KnowledgeStatus } from '@kaizech/shared';
+import { KnowledgeSourceType, KnowledgeStatus, KnowledgeProcessingException } from '@kaizech/shared';
 
 @Injectable()
 export class KnowledgeManagerService {
@@ -17,6 +17,8 @@ export class KnowledgeManagerService {
     private readonly sourceRepository: Repository<KnowledgeSourceEntity>,
     @InjectRepository(KnowledgeChunkEntity)
     private readonly chunkRepository: Repository<KnowledgeChunkEntity>,
+    @InjectRepository(TenantEntity)
+    private readonly tenantRepository: Repository<TenantEntity>,
     private readonly parser: DocumentParserService,
     private readonly crawler: WebsiteCrawlerService,
     private readonly vectorSearch: VectorSearchService,
@@ -61,18 +63,33 @@ export class KnowledgeManagerService {
       } else if (sourceType === KnowledgeSourceType.TEXT && rawContent) {
         extractedText = rawContent;
       } else {
-        throw new Error('Invalid knowledge source input or missing required file/URL/content.');
+        throw new BadRequestException('Invalid knowledge source input or missing required file/URL/content.');
       }
 
       // Chunk text
       const textChunks = this.parser.chunkText(extractedText, 1000, 200);
+      if (!textChunks || textChunks.length === 0) {
+        throw new BadRequestException('Document content is empty or contains no readable text to index.');
+      }
+
       this.logger.log(
         `Generated ${textChunks.length} chunk(s) for knowledge source '${name}' (Tenant ${tenantId})`,
       );
 
+      // Fetch tenant custom API key if configured
+      const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
+      const customApiKey = tenant?.settings?.openaiApiKey;
+
       // Generate Embeddings
       const provider = this.providerFactory.getProvider('openai');
-      const embeddings = await provider.generateEmbeddings(textChunks);
+      let embeddings: number[][];
+      try {
+        embeddings = await provider.generateEmbeddings(textChunks, undefined, customApiKey);
+      } catch (embErr: any) {
+        const errMsg = embErr.message || 'Failed to generate vector embeddings from AI provider.';
+        this.logger.error(`Embedding generation failed: ${errMsg}`, embErr.stack);
+        throw new KnowledgeProcessingException(errMsg);
+      }
 
       // Prepare chunks array
       const chunksData = textChunks.map((content, idx) => ({

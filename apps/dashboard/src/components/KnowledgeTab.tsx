@@ -38,6 +38,7 @@ interface Source {
   chunkCount: number;
   createdAt?: string;
   url?: string;
+  errorMessage?: string;
 }
 
 // ── Viewer Modal ─────────────────────────────────────────────────────────────
@@ -396,7 +397,8 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
       setUploadFile(null);
       fetchSources();
     } catch (err: any) {
-      alert(`Upload failed: ${err.message}`);
+      const msg = err.response?.data?.message || err.message || 'Upload failed';
+      alert(`Upload failed: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -406,11 +408,20 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
     e.preventDefault();
     try {
       setUploading(true);
-      await axios.post('/api/v1/knowledge/faq', { name: faqName, faqs }, { headers: { 'x-api-key': apiKey } });
+      const filteredFaqs = faqs.filter(
+        (f) => f.question.trim() !== '' || f.answer.trim() !== '',
+      );
+      if (filteredFaqs.length === 0) {
+        alert('Please enter at least one question or answer.');
+        setUploading(false);
+        return;
+      }
+      await axios.post('/api/v1/knowledge/faq', { name: faqName, faqs: filteredFaqs }, { headers: { 'x-api-key': apiKey } });
       setFaqs([{ question: '', answer: '' }]);
       fetchSources();
     } catch (err: any) {
-      alert(`FAQ import failed: ${err.message}`);
+      const msg = err.response?.data?.message || err.message || 'FAQ import failed';
+      alert(`FAQ import failed: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -425,7 +436,8 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
       setCrawlName('');
       fetchSources();
     } catch (err: any) {
-      alert(`Crawl failed: ${err.message}`);
+      const msg = err.response?.data?.message || err.message || 'Crawl failed';
+      alert(`Crawl failed: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -627,6 +639,11 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
                           </>
                         )}
                       </div>
+                      {src.status === 'failed' && src.errorMessage && (
+                        <div style={{ color: 'var(--accent-rose)', fontSize: '11px', marginTop: '4px', maxWidth: '400px' }}>
+                          Reason: {src.errorMessage}
+                        </div>
+                      )}
                     </div>
                   </div>
 
