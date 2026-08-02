@@ -10,8 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity, ApiBody } from '@nestjs/swagger';
-import { WhatsAppService } from '@kaizech/channels';
-import { MetaSignatureGuard } from './meta-signature.guard';
+import { WhatsAppService, MetaSignatureGuard } from '@kaizech/channels';
 import { AgentOrchestratorService } from '@kaizech/agent';
 import { TenantsService } from '../tenants/tenants.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
