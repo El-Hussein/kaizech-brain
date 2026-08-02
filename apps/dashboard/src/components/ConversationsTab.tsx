@@ -94,6 +94,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLInputElement>(null);
+  const selectedConvIdRef = useRef<string | null>(null);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -101,57 +102,19 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
   useEffect(() => {
     scrollToBottom('smooth');
-  }, [messages, loadingDetail]);
+  }, [messages.length, loadingDetail]);
 
-  // Fetch live conversations list from backend API
-  const fetchConversations = useCallback(
-    async (isManual = false) => {
-      try {
-        if (isManual) setRefreshing(true);
-        else if (conversations.length === 0) setLoading(true);
-
-        const res = await axios.get('/api/v1/conversations', {
-          headers: { 'x-api-key': apiKey },
-        });
-
-        const liveList: ConversationItem[] = res.data?.data || [];
-        setConversations(liveList);
-
-        if (liveList.length > 0) {
-          const currentId = selectedConv?.id;
-          const found = liveList.find((c) => c.id === currentId);
-          if (found) {
-            loadConversationDetail(found.id, false);
-          } else if (!selectedConv) {
-            loadConversationDetail(liveList[0].id, true);
-          }
-        } else {
-          setSelectedConv(null);
-          setMessages([]);
-        }
-      } catch (err) {
-        console.error('Failed to fetch live conversations from API', err);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [apiKey, selectedConv, conversations.length],
-  );
-
-  // Periodic polling for live updates every 8 seconds
+  // Keep ref up to date with selected conversation ID
   useEffect(() => {
-    fetchConversations(false);
-    const interval = setInterval(() => {
-      fetchConversations(false);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [apiKey]);
+    selectedConvIdRef.current = selectedConv?.id || null;
+  }, [selectedConv]);
 
-  // Load detail and messages for selected conversation ID from live backend API
-  const loadConversationDetail = async (convId: string, showSpinner = true) => {
+  // Load detail and messages for a specific conversation ID
+  const loadConversationDetail = async (convId: string, isExplicitSelection = false) => {
     try {
-      if (showSpinner) setLoadingDetail(true);
+      if (isExplicitSelection) {
+        setLoadingDetail(true);
+      }
       const res = await axios.get(`/api/v1/conversations/${convId}`, {
         headers: { 'x-api-key': apiKey },
       });
@@ -160,14 +123,68 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         setSelectedConv(res.data.conversation);
       }
       if (res.data?.messages) {
-        setMessages(res.data.messages);
+        // Only update if messages actually changed to avoid unnecessary re-renders
+        const fetchedMsgs: MessageItem[] = res.data.messages;
+        setMessages((prevMsgs) => {
+          if (prevMsgs.length === fetchedMsgs.length && prevMsgs.length > 0) {
+            const lastPrev = prevMsgs[prevMsgs.length - 1];
+            const lastFetched = fetchedMsgs[fetchedMsgs.length - 1];
+            if (lastPrev.id === lastFetched.id && lastPrev.content === lastFetched.content) {
+              return prevMsgs; // No change, keep same array reference!
+            }
+          }
+          return fetchedMsgs;
+        });
       }
     } catch (err) {
       console.error(`Failed to load details for conversation ${convId}`, err);
     } finally {
-      if (showSpinner) setLoadingDetail(false);
+      if (isExplicitSelection) {
+        setLoadingDetail(false);
+      }
     }
   };
+
+  // Fetch live conversations list (left sidebar)
+  const fetchConversations = useCallback(
+    async (isManual = false) => {
+      try {
+        if (isManual) setRefreshing(true);
+
+        const res = await axios.get('/api/v1/conversations', {
+          headers: { 'x-api-key': apiKey },
+        });
+
+        const liveList: ConversationItem[] = res.data?.data || [];
+        setConversations(liveList);
+
+        // Auto select first conversation ONLY on initial page load if none selected
+        if (liveList.length > 0 && !selectedConvIdRef.current) {
+          selectedConvIdRef.current = liveList[0].id;
+          loadConversationDetail(liveList[0].id, true);
+        } else if (selectedConvIdRef.current) {
+          // Silent poll update for current active conversation without clearing UI or showing skeleton
+          const currentActiveId = selectedConvIdRef.current;
+          loadConversationDetail(currentActiveId, false);
+        }
+      } catch (err) {
+        console.error('Failed to fetch live conversations from API', err);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [apiKey],
+  );
+
+  // Initial fetch and 10s background polling
+  useEffect(() => {
+    fetchConversations(false);
+    const interval = setInterval(() => {
+      fetchConversations(false);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [apiKey, fetchConversations]);
 
   // Filtered Conversations List
   const filteredConversations = useMemo(() => {
@@ -193,7 +210,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     };
   }, [conversations]);
 
-  // Handle sending human operator reply to live API
+  // Handle sending human operator reply with instant optimistic UI update
   const handleSendReply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!replyInput.trim() || !selectedConv || sendingReply) return;
@@ -202,29 +219,49 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     setReplyInput('');
     setSendingReply(true);
 
+    // 1. Optimistic Update: Append message immediately to UI without reloading or fetching
+    const tempMsg: MessageItem = {
+      id: `temp-${Date.now()}`,
+      role: 'assistant',
+      content: messageText,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, tempMsg]);
+
+    // Update message count in selected conversation locally
+    setSelectedConv((prev) =>
+      prev ? { ...prev, messageCount: prev.messageCount + 1 } : null,
+    );
+
+    setTimeout(() => {
+      scrollToBottom('smooth');
+      replyInputRef.current?.focus();
+    }, 20);
+
     try {
+      // 2. Post to backend in background
       await axios.post(
         `/api/v1/conversations/${selectedConv.id}/messages`,
         { role: 'assistant', content: messageText },
         { headers: { 'x-api-key': apiKey } },
       );
 
-      // Reload conversation messages & thread list from live database
-      await loadConversationDetail(selectedConv.id, false);
+      // 3. Silently update thread list
       const resList = await axios.get('/api/v1/conversations', {
         headers: { 'x-api-key': apiKey },
       });
       if (resList.data?.data) {
         setConversations(resList.data.data);
       }
-      setTimeout(() => {
-        scrollToBottom('smooth');
-        replyInputRef.current?.focus();
-      }, 50);
     } catch (err) {
       console.error('Error posting message to live API', err);
+      // Remove temp message if failed
+      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      alert('Failed to send live reply. Please check connection and try again.');
     } finally {
       setSendingReply(false);
+      replyInputRef.current?.focus();
     }
   };
 
@@ -512,7 +549,10 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                 return (
                   <div
                     key={c.id}
-                    onClick={() => loadConversationDetail(c.id)}
+                    onClick={() => {
+                      selectedConvIdRef.current = c.id;
+                      loadConversationDetail(c.id, true);
+                    }}
                     style={{
                       padding: '12px 14px',
                       borderRadius: '10px',
