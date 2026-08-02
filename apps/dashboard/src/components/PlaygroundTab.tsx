@@ -48,6 +48,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
+          'x-tenant-slug': (axios.defaults.headers.common['x-tenant-slug'] as string) || '',
         },
         body: JSON.stringify({ message: userText }),
       });
