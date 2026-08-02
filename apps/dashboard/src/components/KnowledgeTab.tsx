@@ -366,6 +366,9 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
     try {
       setLoading(true);
       setError(null);
+      const res = await axios.get('/api/v1/knowledge', {
+        headers: { 'x-api-key': apiKey },
+      });
       const sourceList = Array.isArray(res.data) ? res.data : (res.data?.data && Array.isArray(res.data.data) ? res.data.data : []);
       setSources(sourceList);
     } catch (err: any) {
