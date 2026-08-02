@@ -115,35 +115,41 @@ export class TenantsService {
     return { message: `Tenant '${tenant.name}' has been deactivated` };
   }
 
-  async generateApiKey(tenantId: string, name: string) {
-    await this.findOne(tenantId); // Verify tenant exists
+  async generateApiKey(idOrSlug: string, name: string) {
+    const tenant = await this.findOne(idOrSlug); // Resolves slug to UUID
     const rawKey = generateApiKey('kb_live_sk');
     const apiKey = this.apiKeyRepository.create({
       keyHash: hashApiKey(rawKey),
       keyPrefix: rawKey.substring(0, 14),
-      name,
-      tenantId,
+      name: name || 'API Key',
+      tenantId: tenant.id,
+      isActive: true,
     });
-    await this.apiKeyRepository.save(apiKey);
+    const saved = await this.apiKeyRepository.save(apiKey);
+    this.logger.log(`Created API key '${saved.name}' for tenant ${tenant.name} (${tenant.id})`);
 
     return {
       apiKey: rawKey,
-      name,
+      name: saved.name,
+      id: saved.id,
+      createdAt: saved.createdAt,
       message: 'Store this API key securely. It will not be shown again.',
     };
   }
 
-  async listApiKeys(tenantId: string) {
+  async listApiKeys(idOrSlug: string) {
+    const tenant = await this.findOne(idOrSlug);
     return this.apiKeyRepository.find({
-      where: { tenantId },
+      where: { tenantId: tenant.id },
       select: ['id', 'keyPrefix', 'name', 'isActive', 'lastUsedAt', 'expiresAt', 'createdAt'],
       order: { createdAt: 'DESC' },
     });
   }
 
-  async revokeApiKey(tenantId: string, keyId: string) {
+  async revokeApiKey(idOrSlug: string, keyId: string) {
+    const tenant = await this.findOne(idOrSlug);
     const key = await this.apiKeyRepository.findOne({
-      where: { id: keyId, tenantId },
+      where: { id: keyId, tenantId: tenant.id },
     });
     if (!key) {
       throw new NotFoundException('API key not found');
