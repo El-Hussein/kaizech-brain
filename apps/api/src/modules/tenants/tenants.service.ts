@@ -25,6 +25,9 @@ export class TenantsService {
       throw new ConflictException('Tenant with this name or slug already exists');
     }
 
+    const initialPassword = dto.password || `${dto.slug}@123`;
+    const initialOwnerEmail = dto.ownerEmail || `${dto.slug}@tenant.com`;
+
     const tenant = this.tenantRepository.create({
       name: dto.name,
       slug: dto.slug,
@@ -33,7 +36,11 @@ export class TenantsService {
       greetingMessage: dto.greetingMessage,
       apiEndpoint: dto.apiEndpoint,
       branding: dto.branding,
-      settings: dto.settings,
+      settings: {
+        ...(dto.settings || {}),
+        ownerEmail: initialOwnerEmail,
+        password: initialPassword,
+      },
     });
 
     const savedTenant = await this.tenantRepository.save(tenant);
@@ -52,14 +59,22 @@ export class TenantsService {
     return {
       tenant: savedTenant,
       apiKey: rawKey,
-      message: 'Store this API key securely. It will not be shown again.',
+      password: initialPassword,
+      ownerEmail: initialOwnerEmail,
+      message: 'Store these tenant account credentials and API key securely.',
     };
   }
 
   async findAll() {
-    return this.tenantRepository.find({
+    const tenants = await this.tenantRepository.find({
       order: { createdAt: 'DESC' },
     });
+
+    return tenants.map((t) => ({
+      ...t,
+      ownerEmail: t.settings?.ownerEmail || `${t.slug}@tenant.com`,
+      password: t.settings?.password || `${t.slug}@123`,
+    }));
   }
 
   async findOne(idOrSlug: string) {
@@ -78,6 +93,7 @@ export class TenantsService {
           languages: ['ar', 'en'],
           timezone: 'Asia/Riyadh',
           greetingMessage: 'Welcome to Mrkoon Auctions! How can I help you today?',
+          settings: { ownerEmail: 'admin@mrkoon.com', password: 'mrkoon@123' },
         }),
       );
     }
@@ -86,14 +102,24 @@ export class TenantsService {
       throw new NotFoundException(`Tenant '${idOrSlug}' not found`);
     }
 
-    return tenant;
+    return {
+      ...tenant,
+      ownerEmail: tenant.settings?.ownerEmail || `${tenant.slug}@tenant.com`,
+      password: tenant.settings?.password || `${tenant.slug}@123`,
+    };
   }
 
   async update(id: string, dto: UpdateTenantDto) {
     const tenant = await this.findOne(id);
     const ownerEmail = (dto as any).ownerEmail;
-    if (dto.settings || ownerEmail) {
-      const mergedSettings: Record<string, any> = { ...(tenant.settings || {}), ...(dto.settings || {}), ...(ownerEmail ? { ownerEmail } : {}) };
+    const password = (dto as any).password;
+    if (dto.settings || ownerEmail || password) {
+      const mergedSettings: Record<string, any> = {
+        ...(tenant.settings || {}),
+        ...(dto.settings || {}),
+        ...(ownerEmail ? { ownerEmail } : {}),
+        ...(password ? { password } : {}),
+      };
       if (mergedSettings.openaiApiKey && typeof mergedSettings.openaiApiKey === 'string' && !mergedSettings.openaiApiKey.startsWith('enc_v1:')) {
         mergedSettings.openaiApiKey = encryptSecret(mergedSettings.openaiApiKey);
       }
@@ -105,7 +131,7 @@ export class TenantsService {
       }
       tenant.settings = mergedSettings;
     }
-    const { settings, ownerEmail: _, ...rest } = dto as any;
+    const { settings, ownerEmail: _, password: __, ...rest } = dto as any;
     Object.assign(tenant, rest);
     return this.tenantRepository.save(tenant);
   }

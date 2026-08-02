@@ -17,12 +17,12 @@ import {
   X,
   ExternalLink,
   BarChart3,
-  Mail,
   Lock,
   MessageSquare,
   DollarSign,
-  Database,
   Radio,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -34,11 +34,14 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copiedPassword, setCopiedPassword] = useState<string | null>(null);
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
 
   // New Tenant Form
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [languages, setLanguages] = useState('en, ar');
   const [timezone, setTimezone] = useState('Asia/Riyadh');
   const [apiEndpoint, setApiEndpoint] = useState('');
@@ -51,6 +54,7 @@ export const App: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editSlug, setEditSlug] = useState('');
   const [editOwnerEmail, setEditOwnerEmail] = useState('');
+  const [editPassword, setEditPassword] = useState('');
   const [editLanguages, setEditLanguages] = useState('');
   const [editTimezone, setEditTimezone] = useState('');
   const [editApiEndpoint, setEditApiEndpoint] = useState('');
@@ -86,8 +90,9 @@ export const App: React.FC = () => {
         {
           id: 't-1',
           name: 'Mrkoon Auctions',
-          slug: 'mrkoon',
+          slug: 'mrkoon-auctions',
           ownerEmail: 'admin@mrkoon.com',
+          password: 'mrkoon@123',
           languages: ['ar', 'en'],
           timezone: 'Asia/Riyadh',
           status: 'active',
@@ -97,9 +102,23 @@ export const App: React.FC = () => {
         },
         {
           id: 't-2',
+          name: 'Medan Global',
+          slug: 'medan-global',
+          ownerEmail: 'admin@medan.com',
+          password: 'medan@123',
+          languages: ['en', 'ar'],
+          timezone: 'Asia/Riyadh',
+          status: 'active',
+          apiEndpoint: 'https://api.medan.com/v1/bot',
+          greetingMessage: 'Welcome to Medan Global!',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 't-3',
           name: 'E-Nursery Schools',
           slug: 'e-nursery',
           ownerEmail: 'support@enursery.app',
+          password: 'nursery@123',
           languages: ['en'],
           timezone: 'UTC',
           status: 'active',
@@ -108,10 +127,11 @@ export const App: React.FC = () => {
           createdAt: new Date().toISOString(),
         },
         {
-          id: 't-3',
+          id: 't-4',
           name: 'City Care Hospital',
           slug: 'city-care',
           ownerEmail: 'it@citycare.hospital',
+          password: 'citycare@123',
           languages: ['en', 'ar'],
           timezone: 'Asia/Dubai',
           status: 'paused',
@@ -130,15 +150,17 @@ export const App: React.FC = () => {
     try {
       setCreating(true);
       const langArray = languages.split(',').map((l) => l.trim());
+      const passToUse = password.trim() || `${slug || name}@123`;
 
       const res = await axios.post('/api/v1/tenants', {
         name,
         slug,
+        ownerEmail,
+        password: passToUse,
         languages: langArray,
         timezone,
         apiEndpoint,
         greetingMessage,
-        settings: { ownerEmail },
       });
 
       setNewTenantResult(res.data);
@@ -169,6 +191,7 @@ export const App: React.FC = () => {
     setEditName(tenant.name || '');
     setEditSlug(tenant.slug || '');
     setEditOwnerEmail(tenant.ownerEmail || tenant.settings?.ownerEmail || '');
+    setEditPassword(tenant.password || tenant.settings?.password || `${tenant.slug}@123`);
     setEditLanguages(
       Array.isArray(tenant.languages) ? tenant.languages.join(', ') : tenant.languages || 'en, ar',
     );
@@ -188,11 +211,11 @@ export const App: React.FC = () => {
         name: editName,
         slug: editSlug,
         ownerEmail: editOwnerEmail,
+        password: editPassword,
         languages: langArray,
         timezone: editTimezone,
         apiEndpoint: editApiEndpoint,
         greetingMessage: editGreetingMessage,
-        settings: { ...(editingTenant.settings || {}), ownerEmail: editOwnerEmail },
       };
       await axios.put(`/api/v1/tenants/${editingTenant.id}`, payload);
       setTenants((prev) =>
@@ -292,6 +315,16 @@ export const App: React.FC = () => {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  const copyPass = (pass: string) => {
+    navigator.clipboard.writeText(pass);
+    setCopiedPassword(pass);
+    setTimeout(() => setCopiedPassword(null), 2000);
+  };
+
+  const togglePasswordVisibility = (id: string) => {
+    setShowPasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const activeTenantsCount = tenants.filter((t) => t.status === 'active').length;
 
   return (
@@ -323,7 +356,7 @@ export const App: React.FC = () => {
             </h1>
           </div>
           <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
-            Multi-tenant AI Agent Platform Console. Manage tenants, issue API keys, and monitor global metrics.
+            Multi-tenant AI Agent Platform Console. Manage tenants, issue API keys, set tenant passwords, and monitor global metrics.
           </p>
         </div>
 
@@ -453,12 +486,21 @@ export const App: React.FC = () => {
                   </div>
 
                   <div style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '6px' }}>
-                    Slug: <code style={{ color: 'var(--accent-cyan)' }}>{t.slug}</code> | Account:{' '}
+                    Slug: <code style={{ color: 'var(--accent-cyan)' }}>{t.slug}</code> | Email:{' '}
                     <span style={{ color: '#e2e8f0', fontWeight: 500 }}>
                       {t.ownerEmail || t.settings?.ownerEmail || `${t.slug}@tenant.com`}
                     </span>{' '}
-                    | Timezone: {t.timezone} | Languages:{' '}
-                    {Array.isArray(t.languages) ? t.languages.join(', ') : t.languages}
+                    | Password:{' '}
+                    <code style={{ color: 'var(--accent-emerald)', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                      {showPasswords[t.id] ? t.password || t.settings?.password || `${t.slug}@123` : '••••••••'}
+                    </code>
+                    <button
+                      onClick={() => togglePasswordVisibility(t.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-dim)', marginLeft: '4px', verticalAlign: 'middle' }}
+                      title={showPasswords[t.id] ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords[t.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
                   </div>
 
                   <div
@@ -469,7 +511,7 @@ export const App: React.FC = () => {
                       wordBreak: 'break-all',
                     }}
                   >
-                    API Endpoint: {t.apiEndpoint || 'None configured'}
+                    Timezone: {t.timezone} | Languages: {Array.isArray(t.languages) ? t.languages.join(', ') : t.languages} | API Endpoint: {t.apiEndpoint || 'None configured'}
                   </div>
                 </div>
 
@@ -513,7 +555,7 @@ export const App: React.FC = () => {
                   <button
                     className="btn btn-secondary btn-sm"
                     onClick={() => openEditModal(t)}
-                    title="Edit Tenant Details"
+                    title="Edit Tenant Details & Password"
                   >
                     <Pencil size={14} />
                     Edit
@@ -580,7 +622,7 @@ export const App: React.FC = () => {
             >
               <div>
                 <h2 style={{ fontSize: '20px', fontWeight: 800 }}>
-                  Tenant Statistics & Overview
+                  Tenant Statistics & Credentials Overview
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
                   Live metrics for <strong>{statsTenant.name}</strong> ({statsTenant.slug})
@@ -671,7 +713,7 @@ export const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Health & Account Breakdown */}
+                {/* Health & Account Credentials Breakdown */}
                 <div
                   className="glass-card"
                   style={{
@@ -683,25 +725,27 @@ export const App: React.FC = () => {
                   }}
                 >
                   <h4 style={{ fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Radio size={16} color="var(--accent-cyan)" /> Integration & Account Status
+                    <Lock size={16} color="var(--accent-cyan)" /> Tenant Login Credentials & Status
                   </h4>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
                     <div>
-                      <span style={{ color: 'var(--text-muted)' }}>Account Owner:</span>{' '}
+                      <span style={{ color: 'var(--text-muted)' }}>Workspace Slug:</span>{' '}
+                      <code style={{ color: 'var(--accent-cyan)' }}>{statsTenant.slug}</code>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Account Email:</span>{' '}
                       <strong>{statsTenant.ownerEmail || statsTenant.settings?.ownerEmail || `${statsTenant.slug}@tenant.com`}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Login Password:</span>{' '}
+                      <code style={{ color: 'var(--accent-emerald)', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                        {statsTenant.password || statsTenant.settings?.password || `${statsTenant.slug}@123`}
+                      </code>
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)' }}>LLM Model:</span>{' '}
                       <strong>{statsData.health?.llmProvider || 'OpenAI GPT-4o'}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: 'var(--text-muted)' }}>Vector Search:</span>{' '}
-                      <strong>{statsData.health?.vectorStore || 'PostgreSQL pgvector'}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: 'var(--text-muted)' }}>WhatsApp Integration:</span>{' '}
-                      <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>Connected & Active</span>
                     </div>
                   </div>
                 </div>
@@ -774,7 +818,7 @@ export const App: React.FC = () => {
               </button>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-              Zero-code customer onboarding. Generates a new tenant workspace and API Key.
+              Zero-code customer onboarding. Generates a new tenant workspace, login password, and API Key.
             </p>
 
             {newTenantResult ? (
@@ -801,55 +845,46 @@ export const App: React.FC = () => {
                     <span>🎉</span> Tenant '{newTenantResult.tenant?.name || name || 'New Tenant'}' Onboarded!
                   </div>
                   <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '14px', lineHeight: '1.5' }}>
-                    Save this generated API key securely to access the tenant dashboard and APIs:
+                    Store these generated tenant account credentials securely for logging in:
                   </p>
 
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', width: '100%' }}>
-                    <code
-                      style={{
-                        fontSize: '13px',
-                        background: '#090d16',
-                        padding: '10px 14px',
-                        borderRadius: '8px',
-                        flex: 1,
-                        minWidth: 0,
-                        wordBreak: 'break-all',
-                        overflowWrap: 'anywhere',
-                        color: '#38bdf8',
-                        border: '1px solid rgba(56, 189, 248, 0.25)',
-                        fontFamily: 'var(--font-mono)',
-                        lineHeight: '1.4',
-                        userSelect: 'all',
-                      }}
-                    >
-                      {newTenantResult.apiKey}
-                    </code>
-                    <button
-                      className="btn btn-secondary"
-                      style={{
-                        flexShrink: 0,
-                        height: '40px',
-                        padding: '0 14px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        borderRadius: '8px',
-                      }}
-                      onClick={() => copyKey(newTenantResult.apiKey)}
-                      title="Copy API Key"
-                    >
-                      {copiedKey === newTenantResult.apiKey ? (
-                        <>
-                          <Check size={16} color="var(--accent-emerald)" />
-                          <span style={{ color: 'var(--accent-emerald)', fontSize: '13px', fontWeight: 600 }}>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={16} />
-                          <span style={{ fontSize: '13px' }}>Copy</span>
-                        </>
-                      )}
-                    </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                    <div>
+                      <label style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>
+                        Account Email / Login ID
+                      </label>
+                      <code style={{ display: 'block', fontSize: '13px', background: '#090d16', padding: '8px 12px', borderRadius: '6px', color: '#e2e8f0', marginTop: '2px' }}>
+                        {newTenantResult.ownerEmail || ownerEmail || `${slug}@tenant.com`}
+                      </code>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>
+                        Account Password
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px' }}>
+                        <code style={{ fontSize: '13px', background: '#090d16', padding: '8px 12px', borderRadius: '6px', flex: 1, color: 'var(--accent-emerald)', fontWeight: 600 }}>
+                          {newTenantResult.password || password || `${slug}@123`}
+                        </code>
+                        <button className="btn btn-secondary btn-sm" onClick={() => copyPass(newTenantResult.password || password || `${slug}@123`)}>
+                          {copiedPassword === (newTenantResult.password || password || `${slug}@123`) ? <Check size={14} color="var(--accent-emerald)" /> : <Copy size={14} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>
+                        Generated API Key
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px' }}>
+                        <code style={{ fontSize: '12px', background: '#090d16', padding: '8px 12px', borderRadius: '6px', flex: 1, color: '#38bdf8', wordBreak: 'break-all' }}>
+                          {newTenantResult.apiKey}
+                        </code>
+                        <button className="btn btn-secondary btn-sm" onClick={() => copyKey(newTenantResult.apiKey)}>
+                          {copiedKey === newTenantResult.apiKey ? <Check size={14} color="var(--accent-emerald)" /> : <Copy size={14} />}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -882,7 +917,7 @@ export const App: React.FC = () => {
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Tenant Slug (Unique ID)</label>
                   <input
                     type="text"
-                    placeholder="e.g. mrkoon"
+                    placeholder="e.g. mrkoon-auctions"
                     className="input-field"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
@@ -894,11 +929,25 @@ export const App: React.FC = () => {
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Account Owner Email</label>
                   <input
                     type="email"
-                    placeholder="owner@company.com"
+                    placeholder="admin@mrkoon.com"
                     className="input-field"
                     value={ownerEmail}
                     onChange={(e) => setOwnerEmail(e.target.value)}
                   />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Tenant Account Password</label>
+                  <input
+                    type="text"
+                    placeholder="Set password (e.g. mrkoon@123)"
+                    className="input-field"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <span style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '4px', display: 'block' }}>
+                    If left blank, will default to <code>slug@123</code>
+                  </span>
                 </div>
 
                 <div>
@@ -1006,7 +1055,7 @@ export const App: React.FC = () => {
               </button>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-              Update parameters and business details for <strong>{editingTenant.name}</strong>.
+              Update parameters and login credentials for <strong>{editingTenant.name}</strong>.
             </p>
 
             <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1045,6 +1094,19 @@ export const App: React.FC = () => {
                   className="input-field"
                   value={editOwnerEmail}
                   onChange={(e) => setEditOwnerEmail(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  Account Login Password (Reset)
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Set new login password"
                 />
               </div>
 

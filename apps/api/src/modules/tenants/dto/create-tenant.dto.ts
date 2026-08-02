@@ -42,6 +42,11 @@ export class CreateTenantDto {
   @IsString()
   ownerEmail?: string;
 
+  @ApiPropertyOptional({ description: 'Account Login Password' })
+  @IsOptional()
+  @IsString()
+  password?: string;
+
   @ApiPropertyOptional({ description: 'Additional settings' })
   @IsOptional()
   @IsObject()
