@@ -2,9 +2,12 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
+  Param,
   Body,
   UseGuards,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { ToolExecutorService } from '@kaizech/tools';
@@ -38,6 +41,19 @@ export class ToolsController {
       throw new BadRequestException('Tool name and apiEndpoint are required');
     }
     return this.toolExecutor.registerTool(tenant.tenantId, body);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete registered tool manifest' })
+  async deleteTool(
+    @TenantContext() tenant: ITenantContext,
+    @Param('id') id: string,
+  ) {
+    const deleted = await this.toolExecutor.deleteTool(tenant.tenantId, id);
+    if (!deleted) {
+      throw new NotFoundException(`Tool '${id}' not found`);
+    }
+    return { success: true, message: `Tool '${id}' deleted successfully` };
   }
 
   @Post('test')

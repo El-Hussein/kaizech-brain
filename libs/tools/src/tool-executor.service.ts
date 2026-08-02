@@ -15,37 +15,26 @@ export class ToolExecutorService {
   ) {}
 
   async getActiveToolsForTenant(tenantId: string): Promise<ToolManifestEntity[]> {
-    let tools = await this.toolManifestRepository.find({
+    return this.toolManifestRepository.find({
       where: { tenantId, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async deleteTool(tenantId: string, idOrName: string): Promise<boolean> {
+    const tool = await this.toolManifestRepository.findOne({
+      where: [
+        { id: idOrName, tenantId },
+        { name: idOrName, tenantId },
+      ],
     });
 
-    // Auto-seed default getUserInfo tool if no tools exist for tenant
-    if (tools.length === 0) {
-      try {
-        const defaultTool = this.toolManifestRepository.create({
-          tenantId,
-          name: 'getUserInfo',
-          description: 'Fetch user profile details, active account status, role, verification, and ticket size',
-          apiEndpoint: 'https://api-stg.markoontest.online/api/chatbot/getUserInfo',
-          httpMethod: 'POST',
-          isActive: true,
-          parameters: {
-            type: 'object',
-            properties: {
-              user_id: { type: 'integer', description: 'The unique ID of the user (e.g. 42)' },
-              phone: { type: 'string', description: 'User mobile phone number (e.g. 01023239809)' },
-              email: { type: 'string', description: 'User email address' },
-            },
-          },
-        });
-        const saved = await this.toolManifestRepository.save(defaultTool);
-        tools = [saved];
-      } catch (err: any) {
-        this.logger.warn(`Could not auto-seed default getUserInfo tool: ${err.message}`);
-      }
+    if (!tool) {
+      return false;
     }
 
-    return tools;
+    await this.toolManifestRepository.remove(tool);
+    return true;
   }
 
   async getToolDefinitionsForTenant(tenantId: string): Promise<ToolDefinition[]> {
@@ -86,30 +75,7 @@ export class ToolExecutorService {
       where: { tenantId: tenant.id, name: toolName, isActive: true },
     });
 
-    // Fallback default for getUserInfo if not found in database
-    if (!tool && toolName === 'getUserInfo') {
-      try {
-        tool = await this.registerTool(tenant.id, {
-          name: 'getUserInfo',
-          description: 'Fetch user profile details, active account status, role, verification, and ticket size',
-          apiEndpoint: 'https://api-stg.markoontest.online/api/chatbot/getUserInfo',
-          httpMethod: 'POST',
-          isActive: true,
-          parameters: {
-            type: 'object',
-            properties: {
-              user_id: { type: 'integer', description: 'The unique ID of the user (e.g. 42)' },
-              phone: { type: 'string', description: 'User mobile phone number (e.g. 01023239809)' },
-              email: { type: 'string', description: 'User email address' },
-            },
-          },
-        });
-      } catch {
-        // Continue if save fails
-      }
-    }
-
-    if (!tool && toolName !== 'getUserInfo') {
+    if (!tool) {
       throw new NotFoundException(`Tool '${toolName}' not registered or active for tenant.`);
     }
 

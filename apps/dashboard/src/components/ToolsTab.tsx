@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wrench, Play, Plus, Code, Edit2, RotateCcw, Info } from 'lucide-react';
+import { Wrench, Play, Plus, Code, Edit2, RotateCcw, Info, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { Button } from './ui/Button';
 
@@ -183,6 +183,21 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
       fetchTools();
     } catch (err: any) {
       alert(`Tool operation failed: ${err.response?.data?.message || err.message}`);
+    }
+  };
+
+  const handleDeleteTool = async (toolIdOrName: string, toolName: string) => {
+    if (!window.confirm(`Are you sure you want to delete the tool '${toolName}'?`)) {
+      return;
+    }
+    try {
+      await axios.delete(`/api/v1/tools/${toolIdOrName}`, {
+        headers: { 'x-api-key': apiKey },
+      });
+      alert(`Tool '${toolName}' deleted successfully.`);
+      fetchTools();
+    } catch (err: any) {
+      alert(`Failed to delete tool: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -443,6 +458,14 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
                     title="Edit tool details"
                   >
                     <Edit2 size={13} /> Edit
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteTool(tool.id || tool.name, tool.name)}
+                    variant="danger"
+                    style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                    title="Delete tool manifest"
+                  >
+                    <Trash2 size={13} /> Delete
                   </Button>
                 </div>
               </div>
