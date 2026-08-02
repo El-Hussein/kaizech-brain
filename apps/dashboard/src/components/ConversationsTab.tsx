@@ -11,6 +11,10 @@ import {
   User,
   UserCheck,
   CheckCircle2,
+  SlidersHorizontal,
+  AlertTriangle,
+  Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import axios from 'axios';
 import { FormattedMessage } from './FormattedMessage';
@@ -40,11 +44,38 @@ export interface ConversationItem {
   limitExceeded?: boolean;
 }
 
-const QUICK_REPLIES = [
-  'أهلاً بك! يمكنك تتبع حالة المزاد ريماً من خلال تبويب المزادات المباشرة.',
-  'تم التحقق من عملية الشراء وتأكيد التوكنات في حسابك الآن.',
-  'نود إعلامك بأنه تم إسناد الطلب لدعم مركون المالي وسنتواصل معك فوراً.',
-  'Your API webhook settings have been verified and are active.',
+export interface QuickReplyItem {
+  id: string;
+  label: string;
+  icon: string;
+  text: string;
+}
+
+const QUICK_REPLIES: QuickReplyItem[] = [
+  {
+    id: 'auction',
+    label: 'تتبع المزاد',
+    icon: '🔨',
+    text: 'أهلاً بك! يمكنك تتبع حالة المزاد ريماً من خلال تبويب المزادات المباشرة.',
+  },
+  {
+    id: 'payment',
+    label: 'تأكيد الشراء',
+    icon: '🛒',
+    text: 'تم التحقق من عملية الشراء وتأكيد التوكنات في حسابك الآن.',
+  },
+  {
+    id: 'support',
+    label: 'إسناد لدعم مركون',
+    icon: '💬',
+    text: 'نود إعلامك بأنه تم إسناد الطلب لدعم مركون المالي وسنتواصل معك فوراً.',
+  },
+  {
+    id: 'webhook',
+    label: 'Webhook Verified',
+    icon: '⚡',
+    text: 'Your API webhook settings have been verified and are active.',
+  },
 ];
 
 export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
@@ -180,6 +211,17 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
   // Toggle conversation status (active, handed_off, closed) on live API
   const handleUpdateStatus = async (newStatus: 'active' | 'handed_off' | 'closed') => {
     if (!selectedConv) return;
+
+    if (newStatus === 'active') {
+      const maxL = selectedConv.metadata?.maxMessages ?? selectedConv.limit ?? 0;
+      const isExceeded = selectedConv.limitExceeded || (maxL > 0 && selectedConv.messageCount >= maxL);
+      if (isExceeded) {
+        alert(
+          `Cannot resume AI mode: Message limit reached (${selectedConv.messageCount}/${maxL}). Please increase the message limit first.`
+        );
+        return;
+      }
+    }
 
     try {
       await axios.patch(
@@ -538,264 +580,420 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
               <MessageSquare size={36} color="var(--accent-primary)" style={{ opacity: 0.5, marginBottom: '12px' }} />
               <p style={{ fontSize: '14px', fontWeight: 600 }}>Select a conversation from the list to view history</p>
             </div>
-          ) : (
-            <>
-              {/* Header */}
-              <div style={{ paddingBottom: '14px', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <h4 style={{ fontSize: '16px', fontWeight: 800 }}>{selectedConv.channelUserId}</h4>
-                    <span className="badge badge-purple" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
-                      {selectedConv.channelType}
-                    </span>
-                    {selectedConv.status === 'handed_off' && (
-                      <span className="badge" style={{ fontSize: '11px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                        ✋ Hands-Off (Human Agent)
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      Messages: <strong style={{ color: 'var(--text-primary)' }}>{selectedConv.messageCount}</strong>
-                      {typeof (selectedConv.limit ?? selectedConv.metadata?.maxMessages) === 'number' && (selectedConv.limit ?? selectedConv.metadata?.maxMessages) > 0 ? (
-                        <> / {(selectedConv.limit ?? selectedConv.metadata?.maxMessages)} msgs limit</>
-                      ) : (
-                        <> (Unlimited)</>
+          ) : (() => {
+            const maxLimit = selectedConv.metadata?.maxMessages ?? selectedConv.limit ?? 0;
+            const isLimitExceeded = Boolean(
+              selectedConv.limitExceeded || (maxLimit > 0 && selectedConv.messageCount >= maxLimit)
+            );
+
+            return (
+              <>
+                {/* Header & Options Toolbar */}
+                <div
+                  style={{
+                    paddingBottom: '14px',
+                    borderBottom: '1px solid var(--border-glass)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  {/* Top Bar: User Info & Status Badges */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <h4 style={{ fontSize: '16px', fontWeight: 800 }}>{selectedConv.channelUserId}</h4>
+                        <span className="badge badge-purple" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
+                          {selectedConv.channelType}
+                        </span>
+
+                        {selectedConv.status === 'handed_off' && (
+                          <span
+                            className="badge"
+                            style={{
+                              fontSize: '11px',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              color: 'var(--accent-amber)',
+                              border: '1px solid rgba(245, 158, 11, 0.3)',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            ✋ Hands-Off (Human Agent)
+                          </span>
+                        )}
+
+                        {selectedConv.status === 'active' && (
+                          <span
+                            className="badge"
+                            style={{
+                              fontSize: '11px',
+                              background: 'rgba(16, 185, 129, 0.15)',
+                              color: 'var(--accent-emerald)',
+                              border: '1px solid rgba(16, 185, 129, 0.3)',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            🤖 AI Active
+                          </span>
+                        )}
+
+                        {selectedConv.status === 'closed' && (
+                          <span
+                            className="badge"
+                            style={{
+                              fontSize: '11px',
+                              background: 'rgba(148, 163, 184, 0.15)',
+                              color: '#94a3b8',
+                              border: '1px solid rgba(148, 163, 184, 0.3)',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            ✅ Ticket Closed
+                          </span>
+                        )}
+
+                        {isLimitExceeded && (
+                          <span
+                            className="badge"
+                            style={{
+                              fontSize: '11px',
+                              background: 'rgba(239, 68, 68, 0.15)',
+                              color: '#ef4444',
+                              border: '1px solid rgba(239, 68, 68, 0.4)',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontWeight: 700,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                            title="Message limit reached! AI control is disabled until limit is increased."
+                          >
+                            <AlertTriangle size={12} /> Limit Exceeded ({selectedConv.messageCount}/{maxLimit})
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          Messages: <strong style={{ color: isLimitExceeded ? '#ef4444' : 'var(--text-primary)' }}>{selectedConv.messageCount}</strong>
+                          {maxLimit > 0 ? (
+                            <> / <strong style={{ color: 'var(--accent-primary)' }}>{maxLimit}</strong> msgs limit</>
+                          ) : (
+                            <> (Unlimited)</>
+                          )}
+                        </span>
+                      </div>
+                      {selectedConv.summary && (
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{selectedConv.summary}</p>
                       )}
-                    </span>
+                    </div>
+
+                    {/* Options Toolbar: Grouped & Arranged Controls */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        flexWrap: 'wrap',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        padding: '6px 10px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--border-glass)',
+                      }}
+                    >
+                      {/* Limit control dropdown */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: isLimitExceeded ? 'rgba(239, 68, 68, 0.12)' : 'var(--bg-surface-elevated)',
+                          border: isLimitExceeded ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid var(--border-glass)',
+                          padding: '3px 8px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <SlidersHorizontal size={13} style={{ color: isLimitExceeded ? '#ef4444' : 'var(--text-muted)' }} />
+                        <span style={{ color: isLimitExceeded ? '#ef4444' : 'var(--text-muted)', fontWeight: 600 }}>Limit:</span>
+                        <select
+                          value={maxLimit}
+                          onChange={(e) => handleUpdateLimit(parseInt(e.target.value, 10))}
+                          style={{
+                            background: 'transparent',
+                            color: isLimitExceeded ? '#ef4444' : 'var(--text-primary)',
+                            border: 'none',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            outline: 'none',
+                          }}
+                          title="Set max conversation message limit before human handoff"
+                        >
+                          <option value={0} style={{ background: '#1e293b', color: '#fff' }}>Unlimited (0)</option>
+                          <option value={3} style={{ background: '#1e293b', color: '#fff' }}>3 msgs</option>
+                          <option value={5} style={{ background: '#1e293b', color: '#fff' }}>5 msgs</option>
+                          <option value={10} style={{ background: '#1e293b', color: '#fff' }}>10 msgs</option>
+                          <option value={15} style={{ background: '#1e293b', color: '#fff' }}>15 msgs</option>
+                          <option value={20} style={{ background: '#1e293b', color: '#fff' }}>20 msgs</option>
+                          <option value={50} style={{ background: '#1e293b', color: '#fff' }}>50 msgs</option>
+                        </select>
+                      </div>
+
+                      {/* Resume AI / Handoff Action */}
+                      {selectedConv.status === 'handed_off' ? (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => handleUpdateStatus('active')}
+                          disabled={isLimitExceeded}
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: '12px',
+                            gap: '4px',
+                            borderRadius: '8px',
+                            cursor: isLimitExceeded ? 'not-allowed' : 'pointer',
+                            opacity: isLimitExceeded ? 0.45 : 1,
+                            borderColor: isLimitExceeded ? 'rgba(239, 68, 68, 0.4)' : 'var(--accent-emerald)',
+                            color: isLimitExceeded ? 'rgba(239, 68, 68, 0.8)' : 'var(--accent-emerald)',
+                            background: isLimitExceeded ? 'rgba(239, 68, 68, 0.05)' : 'rgba(16, 185, 129, 0.1)',
+                          }}
+                          title={
+                            isLimitExceeded
+                              ? 'Cannot resume AI: Message limit reached. Increase limit first.'
+                              : 'Return thread control to AI Agent'
+                          }
+                        >
+                          <Bot size={13} /> {isLimitExceeded ? 'Resume AI (Limit Exceeded)' : 'Resume AI'}
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => handleUpdateStatus('handed_off')}
+                          style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', borderColor: 'var(--accent-amber)', color: 'var(--accent-amber)' }}
+                          title="Assign Human Support Agent"
+                        >
+                          <UserCheck size={13} /> Handoff
+                        </button>
+                      )}
+
+                      {/* Close / Reopen Ticket */}
+                      {selectedConv.status !== 'closed' ? (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => handleUpdateStatus('closed')}
+                          style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', color: '#94a3b8' }}
+                          title="Mark Ticket Closed"
+                        >
+                          <CheckCircle2 size={13} /> Close Ticket
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => handleUpdateStatus('active')}
+                          disabled={isLimitExceeded}
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: '12px',
+                            gap: '4px',
+                            cursor: isLimitExceeded ? 'not-allowed' : 'pointer',
+                            opacity: isLimitExceeded ? 0.45 : 1,
+                            color: isLimitExceeded ? '#ef4444' : 'var(--accent-emerald)',
+                          }}
+                          title={isLimitExceeded ? 'Cannot reopen in AI mode: limit reached' : 'Re-open thread control'}
+                        >
+                          <RotateCcw size={13} /> Re-open Thread
+                        </button>
+                      )}
+
+                      {/* Export Transcript */}
+                      <button
+                        className="btn btn-secondary"
+                        onClick={handleExportTranscript}
+                        style={{ padding: '5px 10px', fontSize: '12px', gap: '4px' }}
+                        title="Export conversation history"
+                      >
+                        <Download size={13} />
+                      </button>
+                    </div>
                   </div>
-                  {selectedConv.summary && (
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{selectedConv.summary}</p>
-                  )}
                 </div>
 
-                {/* Quick Status & Action Buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  {/* Limit control dropdown */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-glass)', padding: '3px 8px', borderRadius: '8px', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Limit:</span>
-                    <select
-                      value={selectedConv.metadata?.maxMessages ?? selectedConv.limit ?? 0}
-                      onChange={(e) => handleUpdateLimit(parseInt(e.target.value, 10))}
-                      style={{ background: 'transparent', color: 'var(--text-primary)', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
-                      title="Set max conversation message limit before human handoff"
-                    >
-                      <option value={0} style={{ background: '#1e293b' }}>Unlimited (0)</option>
-                      <option value={3} style={{ background: '#1e293b' }}>3 msgs</option>
-                      <option value={5} style={{ background: '#1e293b' }}>5 msgs</option>
-                      <option value={10} style={{ background: '#1e293b' }}>10 msgs</option>
-                      <option value={15} style={{ background: '#1e293b' }}>15 msgs</option>
-                      <option value={20} style={{ background: '#1e293b' }}>20 msgs</option>
-                      <option value={50} style={{ background: '#1e293b' }}>50 msgs</option>
-                    </select>
-                  </div>
-
-                  {selectedConv.status === 'handed_off' ? (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => handleUpdateStatus('active')}
-                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' }}
-                      title="Return thread control to AI Agent"
-                    >
-                      <Bot size={13} /> Resume AI
-                    </button>
+                {/* Messages History List */}
+                <div style={{ flex: 1, padding: '16px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {loadingDetail ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px' }}>
+                      <div style={{ height: '40px', width: '60%', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', alignSelf: 'flex-start' }} />
+                      <div style={{ height: '50px', width: '70%', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', alignSelf: 'flex-end' }} />
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>
+                      No messages in this conversation thread yet.
+                    </div>
                   ) : (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => handleUpdateStatus('handed_off')}
-                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', borderColor: 'var(--accent-amber)', color: 'var(--accent-amber)' }}
-                      title="Assign Human Support Agent"
-                    >
-                      <UserCheck size={13} /> Handoff
-                    </button>
-                  )}
+                    messages.map((msg) => {
+                      const isUser = msg.role === 'user';
+                      const isSystem = msg.role === 'system';
 
-                  {selectedConv.status !== 'closed' ? (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => handleUpdateStatus('closed')}
-                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', color: '#94a3b8' }}
-                      title="Mark Ticket Closed"
-                    >
-                      <CheckCircle2 size={13} /> Close Ticket
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => handleUpdateStatus('active')}
-                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', color: 'var(--accent-emerald)' }}
-                    >
-                      Re-open Thread
-                    </button>
-                  )}
+                      if (isSystem) {
+                        return (
+                          <div
+                            key={msg.id}
+                            style={{
+                              alignSelf: 'center',
+                              background: 'rgba(245, 158, 11, 0.12)',
+                              border: '1px solid rgba(245, 158, 11, 0.3)',
+                              color: 'var(--accent-amber)',
+                              padding: '6px 14px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              margin: '8px 0',
+                            }}
+                          >
+                            {msg.content}
+                          </div>
+                        );
+                      }
 
-                  <button
-                    className="btn btn-secondary"
-                    onClick={handleExportTranscript}
-                    style={{ padding: '5px 10px', fontSize: '12px', gap: '4px' }}
-                    title="Export conversation history"
-                  >
-                    <Download size={13} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Messages History List */}
-              <div style={{ flex: 1, padding: '16px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {loadingDetail ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px' }}>
-                    <div style={{ height: '40px', width: '60%', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', alignSelf: 'flex-start' }} />
-                    <div style={{ height: '50px', width: '70%', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', alignSelf: 'flex-end' }} />
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>
-                    No messages in this conversation thread yet.
-                  </div>
-                ) : (
-                  messages.map((msg) => {
-                    const isUser = msg.role === 'user';
-                    const isSystem = msg.role === 'system';
-
-                    if (isSystem) {
                       return (
                         <div
                           key={msg.id}
                           style={{
-                            alignSelf: 'center',
-                            background: 'rgba(245, 158, 11, 0.12)',
-                            border: '1px solid rgba(245, 158, 11, 0.3)',
-                            color: 'var(--accent-amber)',
-                            padding: '6px 14px',
-                            borderRadius: '20px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            margin: '8px 0',
+                            display: 'flex',
+                            gap: '10px',
+                            alignSelf: isUser ? 'flex-end' : 'flex-start',
+                            maxWidth: '82%',
                           }}
                         >
-                          {msg.content}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div
-                        key={msg.id}
-                        style={{
-                          display: 'flex',
-                          gap: '10px',
-                          alignSelf: isUser ? 'flex-end' : 'flex-start',
-                          maxWidth: '82%',
-                        }}
-                      >
-                        {!isUser && (
-                          <div
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
-                              background: 'var(--gradient-brand)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              marginTop: '2px',
-                            }}
-                          >
-                            <Bot size={16} color="#fff" />
-                          </div>
-                        )}
-
-                        <div>
-                          <div
-                            style={{
-                              padding: '12px 16px',
-                              borderRadius: '14px',
-                              fontSize: '14px',
-                              lineHeight: '1.5',
-                              background: isUser ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
-                              color: '#ffffff',
-                              border: isUser ? 'none' : '1px solid var(--border-glass)',
-                              boxShadow: isUser ? 'var(--glow-primary)' : 'none',
-                            }}
-                          >
-                            <FormattedMessage content={msg.content} />
-                          </div>
-                          {msg.createdAt && (
+                          {!isUser && (
                             <div
                               style={{
-                                fontSize: '11px',
-                                color: 'var(--text-dim)',
-                                marginTop: '4px',
-                                textAlign: isUser ? 'right' : 'left',
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                background: 'var(--gradient-brand)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                marginTop: '2px',
                               }}
                             >
-                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              <Bot size={16} color="#fff" />
+                            </div>
+                          )}
+
+                          <div>
+                            <div
+                              style={{
+                                padding: '12px 16px',
+                                borderRadius: '14px',
+                                fontSize: '14px',
+                                lineHeight: '1.5',
+                                background: isUser ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
+                                color: '#ffffff',
+                                border: isUser ? 'none' : '1px solid var(--border-glass)',
+                                boxShadow: isUser ? 'var(--glow-primary)' : 'none',
+                              }}
+                            >
+                              <FormattedMessage content={msg.content} />
+                            </div>
+                            {msg.createdAt && (
+                              <div
+                                style={{
+                                  fontSize: '11px',
+                                  color: 'var(--text-dim)',
+                                  marginTop: '4px',
+                                  textAlign: isUser ? 'right' : 'left',
+                                }}
+                              >
+                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            )}
+                          </div>
+
+                          {isUser && (
+                            <div
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                background: 'var(--accent-cyan)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                marginTop: '2px',
+                              }}
+                            >
+                              <User size={16} color="#fff" />
                             </div>
                           )}
                         </div>
+                      );
+                    })
+                  )}
+                </div>
 
-                        {isUser && (
-                          <div
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
-                              background: 'var(--accent-cyan)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              marginTop: '2px',
-                            }}
-                          >
-                            <User size={16} color="#fff" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                {/* Structured Quick Reply Options Bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Sparkles size={12} style={{ color: 'var(--accent-amber)' }} /> Quick Replies:
+                  </span>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
+                    {QUICK_REPLIES.map((reply) => (
+                      <button
+                        key={reply.id}
+                        type="button"
+                        onClick={() => setReplyInput(reply.text)}
+                        title={reply.text}
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          border: '1px solid var(--border-glass)',
+                          color: 'var(--text-main)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <span>{reply.icon}</span>
+                        <span>{reply.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              {/* Quick Reply Chips */}
-              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px' }}>
-                {QUICK_REPLIES.map((reply, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setReplyInput(reply)}
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '14px',
-                      fontSize: '11px',
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid var(--border-glass)',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    ⚡ {reply.substring(0, 24)}...
+                {/* Live Reply Form */}
+                <form onSubmit={handleSendReply} style={{ paddingTop: '10px', borderTop: '1px solid var(--border-glass)', display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="Type a live reply to post directly to database..."
+                    value={replyInput}
+                    onChange={(e) => setReplyInput(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <button type="submit" className="btn btn-primary" disabled={!replyInput.trim() || sendingReply} style={{ gap: '6px' }}>
+                    <Send size={15} /> Send Live Reply
                   </button>
-                ))}
-              </div>
-
-              {/* Live Reply Form */}
-              <form onSubmit={handleSendReply} style={{ paddingTop: '10px', borderTop: '1px solid var(--border-glass)', display: 'flex', gap: '10px' }}>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="Type a live reply to post directly to database..."
-                  value={replyInput}
-                  onChange={(e) => setReplyInput(e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <button type="submit" className="btn btn-primary" disabled={!replyInput.trim() || sendingReply} style={{ gap: '6px' }}>
-                  <Send size={15} /> Send Live Reply
-                </button>
-              </form>
-            </>
-          )}
+                </form>
+              </>
+            );
+          })()}
         </div>
       </div>
     </div>

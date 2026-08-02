@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -407,6 +408,15 @@ export class ConversationsController {
 
     if (!conversation) {
       return { id, status: body.status };
+    }
+
+    if (body.status === 'active') {
+      const maxLimit = conversation.metadata?.maxMessages || 0;
+      if (maxLimit > 0 && (conversation.messageCount || 0) >= maxLimit) {
+        throw new BadRequestException(
+          `Cannot resume AI mode: message limit (${conversation.messageCount}/${maxLimit}) has been reached. Please increase the message limit first.`,
+        );
+      }
     }
 
     conversation.status = body.status;
