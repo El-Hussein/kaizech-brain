@@ -14,6 +14,7 @@ function maskSecret(key: string): string {
 @Injectable()
 export class WhatsAppService {
   private readonly logger = new Logger(WhatsAppService.name);
+  private readonly processedMessageIds = new Set<string>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -64,9 +65,28 @@ export class WhatsAppService {
 
       const message = messages[0];
 
+      // Deduplication check: ignore if message ID was already processed
+      if (message.id) {
+        if (this.processedMessageIds.has(message.id)) {
+          this.logger.log(`⚠️ Duplicate WhatsApp message ID received (${message.id}). Skipping.`);
+          return;
+        }
+        this.processedMessageIds.add(message.id);
+        if (this.processedMessageIds.size > 2000) {
+          const firstKey = Array.from(this.processedMessageIds)[0];
+          this.processedMessageIds.delete(firstKey);
+        }
+      }
+
+      // Ignore reactions (e.g. ❤️, 👍)
+      if (message.type === 'reaction') {
+        this.logger.log(`ℹ️ Received WhatsApp reaction from ${message.from}. Skipping reply.`);
+        return;
+      }
+
       // 4. Validate message object and text body presence
       if (!message || message.type !== 'text' || !message.text?.body) {
-        console.log('⚠️ Non-text message or missing text body in WhatsApp payload. Skipping response.');
+        console.log(`⚠️ Non-text message type (${message?.type}) in WhatsApp payload. Skipping response.`);
         return;
       }
 

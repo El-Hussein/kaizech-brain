@@ -61,33 +61,45 @@ export class ChannelsController {
   @Post('whatsapp/webhook')
   @UseGuards(MetaSignatureGuard)
   @ApiOperation({ summary: 'WhatsApp Incoming Message (secured by Meta HMAC signature)' })
-  async handleWhatsAppIncomingRoot(@Body() payload: any) {
+  handleWhatsAppIncomingRoot(@Body() payload: any) {
     console.log('📥 [WhatsApp Webhook POST Received]:', JSON.stringify(payload, null, 2));
 
-    const tenants = await this.tenantsService.findAll();
-    const tenant = tenants.find((t) => t.slug === 'mrkoon-auctions') || tenants[0];
+    // Process asynchronously so HTTP 200 is returned immediately to Meta (prevents retries)
+    this.tenantsService
+      .findAll()
+      .then((tenants) => {
+        const tenant = tenants.find((t) => t.slug === 'mrkoon-auctions') || tenants[0];
+        if (tenant) {
+          this.whatsappService.handleIncomingPayload(payload, tenant).catch((err) => {
+            console.error('💥 Background WhatsApp processing error:', err.message);
+          });
+        }
+      })
+      .catch((err) => console.error('💥 Tenant lookup error in WhatsApp webhook:', err.message));
 
-    if (tenant) {
-      await this.whatsappService.handleIncomingPayload(payload, tenant);
-    } else {
-      console.warn('⚠️ No active tenant found to process WhatsApp message.');
-    }
     return { status: 'EVENT_RECEIVED' };
   }
 
   @Post('whatsapp/webhook/:tenantId')
   @UseGuards(MetaSignatureGuard)
   @ApiOperation({ summary: 'WhatsApp Incoming Message with Tenant ID' })
-  async handleWhatsAppIncomingTenant(
+  handleWhatsAppIncomingTenant(
     @Param('tenantId') tenantId: string,
     @Body() payload: any,
   ) {
     console.log('📥 [WhatsApp Webhook POST Received for Tenant]:', tenantId, JSON.stringify(payload, null, 2));
 
-    const tenant = await this.tenantsService.findOne(tenantId);
-    if (tenant) {
-      await this.whatsappService.handleIncomingPayload(payload, tenant);
-    }
+    this.tenantsService
+      .findOne(tenantId)
+      .then((tenant) => {
+        if (tenant) {
+          this.whatsappService.handleIncomingPayload(payload, tenant).catch((err) => {
+            console.error('💥 Background WhatsApp processing error:', err.message);
+          });
+        }
+      })
+      .catch((err) => console.error('💥 Tenant lookup error in WhatsApp webhook:', err.message));
+
     return { status: 'EVENT_RECEIVED' };
   }
 
