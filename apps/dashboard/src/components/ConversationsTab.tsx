@@ -15,6 +15,10 @@ import {
   AlertTriangle,
   Sparkles,
   RotateCcw,
+  CheckCheck,
+  Clock,
+  AlertCircle,
+  RotateCw,
 } from 'lucide-react';
 import axios from 'axios';
 import { FormattedMessage } from './FormattedMessage';
@@ -30,6 +34,7 @@ export interface MessageItem {
   content: string;
   createdAt?: string;
   channelType?: string;
+  status?: 'sending' | 'sent' | 'failed';
 }
 
 export interface ConversationItem {
@@ -123,17 +128,27 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         setSelectedConv(res.data.conversation);
       }
       if (res.data?.messages) {
-        // Only update if messages actually changed to avoid unnecessary re-renders
         const fetchedMsgs: MessageItem[] = res.data.messages;
         setMessages((prevMsgs) => {
-          if (prevMsgs.length === fetchedMsgs.length && prevMsgs.length > 0) {
-            const lastPrev = prevMsgs[prevMsgs.length - 1];
-            const lastFetched = fetchedMsgs[fetchedMsgs.length - 1];
-            if (lastPrev.id === lastFetched.id && lastPrev.content === lastFetched.content) {
-              return prevMsgs; // No change, keep same array reference!
-            }
+          // Keep any optimistic messages currently sending (id starts with 'temp-')
+          const pendingTempMsgs = prevMsgs.filter((m) => m.id.startsWith('temp-'));
+          
+          // Only keep temp messages that haven't been matched by server content/role yet
+          const unconfirmedTempMsgs = pendingTempMsgs.filter(
+            (tMsg) => !fetchedMsgs.some((fMsg) => fMsg.role === tMsg.role && fMsg.content === tMsg.content)
+          );
+
+          const merged = [...fetchedMsgs, ...unconfirmedTempMsgs];
+
+          // Check reference equality
+          if (prevMsgs.length === merged.length && prevMsgs.length > 0) {
+            const isIdentical = prevMsgs.every(
+              (p, idx) => p.id === merged[idx].id && p.content === merged[idx].content
+            );
+            if (isIdentical) return prevMsgs;
           }
-          return fetchedMsgs;
+
+          return merged;
         });
       }
     } catch (err) {
@@ -210,7 +225,40 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     };
   }, [conversations]);
 
-  // Handle sending human operator reply with instant optimistic UI update
+  // Handle retrying a failed message dispatch
+  const handleRetryMessage = async (msgToRetry: MessageItem) => {
+    if (!selectedConv || sendingReply) return;
+
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msgToRetry.id ? { ...m, status: 'sending' } : m)),
+    );
+
+    try {
+      const postRes = await axios.post(
+        `/api/v1/conversations/${selectedConv.id}/messages`,
+        { role: 'assistant', content: msgToRetry.content },
+        { headers: { 'x-api-key': apiKey } },
+      );
+
+      const savedMsg: MessageItem = postRes.data;
+      if (savedMsg && savedMsg.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === msgToRetry.id
+              ? { ...savedMsg, createdAt: savedMsg.createdAt || m.createdAt, status: 'sent' }
+              : m,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error('Error retrying message post to live API', err);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgToRetry.id ? { ...m, status: 'failed' } : m)),
+      );
+    }
+  };
+
+  // Handle sending human operator reply with instant optimistic UI update & delivery status
   const handleSendReply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!replyInput.trim() || !selectedConv || sendingReply) return;
@@ -219,12 +267,14 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     setReplyInput('');
     setSendingReply(true);
 
-    // 1. Optimistic Update: Append message immediately to UI without reloading or fetching
+    // 1. Instant Optimistic Update: Append message immediately with status: 'sending'
+    const tempId = `temp-${Date.now()}`;
     const tempMsg: MessageItem = {
-      id: `temp-${Date.now()}`,
+      id: tempId,
       role: 'assistant',
       content: messageText,
       createdAt: new Date().toISOString(),
+      status: 'sending',
     };
 
     setMessages((prev) => [...prev, tempMsg]);
@@ -237,17 +287,30 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     setTimeout(() => {
       scrollToBottom('smooth');
       replyInputRef.current?.focus();
-    }, 20);
+    }, 10);
 
     try {
-      // 2. Post to backend in background
-      await axios.post(
+      // 2. Post to backend API in background
+      const postRes = await axios.post(
         `/api/v1/conversations/${selectedConv.id}/messages`,
         { role: 'assistant', content: messageText },
         { headers: { 'x-api-key': apiKey } },
       );
 
-      // 3. Silently update thread list
+      const savedMsg: MessageItem = postRes.data;
+
+      // 3. Update status to 'sent' and swap temp ID for DB ID
+      if (savedMsg && savedMsg.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === tempId
+              ? { ...savedMsg, createdAt: savedMsg.createdAt || tempMsg.createdAt, status: 'sent' }
+              : m,
+          ),
+        );
+      }
+
+      // 4. Update conversations thread list silently
       const resList = await axios.get('/api/v1/conversations', {
         headers: { 'x-api-key': apiKey },
       });
@@ -256,9 +319,10 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       }
     } catch (err) {
       console.error('Error posting message to live API', err);
-      // Remove temp message if failed
-      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
-      alert('Failed to send live reply. Please check connection and try again.');
+      // Mark message status as failed so operator can see & retry!
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, status: 'failed' } : m)),
+      );
     } finally {
       setSendingReply(false);
       replyInputRef.current?.focus();
@@ -963,18 +1027,58 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                             >
                               <FormattedMessage content={msg.content} />
                             </div>
-                            {msg.createdAt && (
-                              <div
-                                style={{
-                                  fontSize: '11px',
-                                  color: 'var(--text-dim)',
-                                  marginTop: '4px',
-                                  textAlign: isUser ? 'right' : 'left',
-                                }}
-                              >
-                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </div>
-                            )}
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: 'var(--text-dim)',
+                                marginTop: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                justifyContent: isUser ? 'flex-end' : 'flex-start',
+                              }}
+                            >
+                              {msg.createdAt && (
+                                <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              )}
+
+                              {!isUser && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  {msg.status === 'sending' ? (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--accent-cyan, #38bdf8)', fontWeight: 600 }}>
+                                      <Clock size={11} className="animate-spin" /> Sending...
+                                    </span>
+                                  ) : msg.status === 'failed' ? (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontWeight: 600 }}>
+                                      <AlertCircle size={11} /> Failed
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRetryMessage(msg)}
+                                        style={{
+                                          background: 'rgba(239, 68, 68, 0.2)',
+                                          border: '1px solid rgba(239, 68, 68, 0.5)',
+                                          color: '#ef4444',
+                                          borderRadius: '4px',
+                                          padding: '1px 6px',
+                                          fontSize: '10px',
+                                          cursor: 'pointer',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '3px',
+                                          fontWeight: 700,
+                                        }}
+                                      >
+                                        <RotateCw size={9} /> Retry
+                                      </button>
+                                    </span>
+                                  ) : (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: 'var(--accent-emerald, #10b981)', fontWeight: 600 }} title="Sent to database and customer channel">
+                                      <CheckCheck size={13} /> Sent
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {isUser && (
