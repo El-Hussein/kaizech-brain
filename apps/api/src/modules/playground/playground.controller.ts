@@ -25,13 +25,16 @@ export class PlaygroundController {
   @ApiOperation({ summary: 'AI Playground — Test AI Assistant conversation flow' })
   async chat(
     @TenantContext() tenantContext: ITenantContext,
-    @Body() body: { message: string; userId?: string; name?: string },
+    @Body() body: { message: string; userId?: string; name?: string; openaiApiKey?: string },
   ) {
     if (!body.message) {
       throw new BadRequestException('message is required');
     }
 
     const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
+    if (body.openaiApiKey) {
+      tenant.settings = { ...(tenant.settings || {}), openaiApiKey: body.openaiApiKey };
+    }
     const userId = body.userId || 'playground-test-user';
 
     const result = await this.agentOrchestrator.processMessage({

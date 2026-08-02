@@ -76,7 +76,11 @@ export class TenantsService {
 
   async update(id: string, dto: UpdateTenantDto) {
     const tenant = await this.findOne(id);
-    Object.assign(tenant, dto);
+    if (dto.settings) {
+      tenant.settings = { ...(tenant.settings || {}), ...dto.settings };
+    }
+    const { settings, ...rest } = dto as any;
+    Object.assign(tenant, rest);
     return this.tenantRepository.save(tenant);
   }
 

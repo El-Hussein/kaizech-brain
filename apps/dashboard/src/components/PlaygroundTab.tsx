@@ -25,9 +25,10 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     setSending(true);
 
     try {
+      const savedOpenAiKey = localStorage.getItem('kaizech_openai_api_key');
       const res = await axios.post(
         '/api/v1/playground/chat',
-        { message: userText },
+        { message: userText, openaiApiKey: savedOpenAiKey || undefined },
         { headers: { 'x-api-key': apiKey } },
       );
 
