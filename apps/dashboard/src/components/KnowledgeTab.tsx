@@ -366,10 +366,8 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await axios.get('/api/v1/knowledge', {
-        headers: { 'x-api-key': apiKey },
-      });
-      setSources(res.data || []);
+      const sourceList = Array.isArray(res.data) ? res.data : (res.data?.data && Array.isArray(res.data.data) ? res.data.data : []);
+      setSources(sourceList);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Could not connect to backend API server.');
       setSources([]);

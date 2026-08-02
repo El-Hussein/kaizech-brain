@@ -80,7 +80,7 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
       const res = await axios.get('/api/v1/tools', {
         headers: { 'x-api-key': apiKey },
       });
-      const toolList = res.data || [];
+      const toolList = Array.isArray(res.data) ? res.data : (res.data?.data && Array.isArray(res.data.data) ? res.data.data : []);
       setTools(toolList);
 
       if (toolList.length > 0) {

@@ -8,6 +8,36 @@ import { PlaygroundTab } from './components/PlaygroundTab';
 import { ConversationsTab } from './components/ConversationsTab';
 import { SettingsTab } from './components/SettingsTab';
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Component Error caught by ErrorBoundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '30px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '12px', margin: '20px', color: '#f87171' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>⚠️ Tab Error Caught</h3>
+          <p style={{ fontSize: '14px', color: '#e5e7eb', fontFamily: 'monospace', margin: '10px 0' }}>{this.state.error?.message || 'An unexpected error occurred while rendering this tab.'}</p>
+          <button className="btn btn-secondary" style={{ marginTop: '14px' }} onClick={() => this.setState({ hasError: false, error: null })}>
+            🔄 Reload Tab Component
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'conversations' | 'settings'>('overview');
   const [apiKey, setApiKey] = useState('kb_demo_tenant_key');
@@ -58,16 +88,19 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="main-content">
-        {activeTab === 'overview' && <OverviewTab apiKey={apiKey} />}
-        {activeTab === 'prompt' && <PromptBuilderTab apiKey={apiKey} />}
-        {activeTab === 'knowledge' && <KnowledgeTab apiKey={apiKey} />}
-        {activeTab === 'tools' && <ToolsTab apiKey={apiKey} />}
-        {activeTab === 'playground' && <PlaygroundTab apiKey={apiKey} />}
-        {activeTab === 'conversations' && <ConversationsTab apiKey={apiKey} />}
-        {activeTab === 'settings' && <SettingsTab apiKey={apiKey} />}
+        <ErrorBoundary key={activeTab}>
+          {activeTab === 'overview' && <OverviewTab apiKey={apiKey} />}
+          {activeTab === 'prompt' && <PromptBuilderTab apiKey={apiKey} />}
+          {activeTab === 'knowledge' && <KnowledgeTab apiKey={apiKey} />}
+          {activeTab === 'tools' && <ToolsTab apiKey={apiKey} />}
+          {activeTab === 'playground' && <PlaygroundTab apiKey={apiKey} />}
+          {activeTab === 'conversations' && <ConversationsTab apiKey={apiKey} />}
+          {activeTab === 'settings' && <SettingsTab apiKey={apiKey} />}
+        </ErrorBoundary>
       </main>
     </div>
   );
 };
 
 export default App;
+
