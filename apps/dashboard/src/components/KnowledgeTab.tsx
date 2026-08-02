@@ -564,7 +564,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
         {error && (
           <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', fontSize: '14px', marginBottom: '16px' }}>
             <AlertTriangle size={16} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
-            API Connection Warning: {error} (Ensure backend server is running at http://localhost:3000)
+            API Connection Warning: {error}
           </div>
         )}
 
