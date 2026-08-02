@@ -34,11 +34,6 @@ export class ApiKeyGuard implements CanActivate {
     let tenantSlug = (request.headers['x-tenant-slug'] || request.query?.tenant || '') as string;
     if (tenantSlug) {
       tenantSlug = tenantSlug.trim().toLowerCase();
-      if (['mrkoon', 'mrkoon-auction', 'mrkoon_auction', 'mrkoon_auctions', 'mrkoonauctions'].includes(tenantSlug)) {
-        tenantSlug = 'mrkoon-auctions';
-      } else if (['medan', 'medanglobal', 'medan_global'].includes(tenantSlug)) {
-        tenantSlug = 'medan-global';
-      }
     }
     const tenantIdHeader = request.headers['x-tenant-id'];
 
@@ -55,6 +50,18 @@ export class ApiKeyGuard implements CanActivate {
       let tenant = await this.tenantRepository.findOne({
         where: isUuid ? { id: targetIdentifier } : { slug: targetIdentifier },
       });
+
+      if (!tenant && tenantSlug) {
+        let aliasSlug = tenantSlug;
+        if (['mrkoon', 'mrkoon-auction', 'mrkoon_auction', 'mrkoon_auctions', 'mrkoonauctions'].includes(tenantSlug)) {
+          aliasSlug = 'mrkoon-auctions';
+        } else if (['medan', 'medanglobal', 'medan_global'].includes(tenantSlug)) {
+          aliasSlug = 'medan-global';
+        }
+        if (aliasSlug !== tenantSlug) {
+          tenant = await this.tenantRepository.findOne({ where: { slug: aliasSlug } });
+        }
+      }
 
       if (!tenant && tenantSlug) {
         const tenantName = tenantSlug

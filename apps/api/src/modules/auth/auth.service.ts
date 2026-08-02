@@ -16,20 +16,11 @@ export class AuthService {
   ) {}
 
   async login(dto: { slug?: string; email?: string; password?: string }) {
-    let slug = dto.slug?.trim().toLowerCase();
+    const rawSlug = dto.slug?.trim().toLowerCase();
     const email = dto.email?.trim().toLowerCase();
     const password = dto.password?.trim();
 
-    // Normalize slug aliases to canonical DB slugs
-    if (slug) {
-      if (['mrkoon', 'mrkoon-auction', 'mrkoon_auction', 'mrkoon_auctions', 'mrkoonauctions'].includes(slug)) {
-        slug = 'mrkoon-auctions';
-      } else if (['medan', 'medanglobal', 'medan_global'].includes(slug)) {
-        slug = 'medan-global';
-      }
-    }
-
-    if (!email && !slug) {
+    if (!email && !rawSlug) {
       throw new UnauthorizedException('Please enter your account email or workspace ID.');
     }
 
@@ -39,12 +30,12 @@ export class AuthService {
 
     let tenant: TenantEntity | null = null;
 
-    // 1. Try finding tenant by normalized slug
-    if (slug) {
-      tenant = await this.tenantRepository.findOne({ where: { slug } });
+    // 1. Try finding tenant by exact slug provided
+    if (rawSlug) {
+      tenant = await this.tenantRepository.findOne({ where: { slug: rawSlug } });
     }
 
-    // 2. Try finding tenant by email / ownerEmail if slug didn't match
+    // 2. Try finding tenant by email / ownerEmail if exact slug didn't match
     if (!tenant && email) {
       const tenants = await this.tenantRepository.find();
       tenant =
@@ -55,19 +46,32 @@ export class AuthService {
         ) || null;
     }
 
+    // 3. Fallback: try alias-mapped slug if still not found
+    if (!tenant && rawSlug) {
+      let aliasSlug = rawSlug;
+      if (['mrkoon', 'mrkoon-auction', 'mrkoon_auction', 'mrkoon_auctions', 'mrkoonauctions'].includes(rawSlug)) {
+        aliasSlug = 'mrkoon-auctions';
+      } else if (['medan', 'medanglobal', 'medan_global'].includes(rawSlug)) {
+        aliasSlug = 'medan-global';
+      }
+      if (aliasSlug !== rawSlug) {
+        tenant = await this.tenantRepository.findOne({ where: { slug: aliasSlug } });
+      }
+    }
+
     // Strict rejection if tenant does not exist in DB
     if (!tenant) {
       throw new UnauthorizedException('Invalid account email, workspace ID, or password.');
     }
 
-    // Verify Password against stored tenant account password
-    const storedPassword = tenant.settings?.password;
+    // Verify Password against stored tenant account password (or default fallback pattern)
+    const storedPassword = tenant.settings?.password || `${tenant.slug}@123`;
     if (storedPassword && storedPassword !== password) {
       throw new UnauthorizedException('Invalid email, workspace ID, or password.');
     }
 
     // If password wasn't set yet on tenant, save it on first login
-    if (!storedPassword && password) {
+    if (!tenant.settings?.password && password) {
       tenant.settings = { ...(tenant.settings || {}), password };
       await this.tenantRepository.save(tenant);
     }
