@@ -5,6 +5,7 @@ import { MemoryModule } from '@kaizech/memory';
 import { ToolsModule } from '@kaizech/tools';
 import { RAGModule } from '@kaizech/rag';
 import { OpenAIProvider } from './providers/openai.provider';
+import { GroqProvider } from './providers/groq.provider';
 import { AIProviderFactory } from './providers/ai-provider.factory';
 import { AgentOrchestratorService } from './agent-orchestrator.service';
 
@@ -16,7 +17,7 @@ import { AgentOrchestratorService } from './agent-orchestrator.service';
     ToolsModule,
     RAGModule,
   ],
-  providers: [OpenAIProvider, AIProviderFactory, AgentOrchestratorService],
-  exports: [AgentOrchestratorService, AIProviderFactory, OpenAIProvider],
+  providers: [OpenAIProvider, GroqProvider, AIProviderFactory, AgentOrchestratorService],
+  exports: [AgentOrchestratorService, AIProviderFactory, OpenAIProvider, GroqProvider],
 })
 export class AgentModule {}

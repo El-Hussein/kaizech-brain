@@ -148,15 +148,21 @@ export class AgentOrchestratorService {
     }
 
     // 4 & 6. Parallelize Memory Summary, Recent Messages, FAQ check & Embedding Generation ⚡
-    const provider = this.providerFactory.getProvider('openai');
-    const openaiApiKey = tenant.settings?.openaiApiKey;
+    const activeProviderName = tenant.settings?.aiProvider || 'openai';
+    const provider = this.providerFactory.getProvider(activeProviderName);
+    const customApiKey = activeProviderName === 'groq'
+      ? (tenant.settings?.groqApiKey || tenant.settings?.openaiApiKey)
+      : tenant.settings?.openaiApiKey;
+    const customModel = activeProviderName === 'groq'
+      ? tenant.settings?.groqModel
+      : tenant.settings?.openaiModel;
 
     const [summary, recentMessages, hasFaqs, directMatch, userEmbedding] = await Promise.all([
       this.memoryService.getConversationSummary(conversation.id),
       this.memoryService.getRecentMessages(conversation.id, 10),
       this.vectorSearch.hasFaqSources(tenant.id),
       this.vectorSearch.findDirectFaqMatch(tenant.id, userMessage),
-      provider.generateEmbedding(userMessage, undefined, openaiApiKey),
+      provider.generateEmbedding(userMessage, undefined, customApiKey),
     ]);
 
     // 5. PRE-REPLY FAQ LAYER
@@ -262,11 +268,12 @@ export class AgentOrchestratorService {
       llmResult = await provider.chatCompletion({
         messages: llmMessages,
         tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-        apiKey: openaiApiKey,
+        apiKey: customApiKey,
+        model: customModel,
       });
     } catch (err: any) {
-      this.logger.error(`AI completion error: ${err.message}`);
-      const errResponse = `⚠️ AI Provider Error: ${err.message}. Please verify your OPENAI_API_KEY in tenant settings or environment variables.`;
+      this.logger.error(`AI completion error (${activeProviderName}): ${err.message}`);
+      const errResponse = `⚠️ AI Provider (${activeProviderName.toUpperCase()}) Error: ${err.message}. Please verify your API key in tenant settings or environment variables.`;
       return {
         response: errResponse,
         conversationId: conversation.id,
@@ -329,7 +336,8 @@ export class AgentOrchestratorService {
         llmResult = await provider.chatCompletion({
           messages: llmMessages,
           tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-          apiKey: openaiApiKey,
+          apiKey: customApiKey,
+          model: customModel,
         });
       } catch (err: any) {
         this.logger.error(`AI completion error in tool loop: ${err.message}`);
@@ -452,15 +460,21 @@ export class AgentOrchestratorService {
       };
     }
 
-    const provider = this.providerFactory.getProvider('openai');
-    const openaiApiKey = tenant.settings?.openaiApiKey;
+    const activeProviderName = tenant.settings?.aiProvider || 'openai';
+    const provider = this.providerFactory.getProvider(activeProviderName);
+    const customApiKey = activeProviderName === 'groq'
+      ? (tenant.settings?.groqApiKey || tenant.settings?.openaiApiKey)
+      : tenant.settings?.openaiApiKey;
+    const customModel = activeProviderName === 'groq'
+      ? tenant.settings?.groqModel
+      : tenant.settings?.openaiModel;
 
     const [summary, recentMessages, hasFaqs, directMatch, userEmbedding] = await Promise.all([
       this.memoryService.getConversationSummary(conversation.id),
       this.memoryService.getRecentMessages(conversation.id, 10),
       this.vectorSearch.hasFaqSources(tenant.id),
       this.vectorSearch.findDirectFaqMatch(tenant.id, userMessage),
-      provider.generateEmbedding(userMessage, undefined, openaiApiKey),
+      provider.generateEmbedding(userMessage, undefined, customApiKey),
     ]);
 
     const faqBotMode = tenant.settings?.faqBotMode || 'strict_first';
@@ -554,7 +568,8 @@ export class AgentOrchestratorService {
           {
             messages: llmMessages,
             tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-            apiKey: openaiApiKey,
+            apiKey: customApiKey,
+            model: customModel,
           },
           onChunk,
         );
@@ -562,15 +577,16 @@ export class AgentOrchestratorService {
         llmResult = await provider.chatCompletion({
           messages: llmMessages,
           tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-          apiKey: openaiApiKey,
+          apiKey: customApiKey,
+          model: customModel,
         });
         if (llmResult.content) {
           onChunk(llmResult.content);
         }
       }
     } catch (err: any) {
-      this.logger.error(`AI stream completion error: ${err.message}`);
-      const errResponse = `⚠️ AI Provider Error: ${err.message}. Please verify your OPENAI_API_KEY in tenant settings or environment variables.`;
+      this.logger.error(`AI stream completion error (${activeProviderName}): ${err.message}`);
+      const errResponse = `⚠️ AI Provider (${activeProviderName.toUpperCase()}) Error: ${err.message}. Please verify your API key in tenant settings or environment variables.`;
       onChunk(errResponse);
       return {
         response: errResponse,

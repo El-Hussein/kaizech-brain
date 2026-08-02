@@ -27,16 +27,28 @@ export class PlaygroundController {
   @ApiOperation({ summary: 'AI Playground — Test AI Assistant conversation flow' })
   async chat(
     @TenantContext() tenantContext: ITenantContext,
-    @Body() body: { message: string; userId?: string; name?: string; openaiApiKey?: string },
+    @Body() body: {
+      message: string;
+      userId?: string;
+      name?: string;
+      openaiApiKey?: string;
+      groqApiKey?: string;
+      aiProvider?: string;
+      groqModel?: string;
+    },
   ) {
     if (!body.message) {
       throw new BadRequestException('message is required');
     }
 
     const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
-    if (body.openaiApiKey) {
-      tenant.settings = { ...(tenant.settings || {}), openaiApiKey: body.openaiApiKey };
-    }
+    tenant.settings = {
+      ...(tenant.settings || {}),
+      ...(body.aiProvider ? { aiProvider: body.aiProvider } : {}),
+      ...(body.openaiApiKey ? { openaiApiKey: body.openaiApiKey } : {}),
+      ...(body.groqApiKey ? { groqApiKey: body.groqApiKey } : {}),
+      ...(body.groqModel ? { groqModel: body.groqModel } : {}),
+    };
     const userId = body.userId || 'playground-test-user';
 
     const result = await this.agentOrchestrator.processMessage({
@@ -62,7 +74,15 @@ export class PlaygroundController {
   @ApiOperation({ summary: 'AI Playground — Stream AI Assistant conversation response (SSE)' })
   async chatStream(
     @TenantContext() tenantContext: ITenantContext,
-    @Body() body: { message: string; userId?: string; name?: string; openaiApiKey?: string },
+    @Body() body: {
+      message: string;
+      userId?: string;
+      name?: string;
+      openaiApiKey?: string;
+      groqApiKey?: string;
+      aiProvider?: string;
+      groqModel?: string;
+    },
     @Res() res: Response,
   ) {
     if (!body.message) {
@@ -70,9 +90,13 @@ export class PlaygroundController {
     }
 
     const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
-    if (body.openaiApiKey) {
-      tenant.settings = { ...(tenant.settings || {}), openaiApiKey: body.openaiApiKey };
-    }
+    tenant.settings = {
+      ...(tenant.settings || {}),
+      ...(body.aiProvider ? { aiProvider: body.aiProvider } : {}),
+      ...(body.openaiApiKey ? { openaiApiKey: body.openaiApiKey } : {}),
+      ...(body.groqApiKey ? { groqApiKey: body.groqApiKey } : {}),
+      ...(body.groqModel ? { groqModel: body.groqModel } : {}),
+    };
     const userId = body.userId || 'playground-test-user';
 
     (res as any).setHeader('Content-Type', 'text/event-stream');

@@ -132,11 +132,17 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   };
 
   // ── AI Provider & Secret Keys ─────────────────────────────────────────────
+  const [aiProvider, setAiProvider] = useState<'openai' | 'groq'>('openai');
   const [openaiApiKey, setOpenaiApiKey] = useState(() => {
     return localStorage.getItem('kaizech_openai_api_key') || '';
   });
-  const [openaiModel, setOpenaiModel] = useState('gpt-4o');
+  const [openaiModel, setOpenaiModel] = useState('gpt-4o-mini');
+  const [groqApiKey, setGroqApiKey] = useState(() => {
+    return localStorage.getItem('kaizech_groq_api_key') || '';
+  });
+  const [groqModel, setGroqModel] = useState('llama-3.3-70b-versatile');
   const [showOpenAiKey, setShowOpenAiKey] = useState(false);
+  const [showGroqKey, setShowGroqKey] = useState(false);
   const [openaiSaved, setOpenaiSaved] = useState(false);
   const [savingOpenAi, setSavingOpenAi] = useState(false);
 
@@ -150,16 +156,23 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
   const [openaiSaveError, setOpenaiSaveError] = useState<string | null>(null);
 
-  const handleSaveOpenAiConfig = async () => {
+  const handleSaveAiConfig = async () => {
     setSavingOpenAi(true);
     setOpenaiSaveError(null);
+
+    if (openaiApiKey) localStorage.setItem('kaizech_openai_api_key', openaiApiKey);
+    if (groqApiKey) localStorage.setItem('kaizech_groq_api_key', groqApiKey);
+
     try {
       await axios.put(
         `${API_BASE}/tenants/${tenantId || 'me'}`,
         {
           settings: {
+            aiProvider,
             openaiApiKey,
             openaiModel,
+            groqApiKey,
+            groqModel,
           },
         },
         { headers: { 'x-api-key': apiKey } },
@@ -284,6 +297,21 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           headers: { 'x-api-key': apiKey },
         });
         if (res.data) {
+          if (res.data.settings?.aiProvider) {
+            setAiProvider(res.data.settings.aiProvider);
+          }
+          if (res.data.settings?.openaiApiKey) {
+            setOpenaiApiKey(res.data.settings.openaiApiKey);
+          }
+          if (res.data.settings?.openaiModel) {
+            setOpenaiModel(res.data.settings.openaiModel);
+          }
+          if (res.data.settings?.groqApiKey) {
+            setGroqApiKey(res.data.settings.groqApiKey);
+          }
+          if (res.data.settings?.groqModel) {
+            setGroqModel(res.data.settings.groqModel);
+          }
           if (res.data.settings?.whatsappVerifyToken) {
             setVerifyToken(res.data.settings.whatsappVerifyToken);
           }
@@ -589,76 +617,195 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
         </div>
       </div>
 
-      {/* ── AI Provider & OpenAI Secret Key Configuration ───────────────────── */}
+      {/* ── AI Provider & Secret Key Configuration ───────────────────── */}
       <div className="glass-card" style={{ padding: '24px' }}>
         <SectionHeader
           icon={<Sparkles size={18} color="var(--accent-cyan)" />}
           title="AI Model Provider & Secret API Keys"
-          subtitle="Configure your OpenAI API key and LLM model. Keys are masked for privacy and security."
+          subtitle="Select your preferred AI Inference Provider (OpenAI or Groq Ultra-Fast LPU) and set API keys."
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Provider Selection */}
           <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-              OpenAI API Key (Secret Variable)
-              <span style={{ marginLeft: '8px', color: 'var(--accent-amber)', fontSize: '12px' }}>
-                (e.g. sk-proj-...)
-              </span>
+            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '10px' }}>
+              Active AI Provider
             </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type={showOpenAiKey ? 'text' : 'password'}
-                className="input-field"
-                value={openaiApiKey}
-                onChange={(e) => setOpenaiApiKey(e.target.value)}
-                placeholder="Paste your secret OpenAI API Key (sk-proj-...)"
-                style={{ flex: 1, fontFamily: 'monospace', fontSize: '13px' }}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setShowOpenAiKey(!showOpenAiKey)}
-                style={{ minWidth: '40px' }}
-                title={showOpenAiKey ? 'Mask Secret Key' : 'Reveal Secret Key'}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+
+              {/* Option 1: OpenAI */}
+              <div
+                onClick={() => setAiProvider('openai')}
+                style={{
+                  border: `2px solid ${aiProvider === 'openai' ? 'var(--accent-primary)' : 'var(--border-glass)'}`,
+                  background: aiProvider === 'openai' ? 'rgba(99,102,241,0.08)' : 'var(--bg-surface-elevated)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
               >
-                {showOpenAiKey ? <EyeOff size={15} /> : <Eye size={15} />}
-              </Button>
-            </div>
-            {openaiApiKey && !showOpenAiKey && (
-              <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', marginTop: '6px', fontFamily: 'monospace' }}>
-                🔒 Secret Key Masked: {maskSecret(openaiApiKey)}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Sparkles size={16} color="var(--accent-primary)" /> OpenAI (GPT-4o / GPT-4o-mini)
+                  </span>
+                  <input
+                    type="radio"
+                    name="aiProvider"
+                    checked={aiProvider === 'openai'}
+                    onChange={() => setAiProvider('openai')}
+                  />
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                  Official OpenAI cloud API. Powerful reasoning with GPT-4o and GPT-4o-mini models.
+                </p>
               </div>
-            )}
+
+              {/* Option 2: Groq */}
+              <div
+                onClick={() => setAiProvider('groq')}
+                style={{
+                  border: `2px solid ${aiProvider === 'groq' ? 'var(--accent-cyan)' : 'var(--border-glass)'}`,
+                  background: aiProvider === 'groq' ? 'rgba(6,182,212,0.08)' : 'var(--bg-surface-elevated)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Zap size={16} color="var(--accent-cyan)" /> Groq (Ultra-Fast 1,000+ tok/sec)
+                  </span>
+                  <input
+                    type="radio"
+                    name="aiProvider"
+                    checked={aiProvider === 'groq'}
+                    onChange={() => setAiProvider('groq')}
+                  />
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                  Ultra-low latency hardware inference (Llama 3.3 70B & Llama 3.1 8B). Free tier available.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                LLM Model
-              </label>
-              <select
-                className="input-field"
-                value={openaiModel}
-                onChange={(e) => setOpenaiModel(e.target.value)}
-              >
-                <option value="gpt-4o">GPT-4o (Omni — Recommended)</option>
-                <option value="gpt-4o-mini">GPT-4o Mini (Fast & Cost Efficient)</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              </select>
-            </div>
+          {/* Groq Settings */}
+          {aiProvider === 'groq' && (
+            <div style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '12px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                  Groq API Key (Secret Variable)
+                  <span style={{ marginLeft: '8px', color: 'var(--accent-cyan)', fontSize: '12px' }}>
+                    (Get free key at console.groq.com — starts with gsk_...)
+                  </span>
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type={showGroqKey ? 'text' : 'password'}
+                    className="input-field"
+                    value={groqApiKey}
+                    onChange={(e) => setGroqApiKey(e.target.value)}
+                    placeholder="Paste your secret Groq API Key (gsk_...)"
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: '13px' }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowGroqKey(!showGroqKey)}
+                    style={{ minWidth: '40px' }}
+                  >
+                    {showGroqKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </Button>
+                </div>
+                {groqApiKey && !showGroqKey && (
+                  <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', marginTop: '6px', fontFamily: 'monospace' }}>
+                    🔒 Groq Key Masked: {maskSecret(groqApiKey)}
+                  </div>
+                )}
+              </div>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Button
-                variant="primary"
-                onClick={handleSaveOpenAiConfig}
-                loading={savingOpenAi}
-                loadingText="Saving Key…"
-                style={{ width: '100%' }}
-              >
-                {openaiSaved ? <><Check size={15} /> Secret Key Saved!</> : 'Save AI Key Settings'}
-              </Button>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                  Groq Model
+                </label>
+                <select
+                  className="input-field"
+                  value={groqModel}
+                  onChange={(e) => setGroqModel(e.target.value)}
+                >
+                  <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommended — High Intelligence & Ultra-Fast)</option>
+                  <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Instant 1,200+ tok/sec)</option>
+                  <option value="mixtral-8x7b-32768">Mixtral 8x7B (32k Context Window)</option>
+                </select>
+              </div>
             </div>
+          )}
+
+          {/* OpenAI Settings */}
+          {aiProvider === 'openai' && (
+            <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '12px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                  OpenAI API Key (Secret Variable)
+                  <span style={{ marginLeft: '8px', color: 'var(--accent-amber)', fontSize: '12px' }}>
+                    (starts with sk-proj-...)
+                  </span>
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type={showOpenAiKey ? 'text' : 'password'}
+                    className="input-field"
+                    value={openaiApiKey}
+                    onChange={(e) => setOpenaiApiKey(e.target.value)}
+                    placeholder="Paste your secret OpenAI API Key (sk-proj-...)"
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: '13px' }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowOpenAiKey(!showOpenAiKey)}
+                    style={{ minWidth: '40px' }}
+                  >
+                    {showOpenAiKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </Button>
+                </div>
+                {openaiApiKey && !showOpenAiKey && (
+                  <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', marginTop: '6px', fontFamily: 'monospace' }}>
+                    🔒 OpenAI Key Masked: {maskSecret(openaiApiKey)}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                  OpenAI Model
+                </label>
+                <select
+                  className="input-field"
+                  value={openaiModel}
+                  onChange={(e) => setOpenaiModel(e.target.value)}
+                >
+                  <option value="gpt-4o-mini">GPT-4o Mini (Fast & Cost Efficient)</option>
+                  <option value="gpt-4o">GPT-4o (Omni Reasoning)</option>
+                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="primary"
+              onClick={handleSaveAiConfig}
+              loading={savingOpenAi}
+              loadingText="Saving Provider Settings…"
+            >
+              {openaiSaved ? <><Check size={15} /> AI Provider Settings Saved!</> : 'Save AI Provider Settings'}
+            </Button>
           </div>
         </div>
       </div>
