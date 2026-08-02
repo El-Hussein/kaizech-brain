@@ -7,7 +7,7 @@
     "start": "nest start",
     "start:dev": "ts-node -r tsconfig-paths/register src/main.ts",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/apps/api/src/main",
     "lint": "eslint src --ext .ts",
     "test": "jest",
     "test:watch": "jest --watch",
