@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Wrench, Play, Plus, Code, Edit2, RotateCcw, Info } from 'lucide-react';
 import axios from 'axios';
+import { Button } from './ui/Button';
 
 interface ToolsProps {
   apiKey: string;
@@ -243,14 +244,14 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
               )}
             </h3>
             {editingToolId && (
-              <button
+              <Button
                 type="button"
                 onClick={handleCancelEdit}
-                className="btn btn-secondary"
+                variant="secondary"
                 style={{ fontSize: '12px', padding: '4px 10px' }}
               >
                 <RotateCcw size={13} /> Cancel Edit
-              </button>
+              </Button>
             )}
           </div>
 
@@ -310,9 +311,9 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ marginTop: '8px' }}>
+            <Button type="submit" variant="primary" style={{ marginTop: '8px' }}>
               <Wrench size={16} /> {editingToolId ? 'Save & Update Tool Manifest' : 'Register Tool Manifest'}
-            </button>
+            </Button>
           </form>
         </div>
 
@@ -377,13 +378,14 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Input Parameters (JSON Body)</label>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={handleResetSampleBody}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  style={{ color: 'var(--accent-primary)', fontSize: '12px', padding: '2px 6px', height: 'auto', gap: '4px' }}
                 >
                   <RotateCcw size={12} /> Auto-fill Sample Body
-                </button>
+                </Button>
               </div>
               <textarea
                 className="input-field"
@@ -393,9 +395,9 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
               />
             </div>
 
-            <button className="btn btn-primary" onClick={handleTestTool} disabled={testing}>
-              <Play size={16} /> {testing ? 'Executing API Call...' : 'Execute Tool Call'}
-            </button>
+            <Button variant="primary" onClick={handleTestTool} loading={testing} loadingText="Executing API Call...">
+              <Play size={16} /> Execute Tool Call
+            </Button>
 
             {testResult && (
               <div>
@@ -434,14 +436,14 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
                 <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--accent-primary)' }}>{tool.name}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span className="badge badge-purple">{tool.httpMethod}</span>
-                  <button
+                  <Button
                     onClick={() => handleEditToolClick(tool)}
-                    className="btn btn-secondary"
+                    variant="secondary"
                     style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                     title="Edit tool details"
                   >
                     <Edit2 size={13} /> Edit
-                  </button>
+                  </Button>
                 </div>
               </div>
 

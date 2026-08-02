@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Brain, Lock, Mail, Building2, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import axios from 'axios';
+import { Button } from './ui/Button';
 
 interface LoginPageProps {
   onLoginSuccess: (session: {
@@ -173,14 +174,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary"
-            disabled={loading}
+            variant="primary"
+            loading={loading}
+            loadingText="Authenticating..."
             style={{ width: '100%', padding: '12px', justifyContent: 'center', marginTop: '8px', fontSize: '15px' }}
           >
-            {loading ? 'Authenticating...' : <>Sign In to Workspace <ArrowRight size={16} /></>}
-          </button>
+            Sign In to Workspace <ArrowRight size={16} />
+          </Button>
         </form>
 
         <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--border-glass)', textAlign: 'center', fontSize: '12px', color: 'var(--text-dim)' }}>

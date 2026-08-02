@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { FormattedMessage } from './FormattedMessage';
+import { Button } from './ui/Button';
 
 interface ConversationsProps {
   apiKey: string;
@@ -333,15 +334,16 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            className="btn btn-secondary"
+          <Button
+            variant="secondary"
             onClick={() => fetchConversations(true)}
-            disabled={refreshing}
+            loading={refreshing}
+            loadingText="Refreshing..."
             style={{ fontSize: '13px', padding: '7px 14px', gap: '6px' }}
+            icon={!refreshing && <RefreshCw size={14} />}
           >
-            <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
-            {refreshing ? 'Refreshing...' : 'Refresh Live Data'}
-          </button>
+            Refresh Live Data
+          </Button>
         </div>
       </div>
 
@@ -433,8 +435,9 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
             {/* Filter Tabs */}
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {(['all', 'active', 'handed_off', 'closed'] as const).map((st) => (
-                <button
+                <Button
                   key={st}
+                  variant={statusFilter === st ? 'primary' : 'secondary'}
                   onClick={() => setStatusFilter(st)}
                   style={{
                     padding: '4px 10px',
@@ -442,15 +445,10 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                     fontSize: '11px',
                     fontWeight: 600,
                     textTransform: 'capitalize',
-                    border: '1px solid',
-                    borderColor: statusFilter === st ? 'var(--accent-primary)' : 'transparent',
-                    background: statusFilter === st ? 'var(--accent-primary)' : 'rgba(255,255,255,0.04)',
-                    color: '#ffffff',
-                    cursor: 'pointer',
                   }}
                 >
                   {st === 'handed_off' ? 'Handoff' : st}
-                </button>
+                </Button>
               ))}
 
               <select
@@ -750,8 +748,8 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
                       {/* Resume AI / Handoff Action */}
                       {selectedConv.status === 'handed_off' ? (
-                        <button
-                          className="btn btn-secondary"
+                        <Button
+                          variant="secondary"
                           onClick={() => handleUpdateStatus('active')}
                           disabled={isLimitExceeded}
                           style={{
@@ -772,31 +770,31 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                           }
                         >
                           <Bot size={13} /> {isLimitExceeded ? 'Resume AI (Limit Exceeded)' : 'Resume AI'}
-                        </button>
+                        </Button>
                       ) : (
-                        <button
-                          className="btn btn-secondary"
+                        <Button
+                          variant="secondary"
                           onClick={() => handleUpdateStatus('handed_off')}
                           style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', borderColor: 'var(--accent-amber)', color: 'var(--accent-amber)' }}
                           title="Assign Human Support Agent"
                         >
                           <UserCheck size={13} /> Handoff
-                        </button>
+                        </Button>
                       )}
 
                       {/* Close / Reopen Ticket */}
                       {selectedConv.status !== 'closed' ? (
-                        <button
-                          className="btn btn-secondary"
+                        <Button
+                          variant="secondary"
                           onClick={() => handleUpdateStatus('closed')}
                           style={{ padding: '5px 10px', fontSize: '12px', gap: '4px', color: '#94a3b8' }}
                           title="Mark Ticket Closed"
                         >
                           <CheckCircle2 size={13} /> Close Ticket
-                        </button>
+                        </Button>
                       ) : (
-                        <button
-                          className="btn btn-secondary"
+                        <Button
+                          variant="secondary"
                           onClick={() => handleUpdateStatus('active')}
                           disabled={isLimitExceeded}
                           style={{
@@ -810,18 +808,18 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                           title={isLimitExceeded ? 'Cannot reopen in AI mode: limit reached' : 'Re-open thread control'}
                         >
                           <RotateCcw size={13} /> Re-open Thread
-                        </button>
+                        </Button>
                       )}
 
                       {/* Export Transcript */}
-                      <button
-                        className="btn btn-secondary"
+                      <Button
+                        variant="secondary"
                         onClick={handleExportTranscript}
                         style={{ padding: '5px 10px', fontSize: '12px', gap: '4px' }}
                         title="Export conversation history"
                       >
                         <Download size={13} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -950,9 +948,10 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                   </span>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
                     {QUICK_REPLIES.map((reply) => (
-                      <button
+                      <Button
                         key={reply.id}
                         type="button"
+                        variant="secondary"
                         onClick={() => setReplyInput(reply.text)}
                         title={reply.text}
                         style={{
@@ -960,19 +959,12 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                           borderRadius: '12px',
                           fontSize: '11px',
                           fontWeight: 600,
-                          background: 'rgba(255, 255, 255, 0.04)',
-                          border: '1px solid var(--border-glass)',
-                          color: 'var(--text-main)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
                           gap: '5px',
-                          transition: 'all 0.15s ease',
                         }}
                       >
                         <span>{reply.icon}</span>
                         <span>{reply.label}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -987,9 +979,16 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                     onChange={(e) => setReplyInput(e.target.value)}
                     style={{ flex: 1 }}
                   />
-                  <button type="submit" className="btn btn-primary" disabled={!replyInput.trim() || sendingReply} style={{ gap: '6px' }}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    loading={sendingReply}
+                    loadingText="Sending..."
+                    disabled={!replyInput.trim()}
+                    style={{ gap: '6px' }}
+                  >
                     <Send size={15} /> Send Live Reply
-                  </button>
+                  </Button>
                 </form>
               </>
             );

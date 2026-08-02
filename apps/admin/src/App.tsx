@@ -26,6 +26,29 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
+const COMMON_TIMEZONES = [
+  { value: 'Asia/Riyadh', label: 'Asia/Riyadh (Saudi Arabia — GMT+3)' },
+  { value: 'Asia/Dubai', label: 'Asia/Dubai (UAE / Gulf — GMT+4)' },
+  { value: 'Asia/Kuwait', label: 'Asia/Kuwait (Kuwait — GMT+3)' },
+  { value: 'Asia/Bahrain', label: 'Asia/Bahrain (Bahrain — GMT+3)' },
+  { value: 'Asia/Qatar', label: 'Asia/Qatar (Qatar — GMT+3)' },
+  { value: 'Asia/Muscat', label: 'Asia/Muscat (Oman — GMT+4)' },
+  { value: 'Asia/Amman', label: 'Asia/Amman (Jordan — GMT+3)' },
+  { value: 'Asia/Beirut', label: 'Asia/Beirut (Lebanon — GMT+3)' },
+  { value: 'Asia/Baghdad', label: 'Asia/Baghdad (Iraq — GMT+3)' },
+  { value: 'Africa/Cairo', label: 'Africa/Cairo (Egypt — GMT+3)' },
+  { value: 'Africa/Casablanca', label: 'Africa/Casablanca (Morocco — GMT+1)' },
+  { value: 'UTC', label: 'UTC (Universal Coordinated Time — GMT+0)' },
+  { value: 'Europe/London', label: 'Europe/London (UK — GMT+0/+1)' },
+  { value: 'Europe/Paris', label: 'Europe/Paris (Central Europe — GMT+1/+2)' },
+  { value: 'Europe/Istanbul', label: 'Europe/Istanbul (Turkey — GMT+3)' },
+  { value: 'America/New_York', label: 'America/New_York (US Eastern — GMT-5/-4)' },
+  { value: 'America/Chicago', label: 'America/Chicago (US Central — GMT-6/-5)' },
+  { value: 'America/Los_Angeles', label: 'America/Los_Angeles (US Pacific — GMT-8/-7)' },
+  { value: 'Asia/Singapore', label: 'Asia/Singapore (Singapore — GMT+8)' },
+  { value: 'Asia/Tokyo', label: 'Asia/Tokyo (Japan — GMT+9)' },
+];
+
 axios.defaults.baseURL =
   (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
 
@@ -976,13 +999,18 @@ export const App: React.FC = () => {
 
                 <div>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Timezone</label>
-                  <input
-                    type="text"
-                    placeholder="Asia/Riyadh"
+                  <select
                     className="input-field"
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
-                  />
+                    style={{ cursor: 'pointer', background: 'var(--bg-surface-elevated)', color: 'var(--text-primary)' }}
+                  >
+                    {COMMON_TIMEZONES.map((tz) => (
+                      <option key={tz.value} value={tz.value} style={{ background: '#1e293b', color: '#fff' }}>
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -1128,12 +1156,23 @@ export const App: React.FC = () => {
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>
                   Timezone
                 </label>
-                <input
-                  type="text"
+                <select
                   className="input-field"
                   value={editTimezone}
                   onChange={(e) => setEditTimezone(e.target.value)}
-                />
+                  style={{ cursor: 'pointer', background: 'var(--bg-surface-elevated)', color: 'var(--text-primary)' }}
+                >
+                  {!COMMON_TIMEZONES.some((tz) => tz.value === editTimezone) && (
+                    <option value={editTimezone} style={{ background: '#1e293b', color: '#fff' }}>
+                      {editTimezone} (Current)
+                    </option>
+                  )}
+                  {COMMON_TIMEZONES.map((tz) => (
+                    <option key={tz.value} value={tz.value} style={{ background: '#1e293b', color: '#fff' }}>
+                      {tz.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

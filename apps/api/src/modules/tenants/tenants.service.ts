@@ -1,4 +1,4 @@
-import { Injectable, Logger, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantEntity, ApiKeyEntity } from '@kaizech/database';
@@ -17,6 +17,18 @@ export class TenantsService {
     private readonly apiKeyRepository: Repository<ApiKeyEntity>,
   ) {}
 
+  private validateAndGetTimezone(tz?: string): string {
+    if (!tz) return 'Asia/Riyadh';
+    try {
+      Intl.DateTimeFormat(undefined, { timeZone: tz });
+      return tz;
+    } catch {
+      throw new BadRequestException(
+        `Invalid IANA timezone: '${tz}'. Please select a valid timezone (e.g. 'Asia/Riyadh', 'UTC', 'Asia/Dubai').`,
+      );
+    }
+  }
+
   async create(dto: CreateTenantDto) {
     const existing = await this.tenantRepository.findOne({
       where: [{ name: dto.name }, { slug: dto.slug }],
@@ -32,7 +44,7 @@ export class TenantsService {
       name: dto.name,
       slug: dto.slug,
       languages: dto.languages || ['en'],
-      timezone: dto.timezone || 'UTC',
+      timezone: this.validateAndGetTimezone(dto.timezone),
       greetingMessage: dto.greetingMessage,
       apiEndpoint: dto.apiEndpoint,
       branding: dto.branding,
@@ -111,6 +123,9 @@ export class TenantsService {
 
   async update(id: string, dto: UpdateTenantDto) {
     const tenant = await this.findOne(id);
+    if (dto.timezone) {
+      tenant.timezone = this.validateAndGetTimezone(dto.timezone);
+    }
     const ownerEmail = (dto as any).ownerEmail;
     const password = (dto as any).password;
     if (dto.settings || ownerEmail || password) {

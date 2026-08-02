@@ -14,6 +14,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import axios from 'axios';
+import { Button } from './ui/Button';
 
 interface PromptProps {
   apiKey: string;
@@ -244,8 +245,8 @@ export const PromptBuilderTab: React.FC<PromptProps> = ({ apiKey }) => {
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           {/* Preset Templates Dropdown */}
           <div style={{ position: 'relative' }} ref={presetRef}>
-            <button
-              className="btn btn-secondary"
+            <Button
+              variant="secondary"
               onClick={() => setPresetOpen((v) => !v)}
               style={{ gap: '8px' }}
             >
@@ -255,7 +256,7 @@ export const PromptBuilderTab: React.FC<PromptProps> = ({ apiKey }) => {
                 size={14}
                 style={{ transition: 'transform 0.2s', transform: presetOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
               />
-            </button>
+            </Button>
 
             {presetOpen && (
               <div
@@ -274,69 +275,60 @@ export const PromptBuilderTab: React.FC<PromptProps> = ({ apiKey }) => {
                 }}
               >
                 {PRESETS.map((preset) => (
-                  <button
+                  <Button
                     key={preset.label}
+                    variant="ghost"
                     onClick={() => applyPreset(preset)}
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
+                      justifyContent: 'flex-start',
                       textAlign: 'left',
                       padding: '10px 12px',
                       borderRadius: '8px',
                       color: 'var(--text-main)',
-                      fontFamily: 'var(--font-sans)',
                       fontSize: '13px',
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
                       gap: '10px',
-                      transition: 'background 0.15s',
+                      width: '100%',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                   >
                     <span style={{ fontSize: '18px' }}>{preset.emoji}</span>
                     {preset.label}
-                  </button>
+                  </Button>
                 ))}
                 <div style={{ borderTop: '1px solid var(--border-glass)', marginTop: '4px', paddingTop: '4px' }}>
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       setIdentity(''); setBusinessRules(''); setSafetyRules(''); setTone(''); setCustomInstructions('');
                       setPresetOpen(false);
                     }}
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
+                      justifyContent: 'flex-start',
                       textAlign: 'left',
                       padding: '8px 12px',
                       borderRadius: '8px',
                       color: 'var(--accent-rose)',
-                      fontFamily: 'var(--font-sans)',
                       fontSize: '12px',
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
                       width: '100%',
-                      transition: 'background 0.15s',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(244,63,94,0.08)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                   >
                     <RotateCcw size={12} /> Clear all fields
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
           </div>
 
           {/* Save button */}
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            <Save size={16} /> {saving ? 'Saving...' : 'Save Configuration'}
-          </button>
+          <Button variant="primary" onClick={handleSave} loading={saving} loadingText="Saving...">
+            <Save size={16} /> Save Configuration
+          </Button>
         </div>
       </div>
 
@@ -458,14 +450,14 @@ export const PromptBuilderTab: React.FC<PromptProps> = ({ apiKey }) => {
                 <Eye size={15} color="var(--accent-primary)" />
                 <span style={{ fontSize: '13px', fontWeight: 700 }}>Live Prompt Preview</span>
               </div>
-              <button
-                className="btn btn-secondary"
+              <Button
+                variant="secondary"
                 style={{ padding: '5px 10px', fontSize: '12px', gap: '5px' }}
                 onClick={handleCopyPrompt}
               >
                 {copied ? <Check size={12} /> : <Copy size={12} />}
                 {copied ? 'Copied!' : 'Copy'}
-              </button>
+              </Button>
             </div>
 
             {/* Stats bar */}

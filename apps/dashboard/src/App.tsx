@@ -23,6 +23,7 @@ import { ToolsTab } from './components/ToolsTab';
 import { PlaygroundTab } from './components/PlaygroundTab';
 import { ConversationsTab } from './components/ConversationsTab';
 import { SettingsTab } from './components/SettingsTab';
+import { Button } from './components/ui/Button';
 
 axios.defaults.baseURL =
   (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
@@ -63,13 +64,13 @@ class ErrorBoundary extends React.Component<
           <p style={{ fontSize: '14px', color: '#e5e7eb', fontFamily: 'monospace', margin: '10px 0' }}>
             {this.state.error?.message || 'An unexpected error occurred while rendering this tab.'}
           </p>
-          <button
-            className="btn btn-secondary"
+          <Button
+            variant="secondary"
             style={{ marginTop: '14px' }}
             onClick={() => this.setState({ hasError: false, error: null })}
           >
             🔄 Reload Tab Component
-          </button>
+          </Button>
         </div>
       );
     }
@@ -266,13 +267,13 @@ export const App: React.FC = () => {
               {user.email}
             </span>
           </div>
-          <button
-            className="btn btn-secondary"
+          <Button
+            variant="secondary"
             style={{ width: '100%', fontSize: '12px', padding: '8px 10px', justifyContent: 'center' }}
             onClick={handleLogout}
           >
             <LogOut size={13} color="var(--accent-rose)" /> Sign Out
-          </button>
+          </Button>
         </div>
       </aside>
 

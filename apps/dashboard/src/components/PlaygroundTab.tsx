@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Send, Bot, User, Cpu, Database, Wrench, Clock, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { FormattedMessage } from './FormattedMessage';
+import { Button } from './ui/Button';
 
 interface PlaygroundProps {
   apiKey: string;
@@ -114,9 +115,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary" disabled={sending}>
-              <Send size={16} />
-            </button>
+            <Button type="submit" variant="primary" loading={sending} icon={!sending && <Send size={16} />} />
           </form>
         </div>
 

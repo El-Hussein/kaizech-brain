@@ -20,6 +20,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import axios from 'axios';
+import { Button } from './ui/Button';
 
 const API_BASE = '/api/v1';
 
@@ -59,9 +60,9 @@ const CopyField: React.FC<{ value: string; label?: string }> = ({ value, label }
           value={value}
           style={{ fontFamily: 'monospace', fontSize: '13px', flex: 1 }}
         />
-        <button className="btn btn-secondary" onClick={copy} title="Copy to clipboard" style={{ minWidth: '40px' }}>
+        <Button variant="secondary" onClick={copy} title="Copy to clipboard" style={{ minWidth: '40px' }}>
           {copied ? <Check size={15} color="var(--accent-emerald)" /> : <Copy size={15} />}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -78,6 +79,29 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?:
     {subtitle && <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{subtitle}</p>}
   </div>
 );
+
+export const COMMON_TIMEZONES = [
+  { value: 'Asia/Riyadh', label: 'Asia/Riyadh (Saudi Arabia — GMT+3)' },
+  { value: 'Asia/Dubai', label: 'Asia/Dubai (UAE / Gulf — GMT+4)' },
+  { value: 'Asia/Kuwait', label: 'Asia/Kuwait (Kuwait — GMT+3)' },
+  { value: 'Asia/Bahrain', label: 'Asia/Bahrain (Bahrain — GMT+3)' },
+  { value: 'Asia/Qatar', label: 'Asia/Qatar (Qatar — GMT+3)' },
+  { value: 'Asia/Muscat', label: 'Asia/Muscat (Oman — GMT+4)' },
+  { value: 'Asia/Amman', label: 'Asia/Amman (Jordan — GMT+3)' },
+  { value: 'Asia/Beirut', label: 'Asia/Beirut (Lebanon — GMT+3)' },
+  { value: 'Asia/Baghdad', label: 'Asia/Baghdad (Iraq — GMT+3)' },
+  { value: 'Africa/Cairo', label: 'Africa/Cairo (Egypt — GMT+3)' },
+  { value: 'Africa/Casablanca', label: 'Africa/Casablanca (Morocco — GMT+1)' },
+  { value: 'UTC', label: 'UTC (Universal Coordinated Time — GMT+0)' },
+  { value: 'Europe/London', label: 'Europe/London (UK — GMT+0/+1)' },
+  { value: 'Europe/Paris', label: 'Europe/Paris (Central Europe — GMT+1/+2)' },
+  { value: 'Europe/Istanbul', label: 'Europe/Istanbul (Turkey — GMT+3)' },
+  { value: 'America/New_York', label: 'America/New_York (US Eastern — GMT-5/-4)' },
+  { value: 'America/Chicago', label: 'America/Chicago (US Central — GMT-6/-5)' },
+  { value: 'America/Los_Angeles', label: 'America/Los_Angeles (US Pacific — GMT-8/-7)' },
+  { value: 'Asia/Singapore', label: 'Asia/Singapore (Singapore — GMT+8)' },
+  { value: 'Asia/Tokyo', label: 'Asia/Tokyo (Japan — GMT+9)' },
+];
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
@@ -419,9 +443,21 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   };
 
   // ── Save Profile ──────────────────────────────────────────────────────────
-  const handleSaveProfile = () => {
-    setProfileSaved(true);
-    setTimeout(() => setProfileSaved(false), 2000);
+  const handleSaveProfile = async () => {
+    try {
+      await axios.put(
+        `${API_BASE}/tenants/${tenantId || 'me'}`,
+        {
+          name: tenantName,
+          timezone: timezone,
+        },
+        { headers: { 'x-api-key': apiKey } },
+      );
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2000);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update business profile');
+    }
   };
 
   const copyRawKey = () => {
@@ -445,34 +481,34 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
       {/* ── Sub-Navigation Bar ───────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '10px', borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px', flexWrap: 'wrap' }}>
-        <button
-          className={`btn ${subTab === 'general' ? 'btn-primary' : 'btn-secondary'}`}
+        <Button
+          variant={subTab === 'general' ? 'primary' : 'secondary'}
           onClick={() => setSubTab('general')}
           style={{ gap: '6px', fontSize: '13px' }}
         >
           <Globe size={15} /> General & Model
-        </button>
-        <button
-          className={`btn ${subTab === 'limits_strategy' ? 'btn-primary' : 'btn-secondary'}`}
+        </Button>
+        <Button
+          variant={subTab === 'limits_strategy' ? 'primary' : 'secondary'}
           onClick={() => setSubTab('limits_strategy')}
           style={{ gap: '6px', fontSize: '13px' }}
         >
           <Sliders size={15} /> Bot Strategy & Limits
-        </button>
-        <button
-          className={`btn ${subTab === 'whatsapp' ? 'btn-primary' : 'btn-secondary'}`}
+        </Button>
+        <Button
+          variant={subTab === 'whatsapp' ? 'primary' : 'secondary'}
           onClick={() => setSubTab('whatsapp')}
           style={{ gap: '6px', fontSize: '13px' }}
         >
           <MessageSquare size={15} /> WhatsApp Channel
-        </button>
-        <button
-          className={`btn ${subTab === 'api_keys' ? 'btn-primary' : 'btn-secondary'}`}
+        </Button>
+        <Button
+          variant={subTab === 'api_keys' ? 'primary' : 'secondary'}
           onClick={() => setSubTab('api_keys')}
           style={{ gap: '6px', fontSize: '13px' }}
         >
           <Key size={15} /> API Keys & Developer Docs
-        </button>
+        </Button>
       </div>
 
       {subTab === 'general' && (
@@ -494,11 +530,27 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             </div>
             <div>
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Timezone</label>
-              <input type="text" className="input-field" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
+              <select
+                className="input-field"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                style={{ cursor: 'pointer', background: 'var(--bg-surface-elevated)', color: 'var(--text-primary)' }}
+              >
+                {!COMMON_TIMEZONES.some((tz) => tz.value === timezone) && (
+                  <option value={timezone} style={{ background: '#1e293b', color: '#fff' }}>
+                    {timezone} (Custom / Current)
+                  </option>
+                )}
+                {COMMON_TIMEZONES.map((tz) => (
+                  <option key={tz.value} value={tz.value} style={{ background: '#1e293b', color: '#fff' }}>
+                    {tz.label}
+                  </option>
+                ))}
+              </select>
             </div>
-            <button className="btn btn-primary" style={{ marginTop: '8px' }} onClick={handleSaveProfile}>
+            <Button variant="primary" style={{ marginTop: '8px' }} onClick={handleSaveProfile}>
               {profileSaved ? <><Check size={15} /> Saved!</> : 'Save Profile'}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -561,15 +613,15 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 placeholder="Paste your secret OpenAI API Key (sk-proj-...)"
                 style={{ flex: 1, fontFamily: 'monospace', fontSize: '13px' }}
               />
-              <button
+              <Button
                 type="button"
-                className="btn btn-secondary"
+                variant="secondary"
                 onClick={() => setShowOpenAiKey(!showOpenAiKey)}
                 style={{ minWidth: '40px' }}
                 title={showOpenAiKey ? 'Mask Secret Key' : 'Reveal Secret Key'}
               >
                 {showOpenAiKey ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
+              </Button>
             </div>
             {openaiApiKey && !showOpenAiKey && (
               <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', marginTop: '6px', fontFamily: 'monospace' }}>
@@ -596,20 +648,15 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button
-                className="btn btn-primary"
+              <Button
+                variant="primary"
                 onClick={handleSaveOpenAiConfig}
-                disabled={savingOpenAi}
+                loading={savingOpenAi}
+                loadingText="Saving Key…"
                 style={{ width: '100%' }}
               >
-                {savingOpenAi ? (
-                  <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving Key…</>
-                ) : openaiSaved ? (
-                  <><Check size={15} /> Secret Key Saved!</>
-                ) : (
-                  'Save AI Key Settings'
-                )}
-              </button>
+                {openaiSaved ? <><Check size={15} /> Secret Key Saved!</> : 'Save AI Key Settings'}
+              </Button>
             </div>
           </div>
         </div>
@@ -736,15 +783,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
           {/* Save button */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button className="btn btn-primary" onClick={handleSaveFaqSettings} disabled={savingFaqSettings}>
-              {savingFaqSettings ? (
-                <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</>
-              ) : faqSaved ? (
-                <><Check size={15} /> FAQ Settings Saved!</>
-              ) : (
-                'Save FAQ Settings'
-              )}
-            </button>
+            <Button variant="primary" onClick={handleSaveFaqSettings} loading={savingFaqSettings} loadingText="Saving…">
+              {faqSaved ? <><Check size={15} /> FAQ Settings Saved!</> : 'Save FAQ Settings'}
+            </Button>
           </div>
         </div>
       </div>
@@ -803,15 +844,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 ? `⚡ Active: Conversations will automatically handoff to human support at ${maxMessagesLimit} messages.`
                 : 'ℹ️ Automatic handoff by message count is disabled (Unlimited mode).'}
             </div>
-            <button className="btn btn-primary" onClick={handleSaveLimitSettings} disabled={savingLimitSettings}>
-              {savingLimitSettings ? (
-                <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</>
-              ) : limitSaved ? (
-                <><Check size={15} /> Limit Settings Saved!</>
-              ) : (
-                'Save Limit Settings'
-              )}
-            </button>
+            <Button variant="primary" onClick={handleSaveLimitSettings} loading={savingLimitSettings} loadingText="Saving…">
+              {limitSaved ? <><Check size={15} /> Limit Settings Saved!</> : 'Save Limit Settings'}
+            </Button>
           </div>
         </div>
       </div>
@@ -840,8 +875,8 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   onChange={(e) => setWebhookUrl(e.target.value)}
                   style={{ fontFamily: 'monospace', fontSize: '13px', flex: 1 }}
                 />
-                <button
-                  className="btn btn-secondary"
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     navigator.clipboard.writeText(webhookUrl);
                   }}
@@ -849,7 +884,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   style={{ minWidth: '40px' }}
                 >
                   <Copy size={15} />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -882,9 +917,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   placeholder="Paste your App Secret from Meta Developer Console"
                   style={{ flex: 1 }}
                 />
-                <button className="btn btn-secondary" onClick={() => setShowAppSecret(!showAppSecret)} style={{ minWidth: '40px' }}>
+                <Button variant="secondary" onClick={() => setShowAppSecret(!showAppSecret)} style={{ minWidth: '40px' }}>
                   {showAppSecret ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -904,9 +939,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   placeholder="Paste Meta Permanent Access Token (EAAG...)"
                   style={{ flex: 1 }}
                 />
-                <button className="btn btn-secondary" onClick={() => setShowAccessToken(!showAccessToken)} style={{ minWidth: '40px' }}>
+                <Button variant="secondary" onClick={() => setShowAccessToken(!showAccessToken)} style={{ minWidth: '40px' }}>
                   {showAccessToken ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -932,12 +967,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               <span style={{ color: 'var(--text-muted)' }}>— All webhook calls from Meta are signature-validated</span>
             </div>
 
-            <button
-              className="btn btn-primary"
+            <Button
+              variant="primary"
               onClick={saveWhatsAppConfig}
             >
               {whatsappSaved ? 'Saved! ✓' : 'Save WhatsApp Config'}
-            </button>
+            </Button>
           </div>
         </div>
         </>
@@ -1047,15 +1082,16 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             onKeyDown={(e) => e.key === 'Enter' && handleGenerateKey()}
             style={{ flex: 1 }}
           />
-          <button
-            className="btn btn-primary"
+          <Button
+            variant="primary"
             onClick={handleGenerateKey}
-            disabled={generatingKey || !newKeyName.trim()}
+            loading={generatingKey}
+            disabled={!newKeyName.trim()}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+            icon={!generatingKey && <Plus size={14} />}
           >
-            {generatingKey ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={14} />}
             Generate Key
-          </button>
+          </Button>
         </div>
 
         {/* One-time raw key reveal */}
@@ -1090,9 +1126,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               >
                 {generatedRawKey}
               </code>
-              <button className="btn btn-secondary" onClick={copyRawKey}>
+              <Button variant="secondary" onClick={copyRawKey}>
                 {keyCopied ? <Check size={15} color="var(--accent-emerald)" /> : <Copy size={15} />}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -1103,13 +1139,14 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
               Active Keys
             </span>
-            <button
-              className="btn btn-secondary"
+            <Button
+              variant="secondary"
               onClick={loadApiKeys}
               style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '12px' }}
+              icon={<RefreshCw size={12} />}
             >
-              <RefreshCw size={12} /> Refresh
-            </button>
+              Refresh
+            </Button>
           </div>
 
           {loadingKeys ? (
@@ -1175,16 +1212,16 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                       {k.isActive ? 'Active' : 'Revoked'}
                     </span>
                     {k.isActive && (
-                      <button
-                        className="btn btn-secondary"
+                      <Button
+                        variant="secondary"
                         onClick={() => handleRevokeKey(k.id)}
-                        disabled={revoking === k.id}
+                        loading={revoking === k.id}
                         style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#f87171', borderColor: 'rgba(239,68,68,0.2)' }}
                         title="Revoke this key"
+                        icon={revoking !== k.id && <Trash2 size={12} />}
                       >
-                        {revoking === k.id ? <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={12} />}
                         Revoke
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>

@@ -15,6 +15,7 @@ import {
   Timer,
 } from 'lucide-react';
 import axios from 'axios';
+import { Button } from './ui/Button';
 
 interface OverviewProps {
   apiKey: string;
@@ -179,15 +180,16 @@ export const OverviewTab: React.FC<OverviewProps> = ({ apiKey }) => {
               Updated {lastRefreshed.toLocaleTimeString()}
             </span>
           )}
-          <button
-            className="btn btn-secondary"
+          <Button
+            variant="secondary"
             style={{ padding: '7px 14px', fontSize: '13px', gap: '6px' }}
             onClick={() => fetchAll(true)}
-            disabled={refreshing}
+            loading={refreshing}
+            loadingText="Refreshing…"
+            icon={!refreshing && <RefreshCw size={14} />}
           >
-            <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
-            {refreshing ? 'Refreshing…' : 'Refresh'}
-          </button>
+            Refresh
+          </Button>
         </div>
       </div>
 

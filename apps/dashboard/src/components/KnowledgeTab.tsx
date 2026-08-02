@@ -19,6 +19,7 @@ import {
   Check,
 } from 'lucide-react';
 import axios from 'axios';
+import { Button } from './ui/Button';
 
 interface KnowledgeProps {
   apiKey: string;
@@ -189,9 +190,9 @@ const ViewerModal: React.FC<{
               )}
             </p>
           </div>
-          <button className="btn btn-secondary" style={{ padding: '8px 10px' }} onClick={onClose}>
+          <Button variant="secondary" style={{ padding: '8px 10px' }} onClick={onClose}>
             <X size={16} />
-          </button>
+          </Button>
         </div>
 
         {/* Search */}
@@ -282,14 +283,14 @@ const ViewerModal: React.FC<{
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button
-                      className="btn btn-secondary"
+                    <Button
+                      variant="secondary"
                       style={{ padding: '4px 10px', fontSize: '11px', gap: '4px' }}
                       onClick={(e) => { e.stopPropagation(); copyChunk(chunk); }}
                     >
                       {copiedId === chunk.id ? <Check size={11} /> : <Copy size={11} />}
                       {copiedId === chunk.id ? 'Copied' : 'Copy'}
-                    </button>
+                    </Button>
                     <span style={{ fontSize: '12px', color: accentColor, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
                       {isExpanded ? 'Collapse' : 'Expand'}
                       {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -313,12 +314,13 @@ const ViewerModal: React.FC<{
                     {preview}
                   </p>
                   {formattedText.length > 220 && (
-                    <button
-                      style={{ marginTop: '8px', background: 'none', border: 'none', color: accentColor, cursor: 'pointer', fontSize: '12px', fontWeight: 600, padding: 0 }}
+                    <Button
+                      variant="ghost"
+                      style={{ marginTop: '8px', color: accentColor, fontSize: '12px', fontWeight: 600, padding: '2px 6px' }}
                       onClick={() => toggleChunk(chunk.chunkIndex)}
                     >
                       {isExpanded ? 'Show less ↑' : 'Show more ↓'}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -344,9 +346,9 @@ const ViewerModal: React.FC<{
               Showing {filtered.length} of {chunks.length} chunks
               {search && ` matching "${search}"`}
             </span>
-            <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '6px 14px' }} onClick={onClose}>
+            <Button variant="secondary" style={{ fontSize: '12px', padding: '6px 14px' }} onClick={onClose}>
               Close
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -484,15 +486,15 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
 
       {/* Sub tabs */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        <button className={`btn ${activeSubTab === 'upload' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveSubTab('upload')}>
+        <Button variant={activeSubTab === 'upload' ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('upload')}>
           <FileText size={16} /> Document Upload (PDF / DOCX / XLSX / MD)
-        </button>
-        <button className={`btn ${activeSubTab === 'faq' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveSubTab('faq')}>
+        </Button>
+        <Button variant={activeSubTab === 'faq' ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('faq')}>
           <HelpCircle size={16} /> FAQ Import
-        </button>
-        <button className={`btn ${activeSubTab === 'crawl' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveSubTab('crawl')}>
+        </Button>
+        <Button variant={activeSubTab === 'crawl' ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('crawl')}>
           <Globe size={16} /> Website Crawler
-        </button>
+        </Button>
       </div>
 
       {/* Action Form */}
@@ -506,9 +508,9 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
               onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
               className="input-field"
             />
-            <button type="submit" className="btn btn-primary" disabled={!uploadFile || uploading} style={{ alignSelf: 'flex-start' }}>
-              <Upload size={16} /> {uploading ? 'Processing & Embedding...' : 'Upload & Train RAG'}
-            </button>
+            <Button type="submit" variant="primary" loading={uploading} loadingText="Processing & Embedding..." disabled={!uploadFile} style={{ alignSelf: 'flex-start' }}>
+              <Upload size={16} /> Upload & Train RAG
+            </Button>
           </form>
         )}
 
@@ -546,12 +548,12 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
               </div>
             ))}
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setFaqs([...faqs, { question: '', answer: '' }])}>
+              <Button type="button" variant="secondary" onClick={() => setFaqs([...faqs, { question: '', answer: '' }])}>
                 + Add FAQ Pair
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={uploading}>
-                {uploading ? 'Importing...' : 'Import FAQs'}
-              </button>
+              </Button>
+              <Button type="submit" variant="primary" loading={uploading} loadingText="Importing...">
+                Import FAQs
+              </Button>
             </div>
           </form>
         )}
@@ -566,9 +568,9 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
               <label style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Name (Optional)</label>
               <input type="text" placeholder="e.g. Help Center Page" className="input-field" value={crawlName} onChange={(e) => setCrawlName(e.target.value)} />
             </div>
-            <button type="submit" className="btn btn-primary" disabled={!crawlUrl || uploading} style={{ alignSelf: 'flex-start' }}>
-              <Globe size={16} /> {uploading ? 'Crawling & Embedding...' : 'Crawl Page'}
-            </button>
+            <Button type="submit" variant="primary" loading={uploading} loadingText="Crawling & Embedding..." disabled={!crawlUrl} style={{ alignSelf: 'flex-start' }}>
+              <Globe size={16} /> Crawl Page
+            </Button>
           </form>
         )}
       </div>
@@ -579,9 +581,9 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
           <h3 style={{ fontSize: '18px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Database size={18} color="var(--accent-primary)" /> Indexed Knowledge Sources ({sources.length})
           </h3>
-          <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '6px 14px' }} onClick={fetchSources}>
+          <Button variant="secondary" style={{ fontSize: '12px', padding: '6px 14px' }} onClick={fetchSources}>
             ↻ Refresh
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -664,24 +666,24 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
 
                     {/* View Button */}
                     {src.status === 'completed' && (
-                      <button
-                        className="btn btn-secondary"
+                      <Button
+                        variant="secondary"
                         style={{ padding: '6px 12px', fontSize: '13px', gap: '6px', color }}
                         onClick={() => setViewingSource(src)}
                         title="View content"
                       >
                         <Eye size={14} /> View
-                      </button>
+                      </Button>
                     )}
 
-                    <button
-                      className="btn btn-danger"
+                    <Button
+                      variant="danger"
                       style={{ padding: '6px 10px' }}
                       onClick={() => handleDelete(src.id)}
                       title="Delete"
                     >
                       <Trash2 size={14} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               );
