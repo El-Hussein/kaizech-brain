@@ -81,13 +81,30 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?:
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
-  const TENANT_ID = 'mrkoon-auctions';
-
-  // ── Business Profile ──────────────────────────────────────────────────────
-  const [tenantName, setTenantName] = useState('Mrkoon Auctions');
+  const [tenantId, setTenantId] = useState('');
+  const [tenantName, setTenantName] = useState('Active Tenant Workspace');
   const [timezone, setTimezone] = useState('Asia/Riyadh');
-  const [apiEndpoint, setApiEndpoint] = useState('https://api.mrkoon.com/v1/bot');
+  const [apiEndpoint, setApiEndpoint] = useState('');
   const [profileSaved, setProfileSaved] = useState(false);
+
+  useEffect(() => {
+    fetchTenantProfile();
+  }, [apiKey]);
+
+  const fetchTenantProfile = async () => {
+    try {
+      const res = await axios.get('/api/v1/analytics/health', {
+        headers: { 'x-api-key': apiKey },
+      });
+      if (res.data) {
+        setTenantName(res.data.tenantName || 'Tenant Workspace');
+        setTimezone(res.data.timezone || 'Asia/Riyadh');
+        setTenantId(res.data.tenantSlug || 'tenant');
+      }
+    } catch {
+      // Fallback
+    }
+  };
 
   // ── AI Provider & Secret Keys ─────────────────────────────────────────────
   const [openaiApiKey, setOpenaiApiKey] = useState(() => {
@@ -113,7 +130,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
     setOpenaiSaveError(null);
     try {
       await axios.put(
-        `${API_BASE}/tenants/${TENANT_ID}`,
+        `${API_BASE}/tenants/${tenantId || 'me'}`,
         {
           settings: {
             openaiApiKey,
@@ -171,7 +188,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
     try {
       await axios.put(
-        `${API_BASE}/tenants/${TENANT_ID}`,
+        `${API_BASE}/tenants/${tenantId}`,
         {
           settings: {
             whatsappVerifyToken: verifyToken,
@@ -201,10 +218,10 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   // ── Load existing API keys on mount ──────────────────────────────────────
   const loadApiKeys = useCallback(async () => {
     setLoadingKeys(true);
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(TENANT_ID);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId);
     if (isUuid) {
       try {
-        const res = await axios.get(`${API_BASE}/tenants/${TENANT_ID}/api-keys`, {
+        const res = await axios.get(`${API_BASE}/tenants/${tenantId}/api-keys`, {
           headers: { 'x-api-key': apiKey },
         });
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
@@ -231,7 +248,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
     async function loadTenantDetails() {
       try {
-        const res = await axios.get(`${API_BASE}/tenants/${TENANT_ID}`, {
+        const res = await axios.get(`${API_BASE}/tenants/${tenantId}`, {
           headers: { 'x-api-key': apiKey },
         });
         if (res.data) {
@@ -271,7 +288,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
     setSavingFaqSettings(true);
     try {
       await axios.put(
-        `${API_BASE}/tenants/${TENANT_ID}`,
+        `${API_BASE}/tenants/${tenantId}`,
         {
           settings: {
             faqBotMode,
@@ -307,7 +324,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
     try {
       const res = await axios.post(
-        `${API_BASE}/tenants/${TENANT_ID}/api-keys`,
+        `${API_BASE}/tenants/${tenantId}/api-keys`,
         { name: newKeyName.trim() },
         { headers: { 'x-api-key': apiKey } },
       );
@@ -346,7 +363,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const handleRevokeKey = async (keyId: string) => {
     setRevoking(keyId);
     try {
-      await axios.delete(`${API_BASE}/tenants/${TENANT_ID}/api-keys/${keyId}`, {
+      await axios.delete(`${API_BASE}/tenants/${tenantId}/api-keys/${keyId}`, {
         headers: { 'x-api-key': apiKey },
       });
     } catch {
