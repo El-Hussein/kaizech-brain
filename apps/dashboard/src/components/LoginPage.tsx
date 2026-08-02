@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, Lock, Mail, Building2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Brain, Lock, Mail, Building2, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
 interface LoginPageProps {
@@ -23,20 +23,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     try {
       setLoading(true);
 
-      // Extract slug from email if workspace slug is empty (e.g. admin@medan.com -> medan)
-      let slugToUse = workspaceSlug.trim().toLowerCase();
-      if (!slugToUse && email.includes('@')) {
-        const domainOrUser = email.split('@')[1]?.split('.')[0] || email.split('@')[0];
-        slugToUse = domainOrUser;
-      }
-      if (!slugToUse) {
-        slugToUse = 'workspace';
-      }
-
       const res = await axios.post('/api/v1/auth/login', {
         email: email.trim(),
-        slug: slugToUse,
-        password,
+        slug: workspaceSlug.trim().toLowerCase(),
+        password: password.trim(),
       });
 
       if (res.data && res.data.tenant) {
@@ -45,30 +35,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           user: res.data.user,
           tenant: res.data.tenant,
         });
+      } else {
+        setErrorMessage('Authentication failed. Please check your credentials.');
       }
     } catch (err: any) {
-      // Local fallback for offline/mock auth
-      let slugToUse = workspaceSlug.trim().toLowerCase();
-      if (!slugToUse && email.includes('@')) {
-        slugToUse = email.split('@')[1]?.split('.')[0] || email.split('@')[0];
-      }
-      if (!slugToUse) slugToUse = 'workspace';
-
-      const tenantName = slugToUse
-        .split(/[-_]/)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
-
-      onLoginSuccess({
-        token: 'tenant_jwt_token',
-        user: { email: email.trim(), name: tenantName + ' Admin', role: 'tenant_admin' },
-        tenant: {
-          id: 't-' + slugToUse,
-          name: tenantName,
-          slug: slugToUse,
-          apiKey: `kb_live_sk_${slugToUse}`,
-        },
-      });
+      // Display strict API authentication failure error
+      const msg =
+        err.response?.data?.message ||
+        'Invalid account email, workspace ID, or password.';
+      setErrorMessage(typeof msg === 'string' ? msg : 'Authentication failed.');
     } finally {
       setLoading(false);
     }
@@ -126,16 +101,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         {errorMessage && (
           <div
             style={{
-              padding: '10px 14px',
+              padding: '12px 14px',
               background: 'rgba(244, 63, 94, 0.12)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              borderRadius: '8px',
-              color: 'var(--accent-rose)',
+              border: '1px solid rgba(244, 63, 94, 0.4)',
+              borderRadius: '10px',
+              color: '#f87171',
               fontSize: '13px',
-              marginBottom: '18px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
             }}
           >
-            {errorMessage}
+            <AlertCircle size={18} color="#f87171" style={{ flexShrink: 0 }} />
+            <div>{errorMessage}</div>
           </div>
         )}
 

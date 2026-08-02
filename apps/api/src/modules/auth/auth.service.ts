@@ -18,58 +18,63 @@ export class AuthService {
   async login(dto: { slug?: string; email?: string; password?: string }) {
     const slug = dto.slug?.trim().toLowerCase();
     const email = dto.email?.trim().toLowerCase();
+    const password = dto.password?.trim();
+
+    if (!email && !slug) {
+      throw new UnauthorizedException('Please enter your account email or workspace ID.');
+    }
+
+    if (!password) {
+      throw new UnauthorizedException('Password is required.');
+    }
 
     let tenant: TenantEntity | null = null;
 
+    // 1. Try finding tenant by slug
     if (slug) {
       tenant = await this.tenantRepository.findOne({ where: { slug } });
     }
 
+    // 2. Try finding tenant by email / ownerEmail if slug didn't match
     if (!tenant && email) {
-      // Find tenant where settings contains ownerEmail or email match
       const tenants = await this.tenantRepository.find();
-      tenant = tenants.find(
-        (t) =>
-          t.settings?.ownerEmail?.toLowerCase() === email ||
-          `${t.slug}@tenant.com` === email ||
-          t.slug === email.split('@')[0],
-      ) || null;
+      tenant =
+        tenants.find(
+          (t) =>
+            t.settings?.ownerEmail?.toLowerCase() === email ||
+            t.slug === email.split('@')[0],
+        ) || null;
     }
 
-    if (!tenant && slug) {
-      // Auto-provision requested tenant workspace if first login
-      const tenantName = slug
-        .split(/[-_]/)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
-      tenant = await this.tenantRepository.save(
-        this.tenantRepository.create({
-          name: tenantName,
-          slug,
-          status: 'active',
-          languages: ['en', 'ar'],
-          timezone: 'Asia/Riyadh',
-          greetingMessage: `Welcome to ${tenantName}!`,
-          settings: { ownerEmail: email || `${slug}@tenant.com` },
-        }),
-      );
-    }
-
+    // Strict rejection if tenant does not exist in DB
     if (!tenant) {
-      throw new NotFoundException(`Tenant workspace '${slug || email}' not found.`);
+      throw new UnauthorizedException('Invalid account email, workspace ID, or password.');
     }
 
+    // Verify Password against stored tenant account password
+    const storedPassword = tenant.settings?.password;
+    if (storedPassword && storedPassword !== password) {
+      throw new UnauthorizedException('Invalid email, workspace ID, or password.');
+    }
+
+    // If password wasn't set yet on tenant, save it on first login
+    if (!storedPassword && password) {
+      tenant.settings = { ...(tenant.settings || {}), password };
+      await this.tenantRepository.save(tenant);
+    }
+
+    // Verify tenant status is active
     if (tenant.status !== 'active') {
-      throw new UnauthorizedException(`Tenant '${tenant.name}' is currently paused. Please contact super admin.`);
+      throw new UnauthorizedException(`Tenant workspace '${tenant.name}' is paused or inactive. Please contact super admin.`);
     }
 
-    // Get or create tenant API key
+    // Retrieve active API key
     let apiKeyEntity = await this.apiKeyRepository.findOne({
       where: { tenantId: tenant.id, isActive: true },
       order: { createdAt: 'DESC' },
     });
 
-    let rawApiKey = 'kb_live_sk_' + tenant.slug + '_' + Math.random().toString(36).substring(2, 10);
+    let rawApiKey = '';
 
     if (!apiKeyEntity) {
       rawApiKey = generateApiKey(`kb_live_sk_${tenant.slug}`);
@@ -100,7 +105,7 @@ export class AuthService {
       accessToken,
       user: {
         email: payload.email,
-        name: tenant.name + ' Admin',
+        name: tenant.name + ' Owner',
         role: 'tenant_admin',
       },
       tenant: {
