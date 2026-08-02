@@ -81,6 +81,8 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?:
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
+  const TENANT_ID = 'mrkoon-auctions';
+
   // ── Business Profile ──────────────────────────────────────────────────────
   const [tenantName, setTenantName] = useState('Mrkoon Auctions');
   const [timezone, setTimezone] = useState('Asia/Riyadh');
