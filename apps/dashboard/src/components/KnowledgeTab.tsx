@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Upload,
   FileText,
@@ -108,20 +109,26 @@ const ViewerModal: React.FC<{
       text: 'var(--text-muted)',
     }[source.sourceType?.toLowerCase()] || 'var(--accent-primary)';
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(8px)',
-        zIndex: 1000,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0, 0, 0, 0.82)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        overflowY: 'auto',
-        animation: 'fadeIn 0.2s ease',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
@@ -129,13 +136,15 @@ const ViewerModal: React.FC<{
         className="glass-card"
         style={{
           width: '100%',
-          maxWidth: '850px',
+          maxWidth: '880px',
+          maxHeight: '90vh',
           height: '85vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
           borderColor: accentColor,
-          boxShadow: `0 0 40px rgba(0, 0, 0, 0.6), 0 0 0 1px ${accentColor}33`,
+          boxShadow: `0 0 50px rgba(0, 0, 0, 0.8), 0 0 0 1px ${accentColor}44`,
+          animation: 'fadeIn 0.2s ease',
         }}
       >
         {/* Header */}
@@ -341,7 +350,8 @@ const ViewerModal: React.FC<{
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
