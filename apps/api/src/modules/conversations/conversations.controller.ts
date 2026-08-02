@@ -249,9 +249,24 @@ export class ConversationsController {
         const tenantEntity = await this.tenantRepo.findOne({ where: { id: tenant.tenantId } });
         const whatsappToken = tenantEntity?.settings?.whatsappAccessToken;
 
-        console.log(`📤 [Live Reply] Dispatching WhatsApp outbound message to ${conversation.channelUserId}...`);
+        // 1. Thread-level Phone Number ID (supports multi-phone number accounts)
+        let phoneNumberId: string | undefined;
+        const recentMsg = await this.messageRepo.findOne({
+          where: { conversationId: conversation.id },
+          order: { createdAt: 'DESC' },
+        });
+        if (recentMsg?.metadata?.phoneNumberId) {
+          phoneNumberId = recentMsg.metadata.phoneNumberId;
+        }
+
+        // 2. Fallback to global tenant setting if thread metadata is absent
+        if (!phoneNumberId) {
+          phoneNumberId = tenantEntity?.settings?.whatsappPhoneNumberId;
+        }
+
+        console.log(`📤 [Live Reply] Dispatching WhatsApp outbound message to ${conversation.channelUserId} (PhoneID: ${phoneNumberId || 'default'})...`);
         this.whatsappService
-          .sendWhatsAppMessage(conversation.channelUserId, body.content.trim(), undefined, whatsappToken)
+          .sendWhatsAppMessage(conversation.channelUserId, body.content.trim(), phoneNumberId, whatsappToken)
           .catch((err: any) => {
             console.error('💥 Failed to dispatch live reply to WhatsApp:', err.message);
           });

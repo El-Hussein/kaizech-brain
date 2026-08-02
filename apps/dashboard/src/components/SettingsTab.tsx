@@ -151,6 +151,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [accessToken, setAccessToken] = useState(() => {
     return localStorage.getItem('kaizech_access_token') || '';
   });
+  const [phoneNumberId, setPhoneNumberId] = useState(() => {
+    return localStorage.getItem('kaizech_phone_number_id') || '';
+  });
   const [showAppSecret, setShowAppSecret] = useState(false);
   const [showAccessToken, setShowAccessToken] = useState(false);
   const [whatsappSaved, setWhatsappSaved] = useState(false);
@@ -163,6 +166,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
     localStorage.setItem('kaizech_verify_token', verifyToken);
     localStorage.setItem('kaizech_app_secret', appSecret);
     localStorage.setItem('kaizech_access_token', accessToken);
+    localStorage.setItem('kaizech_phone_number_id', phoneNumberId);
     localStorage.setItem('kaizech_webhook_url', webhookUrl);
 
     try {
@@ -173,6 +177,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             whatsappVerifyToken: verifyToken,
             whatsappAppSecret: appSecret,
             whatsappAccessToken: accessToken,
+            whatsappPhoneNumberId: phoneNumberId,
             whatsappWebhookUrl: webhookUrl,
           },
         },
@@ -238,6 +243,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           }
           if (res.data.settings?.whatsappAccessToken) {
             setAccessToken(res.data.settings.whatsappAccessToken);
+          }
+          if (res.data.settings?.whatsappPhoneNumberId) {
+            setPhoneNumberId(res.data.settings.whatsappPhoneNumberId);
           }
           if (res.data.settings?.faqBotMode) {
             setFaqBotMode(res.data.settings.faqBotMode);
@@ -745,6 +753,22 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   {showAccessToken ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Meta Phone Number ID
+                <span style={{ marginLeft: '6px', fontWeight: 400, color: 'var(--accent-amber)', fontSize: '12px' }}>
+                  (Found in Meta Developer Console under WhatsApp Phone Numbers)
+                </span>
+              </label>
+              <input
+                type="text"
+                className="input-field"
+                value={phoneNumberId}
+                onChange={(e) => setPhoneNumberId(e.target.value)}
+                placeholder="e.g. 100609348588231"
+              />
             </div>
 
             <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
