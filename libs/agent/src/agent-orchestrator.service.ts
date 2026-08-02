@@ -187,7 +187,7 @@ export class AgentOrchestratorService {
       messages: llmMessages,
       tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
       apiKey: openaiApiKey,
-    } as any);
+    });
 
     totalTokenUsage.promptTokens += llmResult.usage.promptTokens;
     totalTokenUsage.completionTokens += llmResult.usage.completionTokens;

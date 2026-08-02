@@ -31,6 +31,7 @@ export interface ChatCompletionOptions {
   temperature?: number;
   maxTokens?: number;
   topP?: number;
+  apiKey?: string;
 }
 
 export interface ChatCompletionResult {
@@ -48,6 +49,7 @@ export interface ChatCompletionResult {
 export interface ILLMProvider {
   readonly providerName: string;
   chatCompletion(options: ChatCompletionOptions): Promise<ChatCompletionResult>;
-  generateEmbedding(text: string, model?: string): Promise<number[]>;
-  generateEmbeddings(texts: string[], model?: string): Promise<number[][]>;
+  generateEmbedding(text: string, model?: string, apiKey?: string): Promise<number[]>;
+  generateEmbeddings(texts: string[], model?: string, apiKey?: string): Promise<number[][]>;
 }
+
