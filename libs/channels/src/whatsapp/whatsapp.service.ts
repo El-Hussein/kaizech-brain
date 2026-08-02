@@ -113,6 +113,11 @@ export class WhatsAppService {
         metadata: { whatsappMessageId: message.id, phoneNumberId },
       });
 
+      if (agentResult.handedOff || !agentResult.response) {
+        console.log(`ℹ️ Conversation ${agentResult.conversationId} is in Human Handoff mode. Message stored; skipping automated WhatsApp AI reply.`);
+        return;
+      }
+
       console.log(`🤖 AI Response generated for ${fromNumber}: "${agentResult.response}"`);
 
       // Send Response back via WhatsApp API

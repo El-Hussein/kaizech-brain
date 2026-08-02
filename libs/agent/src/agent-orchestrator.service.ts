@@ -5,7 +5,7 @@ import { MemoryService, UserProfileService } from '@kaizech/memory';
 import { ToolExecutorService } from '@kaizech/tools';
 import { VectorSearchService } from '@kaizech/rag';
 import { AIProviderFactory } from './providers/ai-provider.factory';
-import { ChatMessage, MessageRole, ToolCall } from '@kaizech/shared';
+import { ChatMessage, MessageRole, ToolCall, ConversationStatus } from '@kaizech/shared';
 
 export interface AgentProcessInput {
   tenant: TenantEntity;
@@ -27,6 +27,7 @@ export interface AgentProcessResult {
     totalTokens: number;
   };
   responseTimeMs: number;
+  handedOff?: boolean;
 }
 
 @Injectable()
@@ -71,6 +72,22 @@ export class AgentOrchestratorService {
       channelType,
       { metadata },
     );
+
+    // 3b. Check if conversation is handed off to human support
+    if (conversation.status === ConversationStatus.HANDED_OFF) {
+      this.logger.log(
+        `Conversation ${conversation.id} for user '${channelUserId}' is HANDED_OFF to human support. AI reply paused.`,
+      );
+      return {
+        response: '',
+        conversationId: conversation.id,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: true,
+      };
+    }
 
     // 4. Retrieve Memory (Summary + Recent Messages)
     const summary = await this.memoryService.getConversationSummary(conversation.id);

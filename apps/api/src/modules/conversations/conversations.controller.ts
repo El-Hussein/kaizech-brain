@@ -12,7 +12,8 @@ import {
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConversationEntity, MessageEntity } from '@kaizech/database';
+import { ConversationEntity, MessageEntity, TenantEntity } from '@kaizech/database';
+import { WhatsAppService } from '@kaizech/channels';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { TenantContext, ITenantContext, PaginationDto, PaginatedResponseDto } from '@kaizech/shared';
 
@@ -26,6 +27,9 @@ export class ConversationsController {
     private readonly conversationRepo: Repository<ConversationEntity>,
     @InjectRepository(MessageEntity)
     private readonly messageRepo: Repository<MessageEntity>,
+    @InjectRepository(TenantEntity)
+    private readonly tenantRepo: Repository<TenantEntity>,
+    private readonly whatsappService: WhatsAppService,
   ) {}
 
   @Get()
@@ -235,6 +239,45 @@ export class ConversationsController {
     conversation.messageCount = (conversation.messageCount || 0) + 1;
     conversation.lastMessageAt = new Date();
     await this.conversationRepo.save(conversation);
+
+    // If an operator/assistant posts a message to a live channel, trigger immediate outbound dispatch
+    const isOutboundRole = body.role === 'assistant' || body.role === 'agent' || !body.role;
+    if (isOutboundRole && body.content && body.content.trim()) {
+      const channel = conversation.channelType || body.channelType;
+
+      if (channel === 'whatsapp') {
+        const tenantEntity = await this.tenantRepo.findOne({ where: { id: tenant.tenantId } });
+        const whatsappToken = tenantEntity?.settings?.whatsappAccessToken;
+
+        console.log(`📤 [Live Reply] Dispatching WhatsApp outbound message to ${conversation.channelUserId}...`);
+        this.whatsappService
+          .sendWhatsAppMessage(conversation.channelUserId, body.content.trim(), undefined, whatsappToken)
+          .catch((err: any) => {
+            console.error('💥 Failed to dispatch live reply to WhatsApp:', err.message);
+          });
+      } else if (tenant.tenantId) {
+        // HTTP Webhook Dispatch if tenant has webhookUrl configured in settings
+        const tenantEntity = await this.tenantRepo.findOne({ where: { id: tenant.tenantId } });
+        const webhookUrl = tenantEntity?.settings?.webhookUrl;
+        if (webhookUrl) {
+          console.log(`📤 [Live Reply] Dispatching HTTP webhook to ${webhookUrl}...`);
+          fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              event: 'live_reply_sent',
+              conversationId: conversation.id,
+              channelUserId: conversation.channelUserId,
+              role: savedMsg.role,
+              content: savedMsg.content,
+              createdAt: savedMsg.createdAt,
+            }),
+          }).catch((err: any) => {
+            console.error('💥 Failed to dispatch live reply webhook:', err.message);
+          });
+        }
+      }
+    }
 
     return savedMsg;
   }

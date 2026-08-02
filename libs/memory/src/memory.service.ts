@@ -25,12 +25,11 @@ export class MemoryService {
         tenantId,
         channelType,
         channelUserId,
-        status: ConversationStatus.ACTIVE,
       },
       order: { createdAt: 'DESC' },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.status === ConversationStatus.CLOSED) {
       conversation = this.conversationRepository.create({
         tenantId,
         channelType,
