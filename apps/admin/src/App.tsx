@@ -249,31 +249,44 @@ export const App: React.FC = () => {
     setLoadingStats(true);
     setStatsData(null);
     try {
+      const apiKey = tenant.apiKey || tenant.apiKeys?.[0]?.keyPrefix || 'kb_demo_tenant_key';
       const [metricsRes, healthRes] = await Promise.all([
-        axios.get(`/api/v1/analytics/dashboard`, { headers: { 'x-tenant-id': tenant.id } }),
-        axios.get(`/api/v1/analytics/health`, { headers: { 'x-tenant-id': tenant.id } }),
+        axios.get(`/api/v1/analytics/dashboard`, {
+          headers: {
+            'x-tenant-id': tenant.id,
+            'x-tenant-slug': tenant.slug,
+            'x-api-key': apiKey,
+          },
+        }),
+        axios.get(`/api/v1/analytics/health`, {
+          headers: {
+            'x-tenant-id': tenant.id,
+            'x-tenant-slug': tenant.slug,
+            'x-api-key': apiKey,
+          },
+        }),
       ]);
       setStatsData({ metrics: metricsRes.data, health: healthRes.data });
     } catch {
-      // Mock stats fallback
+      // Clean fallback metrics for new or offline tenants
       setStatsData({
         metrics: {
-          totalConversations: Math.floor(Math.random() * 450) + 120,
-          activeConversations: Math.floor(Math.random() * 15) + 2,
-          totalMessages: Math.floor(Math.random() * 3200) + 850,
-          resolutionRate: '94.2%',
-          escalationRate: '5.8%',
-          averageResponseTimeMs: 420,
-          tokens: { totalTokens: 1452000, promptTokens: 980000, completionTokens: 472000 },
-          estimatedCostUsd: 4.82,
+          totalConversations: 0,
+          activeConversations: 0,
+          totalMessages: 0,
+          resolutionRate: '100.0%',
+          escalationRate: '0.0%',
+          averageResponseTimeMs: 0,
+          tokens: { totalTokens: 0, promptTokens: 0, completionTokens: 0 },
+          estimatedCostUsd: 0.00,
         },
         health: {
           status: tenant.status === 'active' ? 'online' : 'offline',
           llmProvider: 'OpenAI GPT-4o',
           vectorStore: 'PostgreSQL pgvector',
-          whatsappConnected: true,
+          whatsappConnected: false,
           webConnected: true,
-          faqsCount: 48,
+          faqsCount: 0,
         },
       });
     } finally {
