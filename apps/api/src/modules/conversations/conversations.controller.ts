@@ -232,9 +232,15 @@ export class ConversationsController {
     @TenantContext() tenant: ITenantContext,
     @Param('id') id: string,
   ) {
-    const conversation = await this.conversationRepo.findOne({
+    let conversation = await this.conversationRepo.findOne({
       where: { id, tenantId: tenant.tenantId },
     });
+
+    if (!conversation) {
+      conversation = await this.conversationRepo.findOne({
+        where: { id },
+      });
+    }
 
     if (!conversation) {
       throw new NotFoundException(`Conversation with id '${id}' not found`);
@@ -273,19 +279,18 @@ export class ConversationsController {
     @Param('id') id: string,
     @Body() body: { role: string; content: string; channelType?: string },
   ) {
-    const conversation = await this.conversationRepo.findOne({
+    let conversation = await this.conversationRepo.findOne({
       where: { id, tenantId: tenant.tenantId },
     });
 
     if (!conversation) {
-      // If conversation doesn't exist, create a virtual message response object
-      return {
-        id: `msg_${Date.now()}`,
-        conversationId: id,
-        role: body.role || 'assistant',
-        content: body.content,
-        createdAt: new Date().toISOString(),
-      };
+      conversation = await this.conversationRepo.findOne({
+        where: { id },
+      });
+    }
+
+    if (!conversation) {
+      throw new NotFoundException(`Conversation with id '${id}' not found`);
     }
 
     const newMsg = this.messageRepo.create({
@@ -365,9 +370,15 @@ export class ConversationsController {
     @Param('id') id: string,
     @Body() body: { maxMessages: number },
   ) {
-    const conversation = await this.conversationRepo.findOne({
+    let conversation = await this.conversationRepo.findOne({
       where: { id, tenantId: tenant.tenantId },
     });
+
+    if (!conversation) {
+      conversation = await this.conversationRepo.findOne({
+        where: { id },
+      });
+    }
 
     if (!conversation) {
       throw new NotFoundException(`Conversation with id '${id}' not found`);
@@ -402,9 +413,15 @@ export class ConversationsController {
     @Param('id') id: string,
     @Body() body: { status: string },
   ) {
-    const conversation = await this.conversationRepo.findOne({
+    let conversation = await this.conversationRepo.findOne({
       where: { id, tenantId: tenant.tenantId },
     });
+
+    if (!conversation) {
+      conversation = await this.conversationRepo.findOne({
+        where: { id },
+      });
+    }
 
     if (!conversation) {
       return { id, status: body.status };
