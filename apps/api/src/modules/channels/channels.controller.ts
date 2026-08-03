@@ -70,7 +70,10 @@ export class ChannelsController {
     this.tenantsService
       .findAll()
       .then((tenants) => {
-        const tenant = tenants.find((t) => t.slug === 'mrkoon-auctions') || tenants[0];
+        const tenant =
+          tenants.find((t) => t.slug === 'mrkoon' || t.slug === 'mrkoon-auctions') ||
+          tenants.find((t) => t.slug.includes('mrkoon')) ||
+          tenants[0];
         if (tenant) {
           this.whatsappService.handleIncomingPayload(payload, tenant).catch((err) => {
             console.error('💥 Background WhatsApp processing error:', err.message);

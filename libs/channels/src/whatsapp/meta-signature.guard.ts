@@ -70,10 +70,13 @@ export class MetaSignatureGuard implements CanActivate {
     }
 
     if (!rawAppSecret) {
-      const defaultTenant = await this.tenantRepository.findOne({ where: { slug: 'mrkoon-auctions' } });
+      let defaultTenant = await this.tenantRepository.findOne({ where: { slug: 'mrkoon' } });
+      if (!defaultTenant) {
+        defaultTenant = await this.tenantRepository.findOne({ where: { slug: 'mrkoon-auctions' } });
+      }
       rawAppSecret = this.getSecretFromSettings(defaultTenant?.settings);
       if (rawAppSecret) {
-        resolutionSource = `Default Tenant Settings (${defaultTenant?.name || 'mrkoon-auctions'})`;
+        resolutionSource = `Default Tenant Settings (${defaultTenant?.name || 'mrkoon'})`;
       }
     }
 
