@@ -62,25 +62,26 @@ export class WebsiteCrawlerService {
       // Wait 1.5 seconds for dynamic DOM rendering
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Click open any collapsed accordions/details to expose hidden text
-      await page.evaluate(() => {
+      // Clean up navigation, headers, and popups FIRST, then safely expand collapsed details/accordions
+      const pageData = await page.evaluate(() => {
+        const title = document.title || '';
+
+        // 1. Remove non-content, navigation headers/footers, and modal popups/dialogs immediately
+        document
+          .querySelectorAll(
+            'script, style, nav, footer, header, noscript, iframe, svg, canvas, [role="dialog"], .modal, .popup, [aria-modal="true"]',
+          )
+          .forEach((el) => el.remove());
+
+        // 2. Safely open <details> tags
         document.querySelectorAll('details').forEach((el) => el.setAttribute('open', 'true'));
-        document.querySelectorAll('button, [role="button"], .accordion-header, summary').forEach((el) => {
+
+        // 3. Click ONLY collapsed accordion triggers (never navbar or login buttons)
+        document.querySelectorAll('summary, [aria-expanded="false"], [data-state="closed"]').forEach((el) => {
           try {
             (el as HTMLElement).click();
           } catch (e) {}
         });
-      });
-
-      // Wait another 1.5s after clicking to allow DOM animation / rendering
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Extract title and all human-readable text across ALL tags (p, pre, strong, a, div, span, etc.)
-      const pageData = await page.evaluate(() => {
-        const title = document.title || '';
-        
-        // Remove non-content elements
-        document.querySelectorAll('script, style, nav, footer, header, noscript, iframe, svg, canvas').forEach((el) => el.remove());
 
         // Extract full innerText of body (includes p, pre, strong, a, h1-h6, span, div, li, etc.)
         const bodyText = document.body ? document.body.innerText : '';
