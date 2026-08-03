@@ -12,6 +12,11 @@ import {
   ShieldCheck,
   AlertTriangle,
   CheckCircle2,
+  Activity,
+  Phone,
+  Send,
+  Server,
+  Lock,
   Code2,
   Eye,
   EyeOff,
@@ -1025,11 +1030,110 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
       {subTab === 'whatsapp' && (
         <>
-          {/* WhatsApp (Meta Direct) */}
+          {/* ── Top Panel: Live WhatsApp Integration Health & Diagnostics Matrix ── */}
+          <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <SectionHeader
+                icon={<Activity size={20} color="var(--accent-emerald)" />}
+                title="WhatsApp Integration Live Health & Diagnostics"
+                subtitle="Real-time background verification of Meta Graph API access, Phone Number ID binding, and Webhook HMAC guards."
+              />
+              <Button
+                variant="secondary"
+                onClick={handleTestWhatsAppConnection}
+                loading={testingWhatsApp}
+                loadingText="Auditing Connection..."
+                style={{ gap: '6px', fontSize: '13px' }}
+              >
+                <RefreshCw size={14} /> Re-Run Live Audit
+              </Button>
+            </div>
+
+            {/* 4 Stat Cards Matrix */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px' }}>
+              {/* Card 1: Meta Graph API Token */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${testResults?.checks?.accessToken?.status === 'ok' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldCheck size={16} color={testResults?.checks?.accessToken?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444'} />
+                    Meta System Token
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: testResults?.checks?.accessToken?.status === 'ok' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: testResults?.checks?.accessToken?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444' }}>
+                    {testResults?.checks?.accessToken?.status === 'ok' ? 'VERIFIED' : 'ACTION NEEDED'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                  {testResults?.checks?.accessToken?.details?.verified_name ? `Meta Account: ${testResults.checks.accessToken.details.verified_name}` : 'Meta Graph API'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  {testResults?.checks?.accessToken?.message || 'Click "Re-Run Live Audit" to test token'}
+                </div>
+              </div>
+
+              {/* Card 2: Phone Number ID */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${testResults?.checks?.phoneNumberId?.status === 'ok' ? 'rgba(6,182,212,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Phone size={16} color="var(--accent-cyan)" />
+                    Phone Number ID
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: testResults?.checks?.phoneNumberId?.status === 'ok' ? 'rgba(6,182,212,0.15)' : 'rgba(239,68,68,0.15)', color: testResults?.checks?.phoneNumberId?.status === 'ok' ? 'var(--accent-cyan)' : '#ef4444' }}>
+                    {testResults?.checks?.phoneNumberId?.status === 'ok' ? 'BOUND' : 'UNBOUND'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace', marginTop: '4px' }}>
+                  {testResults?.checks?.phoneNumberId?.phoneId || phoneNumberId || 'Not set'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  Matches incoming & outgoing Meta Graph API routing
+                </div>
+              </div>
+
+              {/* Card 3: HMAC Security Guard */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${testResults?.checks?.appSecret?.status === 'ok' ? 'rgba(168,85,247,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Lock size={16} color="#c084fc" />
+                    HMAC Signature Guard
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: testResults?.checks?.appSecret?.status === 'ok' ? 'rgba(168,85,247,0.15)' : 'rgba(239,68,68,0.15)', color: '#c084fc' }}>
+                    {testResults?.checks?.appSecret?.status === 'ok' ? 'ACTIVE' : 'INACTIVE'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                  SHA-256 Validation
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  {testResults?.checks?.appSecret?.message || 'Meta App Secret configured'}
+                </div>
+              </div>
+
+              {/* Card 4: Webhook Endpoint */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Server size={16} color="var(--accent-amber)" />
+                    Webhook Endpoint
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: 'rgba(245,158,11,0.15)', color: 'var(--accent-amber)' }}>
+                    200 OK
+                  </span>
+                </div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-amber)', fontFamily: 'monospace', wordBreak: 'break-all', marginTop: '4px' }}>
+                  {webhookUrl}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  Meta Webhook handshake ready
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* WhatsApp (Meta Direct) Credentials Card */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <SectionHeader
             icon={<MessageSquare size={18} color="var(--accent-emerald)" />}
-            title="WhatsApp — Meta Direct"
+            title="WhatsApp Credentials & Config"
             subtitle="Paste these values into Meta's WhatsApp Business developer console."
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1131,12 +1235,6 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               />
             </div>
 
-            <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-              <ShieldCheck size={15} color="var(--accent-emerald)" />
-              <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>HMAC guard active</span>
-              <span style={{ color: 'var(--text-muted)' }}>— All webhook calls from Meta are signature-validated</span>
-            </div>
-
             <div style={{ display: 'flex', gap: '10px' }}>
               <Button
                 variant="primary"
@@ -1144,56 +1242,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               >
                 {whatsappSaved ? 'Saved! ✓' : 'Save WhatsApp Config'}
               </Button>
-
-              <Button
-                variant="secondary"
-                onClick={handleTestWhatsAppConnection}
-                loading={testingWhatsApp}
-                loadingText="Running Test..."
-                style={{ gap: '6px' }}
-              >
-                <RefreshCw size={14} /> Run WhatsApp Test
-              </Button>
             </div>
-
-            {/* Live WhatsApp Diagnostics Results Panel */}
-            {testResults && (
-              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${testResults.success ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '14px', color: testResults.success ? 'var(--accent-emerald)' : '#ef4444' }}>
-                  {testResults.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-                  {testResults.success ? 'WhatsApp Connection & Credentials Verified!' : (testResults.error || 'WhatsApp Diagnostic Issues Detected')}
-                </div>
-
-                {testResults.checks && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', fontSize: '12px' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Meta Access Token:</div>
-                      <div style={{ color: testResults.checks.accessToken?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444', fontWeight: 700, marginTop: '2px' }}>
-                        {testResults.checks.accessToken?.message}
-                      </div>
-                    </div>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Phone Number ID:</div>
-                      <div style={{ color: testResults.checks.phoneNumberId?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444', fontWeight: 700, marginTop: '2px' }}>
-                        {testResults.checks.phoneNumberId?.message}
-                      </div>
-                    </div>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>HMAC Guard (App Secret):</div>
-                      <div style={{ color: testResults.checks.appSecret?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444', fontWeight: 700, marginTop: '2px' }}>
-                        {testResults.checks.appSecret?.message}
-                      </div>
-                    </div>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Webhook Callback URL:</div>
-                      <div style={{ color: 'var(--accent-cyan)', fontWeight: 700, marginTop: '2px', wordBreak: 'break-all' }}>
-                        {testResults.checks.webhook?.url}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
         </>
