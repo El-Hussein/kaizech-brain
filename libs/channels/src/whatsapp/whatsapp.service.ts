@@ -184,4 +184,82 @@ export class WhatsAppService {
       this.logger.error(`❌ Failed to send WhatsApp message to ${to}: ${errDetail}`);
     }
   }
+
+  async testConnection(tenant: TenantEntity): Promise<any> {
+    const baseUrl = this.configService.get<string>('WHATSAPP_API_URL', 'https://graph.facebook.com/v19.0');
+    const defaultPhoneNumberId = this.configService.get<string>('WHATSAPP_PHONE_NUMBER_ID', '');
+    const phoneId = tenant.settings?.whatsappPhoneNumberId || defaultPhoneNumberId;
+
+    const rawToken =
+      tenant.settings?.whatsappAccessToken ||
+      this.configService.get<string>('WHATSAPP_ACCESS_TOKEN', '') ||
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      '';
+    const token = decryptSecret(rawToken);
+
+    const rawSecret =
+      tenant.settings?.whatsappAppSecret ||
+      this.configService.get<string>('WHATSAPP_APP_SECRET', '') ||
+      process.env.WHATSAPP_APP_SECRET ||
+      '';
+    const secret = decryptSecret(rawSecret);
+
+    const checks: any = {
+      phoneNumberId: {
+        status: phoneId ? 'ok' : 'error',
+        phoneId: phoneId || 'Not configured',
+        message: phoneId ? `Configured (PhoneID: ${phoneId})` : 'Missing WhatsApp Phone Number ID',
+      },
+      appSecret: {
+        status: secret ? 'ok' : 'error',
+        message: secret ? `Configured (HMAC Guard Active)` : 'Missing WhatsApp App Secret for HMAC validation',
+      },
+      accessToken: {
+        status: 'error',
+        message: 'Token not tested',
+      },
+      webhook: {
+        status: 'ok',
+        url: tenant.settings?.whatsappWebhookUrl || `https://kaizech-brain-production.up.railway.app/api/v1/channels/whatsapp/webhook`,
+        message: 'Webhook URL configured',
+      },
+    };
+
+    if (!token) {
+      checks.accessToken = {
+        status: 'error',
+        message: 'WHATSAPP_ACCESS_TOKEN is missing. Please set your Meta System User Access Token.',
+      };
+    } else {
+      try {
+        const testUrl = phoneId ? `${baseUrl}/${phoneId}` : `${baseUrl}/me`;
+        const res = await axios.get(testUrl, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        checks.accessToken = {
+          status: 'ok',
+          message: `Meta Graph API connection verified (Name: ${res.data?.display_phone_number || res.data?.verified_name || res.data?.id || 'OK'})`,
+          details: res.data,
+        };
+      } catch (err: any) {
+        const errDetail = err.response?.data?.error?.message || err.message;
+        checks.accessToken = {
+          status: 'error',
+          message: `Meta Graph API verification failed: ${errDetail}`,
+        };
+      }
+    }
+
+    const overallSuccess =
+      checks.phoneNumberId.status === 'ok' &&
+      checks.appSecret.status === 'ok' &&
+      checks.accessToken.status === 'ok';
+
+    return {
+      success: overallSuccess,
+      tenantId: tenant.id,
+      tenantSlug: tenant.slug,
+      checks,
+    };
+  }
 }

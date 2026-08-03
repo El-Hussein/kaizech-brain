@@ -11,6 +11,7 @@ import {
   RefreshCw,
   ShieldCheck,
   AlertTriangle,
+  CheckCircle2,
   Code2,
   Eye,
   EyeOff,
@@ -221,6 +222,27 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [webhookUrl, setWebhookUrl] = useState(() => {
     return localStorage.getItem('kaizech_webhook_url') || computedWebhook;
   });
+  const [testingWhatsApp, setTestingWhatsApp] = useState(false);
+  const [testResults, setTestResults] = useState<any | null>(null);
+
+  const handleTestWhatsAppConnection = async () => {
+    setTestingWhatsApp(true);
+    setTestResults(null);
+    try {
+      const res = await axios.post(`${API_BASE}/channels/whatsapp/test`, {}, {
+        headers: { 'x-api-key': apiKey },
+      });
+      setTestResults(res.data);
+    } catch (err: any) {
+      setTestResults({
+        success: false,
+        error: err.response?.data?.message || err.message,
+      });
+    } finally {
+      setTestingWhatsApp(false);
+    }
+  };
+
   const CHAT_ENDPOINT = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/chat`;
 
   const saveWhatsAppConfig = async () => {
@@ -1115,12 +1137,63 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               <span style={{ color: 'var(--text-muted)' }}>— All webhook calls from Meta are signature-validated</span>
             </div>
 
-            <Button
-              variant="primary"
-              onClick={saveWhatsAppConfig}
-            >
-              {whatsappSaved ? 'Saved! ✓' : 'Save WhatsApp Config'}
-            </Button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <Button
+                variant="primary"
+                onClick={saveWhatsAppConfig}
+              >
+                {whatsappSaved ? 'Saved! ✓' : 'Save WhatsApp Config'}
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={handleTestWhatsAppConnection}
+                loading={testingWhatsApp}
+                loadingText="Running Test..."
+                style={{ gap: '6px' }}
+              >
+                <RefreshCw size={14} /> Run WhatsApp Test
+              </Button>
+            </div>
+
+            {/* Live WhatsApp Diagnostics Results Panel */}
+            {testResults && (
+              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${testResults.success ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '14px', color: testResults.success ? 'var(--accent-emerald)' : '#ef4444' }}>
+                  {testResults.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                  {testResults.success ? 'WhatsApp Connection & Credentials Verified!' : (testResults.error || 'WhatsApp Diagnostic Issues Detected')}
+                </div>
+
+                {testResults.checks && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', fontSize: '12px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Meta Access Token:</div>
+                      <div style={{ color: testResults.checks.accessToken?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444', fontWeight: 700, marginTop: '2px' }}>
+                        {testResults.checks.accessToken?.message}
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Phone Number ID:</div>
+                      <div style={{ color: testResults.checks.phoneNumberId?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444', fontWeight: 700, marginTop: '2px' }}>
+                        {testResults.checks.phoneNumberId?.message}
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>HMAC Guard (App Secret):</div>
+                      <div style={{ color: testResults.checks.appSecret?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444', fontWeight: 700, marginTop: '2px' }}>
+                        {testResults.checks.appSecret?.message}
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Webhook Callback URL:</div>
+                      <div style={{ color: 'var(--accent-cyan)', fontWeight: 700, marginTop: '2px', wordBreak: 'break-all' }}>
+                        {testResults.checks.webhook?.url}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         </>

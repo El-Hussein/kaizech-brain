@@ -108,6 +108,16 @@ export class ChannelsController {
     return { status: 'EVENT_RECEIVED' };
   }
 
+  @Post('whatsapp/test')
+  @UseGuards(ApiKeyGuard)
+  @ApiSecurity('api-key')
+  @ApiOperation({ summary: 'Test live WhatsApp Meta Graph API connection and credentials' })
+  async testWhatsAppConnection(@Req() req: any) {
+    const tenantContext = req.tenant;
+    const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
+    return this.whatsappService.testConnection(tenant);
+  }
+
   // ─── Channel 2: Direct API / Mrkoon-Meta ──────────
 
   /**
