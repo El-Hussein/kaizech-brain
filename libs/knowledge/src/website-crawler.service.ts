@@ -1,7 +1,6 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import puppeteer from 'puppeteer';
 
 @Injectable()
 export class WebsiteCrawlerService {
@@ -26,9 +25,17 @@ export class WebsiteCrawlerService {
   }
 
   private async crawlWithPuppeteer(url: string): Promise<{ title: string; content: string; url: string }> {
+    let puppeteer: any;
+    try {
+      // Dynamic import to prevent app crash at startup if puppeteer module resolution fails
+      puppeteer = require('puppeteer');
+    } catch (importErr: any) {
+      throw new Error(`Puppeteer module not found in runtime environment (${importErr.message}).`);
+    }
+
     let browser;
     try {
-      browser = await puppeteer.launch({
+      const launchOptions: any = {
         headless: true,
         args: [
           '--no-sandbox',
@@ -37,10 +44,18 @@ export class WebsiteCrawlerService {
           '--disable-accelerated-2d-canvas',
           '--disable-gpu',
         ],
-      });
+      };
+
+      if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+      }
+
+      browser = await puppeteer.launch(launchOptions);
 
       const page = await browser.newPage();
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+      await page.setUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      );
 
       // Navigate and wait for network to settle (SPA hydration)
       await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
@@ -69,7 +84,8 @@ export class WebsiteCrawlerService {
       const response = await axios.get(url, {
         timeout: 15000,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
       });
 
