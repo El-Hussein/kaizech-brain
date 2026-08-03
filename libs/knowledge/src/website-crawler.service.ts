@@ -27,7 +27,6 @@ export class WebsiteCrawlerService {
   private async crawlWithPuppeteer(url: string): Promise<{ title: string; content: string; url: string }> {
     let puppeteer: any;
     try {
-      // Dynamic import to prevent app crash at startup if puppeteer module resolution fails
       puppeteer = require('puppeteer');
     } catch (importErr: any) {
       throw new Error(`Puppeteer module not found in runtime environment (${importErr.message}).`);
@@ -57,19 +56,49 @@ export class WebsiteCrawlerService {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       );
 
-      // Navigate and wait for network to settle (SPA hydration)
+      // Navigate and wait for network requests to settle (SPA hydration)
       await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
-      // Give extra 1.5 seconds for dynamic DOM rendering / animations
+      // Wait 1.5 seconds for dynamic DOM rendering
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      const renderedHtml = await page.content();
-      const title = await page.title();
+      // Click open any collapsed accordions/details to expose hidden text
+      await page.evaluate(() => {
+        document.querySelectorAll('details').forEach((el) => el.setAttribute('open', 'true'));
+        document.querySelectorAll('button, [role="button"], .accordion-header, summary').forEach((el) => {
+          try {
+            (el as HTMLElement).click();
+          } catch (e) {}
+        });
+      });
 
-      const cleanedContent = this.cleanAndExtractText(renderedHtml, url, title);
+      // Wait another 1.5s after clicking to allow DOM animation / rendering
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Extract title and all human-readable text across ALL tags (p, pre, strong, a, div, span, etc.)
+      const pageData = await page.evaluate(() => {
+        const title = document.title || '';
+        
+        // Remove non-content elements
+        document.querySelectorAll('script, style, nav, footer, header, noscript, iframe, svg, canvas').forEach((el) => el.remove());
+
+        // Extract full innerText of body (includes p, pre, strong, a, h1-h6, span, div, li, etc.)
+        const bodyText = document.body ? document.body.innerText : '';
+
+        return { title, bodyText };
+      });
+
+      const title = pageData.title || url;
+      const formattedText = pageData.bodyText
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n\s*\n+/g, '\n\n')
+        .trim();
+
+      const content = `Document Title: ${title}\nURL: ${url}\n\nContent:\n${formattedText}`;
+
       return {
-        title: title || url,
-        content: cleanedContent,
+        title,
+        content,
         url,
       };
     } finally {
@@ -110,9 +139,13 @@ export class WebsiteCrawlerService {
     // Remove script, style, nav, footer, header, noscript, iframe, svg
     $('script, style, nav, footer, header, noscript, iframe, svg').remove();
 
+    // Add newlines before every HTML tag that contains text
+    $('p, pre, strong, a, b, i, em, span, div, h1, h2, h3, h4, h5, h6, li, dt, dd, br, tr, article, section, button, label, summary, details').before('\n');
+
     const bodyText = $('body')
       .text()
-      .replace(/\s+/g, ' ')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n\s*\n+/g, '\n\n')
       .trim();
 
     return `Document Title: ${title || url}\nURL: ${url}\n\nContent:\n${bodyText}`;
