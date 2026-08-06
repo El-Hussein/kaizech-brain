@@ -18,6 +18,6 @@ import { AgentOrchestratorService } from './agent-orchestrator.service';
     RAGModule,
   ],
   providers: [OpenAIProvider, GroqProvider, AIProviderFactory, AgentOrchestratorService],
-  exports: [AgentOrchestratorService, AIProviderFactory, OpenAIProvider, GroqProvider],
+  exports: [AgentOrchestratorService, AIProviderFactory, OpenAIProvider, GroqProvider, MemoryModule],
 })
 export class AgentModule {}
