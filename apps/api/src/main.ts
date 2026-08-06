@@ -35,7 +35,9 @@ async function bootstrap() {
 
   // API Prefix
   const apiPrefix = process.env.API_PREFIX || 'api/v1';
-  app.setGlobalPrefix(apiPrefix);
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: ['docs', 'documentation', 'guide', 'health'],
+  });
 
   // Swagger Documentation Setup (always active)
   const config = new DocumentBuilder()
