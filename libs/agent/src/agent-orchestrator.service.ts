@@ -29,6 +29,7 @@ export interface AgentProcessResult {
   };
   responseTimeMs: number;
   handedOff?: boolean;
+  handoffReason?: string;
   limit?: number;
   messageCount?: number;
   limitExceeded?: boolean;
@@ -37,6 +38,56 @@ export interface AgentProcessResult {
 @Injectable()
 export class AgentOrchestratorService {
   private readonly logger = new Logger(AgentOrchestratorService.name);
+
+  private isEscalationKeyword(userMessage: string, customKeywords?: string): boolean {
+    if (!userMessage) return false;
+    const lower = userMessage.toLowerCase().trim();
+    const defaultKeywords = [
+      'human',
+      'agent',
+      'support',
+      'representative',
+      'real person',
+      'talk to human',
+      'speak to human',
+      'escalate',
+      'إنسان',
+      'موظف',
+      'دعم',
+      'خدمة العملاء',
+      'مساعد بشري',
+      'تحدث مع موظف',
+    ];
+    let keywords = defaultKeywords;
+    if (customKeywords && customKeywords.trim()) {
+      const customList = customKeywords
+        .split(',')
+        .map((k) => k.trim().toLowerCase())
+        .filter(Boolean);
+      if (customList.length > 0) {
+        keywords = [...defaultKeywords, ...customList];
+      }
+    }
+    return keywords.some((kw) => lower.includes(kw));
+  }
+
+  private isUnanswerableFallback(content: string): boolean {
+    if (!content) return true;
+    const lower = content.toLowerCase().trim();
+    const fallbackPhrases = [
+      "i don't have enough information",
+      "i cannot answer this",
+      "i am unable to assist",
+      "please contact support",
+      "speak to a human",
+      "no relevant information",
+      "لا أستطيع الإجابة",
+      "عذراً لا تتوفر لدي معلومات",
+      "يرجى التواصل مع الدعم",
+      "لا أستطيع مساعدتك في هذا",
+    ];
+    return fallbackPhrases.some((phrase) => lower.includes(phrase));
+  }
 
   constructor(
     private readonly providerFactory: AIProviderFactory,
@@ -147,6 +198,45 @@ export class AgentOrchestratorService {
       };
     }
 
+    // 3d. User Escalation Keyword Check
+    const autoHandoffOnKeywords = tenant.settings?.autoHandoffOnKeywords !== false;
+    if (
+      autoHandoffOnKeywords &&
+      this.isEscalationKeyword(userMessage, tenant.settings?.autoHandoffKeywords)
+    ) {
+      this.logger.log(
+        `User keyword triggered automatic human handoff for conversation ${conversation.id}`,
+      );
+
+      await this.memoryService.handoverConversation(conversation.id);
+
+      const handoffNotice =
+        tenant.settings?.handoffMessage ||
+        '⚠️ Escalation requested by user. AI chat stopped and handed off to human support.';
+
+      await this.memoryService.addMessage(
+        conversation.id,
+        MessageRole.SYSTEM,
+        handoffNotice,
+        channelType,
+      );
+
+      return {
+        response: handoffNotice,
+        conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: true,
+        handoffReason: 'USER_KEYWORD_ESCALATION',
+        limit: maxLimit,
+        messageCount: currentMessageCount,
+        limitExceeded: isLimitExceeded,
+      };
+    }
+
     // 4 & 6. Parallelize Memory Summary, Recent Messages, FAQ check & Embedding Generation ⚡
     const activeProviderName = tenant.settings?.aiProvider || 'openai';
     const provider = this.providerFactory.getProvider(activeProviderName);
@@ -245,6 +335,42 @@ export class AgentOrchestratorService {
       this.logger.warn(`Knowledge retrieval warning: ${err.message}`);
     }
 
+    // 6b. Check Low Knowledge Auto Handoff Rule
+    const autoHandoffOnLowKnowledge = tenant.settings?.autoHandoffOnLowKnowledge === true;
+    if (autoHandoffOnLowKnowledge && knowledgeTexts.length === 0 && !directMatch) {
+      this.logger.log(
+        `Low knowledge context (0 sources found) triggered automatic handoff for conversation ${conversation.id}`,
+      );
+
+      await this.memoryService.handoverConversation(conversation.id);
+
+      const handoffNotice =
+        tenant.settings?.handoffMessage ||
+        '⚠️ AI was unable to find verified knowledge to answer your request. Handed off to human support.';
+
+      await this.memoryService.addMessage(
+        conversation.id,
+        MessageRole.SYSTEM,
+        handoffNotice,
+        channelType,
+      );
+
+      return {
+        response: handoffNotice,
+        conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: true,
+        handoffReason: 'LOW_KNOWLEDGE_CONFIDENCE',
+        limit: maxLimit,
+        messageCount: currentMessageCount,
+        limitExceeded: isLimitExceeded,
+      };
+    }
+
     // 7. Build System Prompt
     const systemPrompt = await this.promptBuilder.buildSystemPrompt({
       tenant,
@@ -273,6 +399,36 @@ export class AgentOrchestratorService {
       });
     } catch (err: any) {
       this.logger.error(`AI completion error (${activeProviderName}): ${err.message}`);
+      const autoHandoffOnError = tenant.settings?.autoHandoffOnError !== false;
+      if (autoHandoffOnError) {
+        await this.memoryService.handoverConversation(conversation.id);
+        const handoffNotice =
+          tenant.settings?.handoffMessage ||
+          `⚠️ AI Provider Error: ${err.message}. Conversation handed off to human support.`;
+
+        await this.memoryService.addMessage(
+          conversation.id,
+          MessageRole.SYSTEM,
+          handoffNotice,
+          channelType,
+        );
+
+        return {
+          response: handoffNotice,
+          conversationId: conversation.id,
+          status: ConversationStatus.HANDED_OFF,
+          toolCallsExecuted: [],
+          knowledgeSourcesUsed: knowledgeTexts.length,
+          tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+          responseTimeMs: Date.now() - startTime,
+          handedOff: true,
+          handoffReason: 'AI_PROVIDER_ERROR',
+          limit: maxLimit,
+          messageCount: currentMessageCount,
+          limitExceeded: isLimitExceeded,
+        };
+      }
+
       const errResponse = `⚠️ AI Provider (${activeProviderName.toUpperCase()}) Error: ${err.message}. Please verify your API key in tenant settings or environment variables.`;
       return {
         response: errResponse,
@@ -351,6 +507,42 @@ export class AgentOrchestratorService {
 
     const finalResponse = llmResult.content || 'I have completed your request.';
     const responseTimeMs = Date.now() - startTime;
+
+    // 9b. Check Fallback / Unanswerable Auto-Handoff Rule
+    const autoHandoffOnUncertainty = tenant.settings?.autoHandoffOnUncertainty !== false;
+    if (autoHandoffOnUncertainty && this.isUnanswerableFallback(finalResponse)) {
+      this.logger.log(
+        `AI fallback / unanswerable response detected. Transitioning conversation ${conversation.id} to HANDED_OFF status.`,
+      );
+
+      await this.memoryService.handoverConversation(conversation.id);
+
+      const handoffNotice =
+        tenant.settings?.handoffMessage ||
+        '⚠️ AI could not answer your inquiry with full confidence. Conversation handed off to human support.';
+
+      await this.memoryService.addMessage(
+        conversation.id,
+        MessageRole.SYSTEM,
+        handoffNotice,
+        channelType,
+      );
+
+      return {
+        response: handoffNotice,
+        conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
+        toolCallsExecuted,
+        knowledgeSourcesUsed: knowledgeTexts.length,
+        tokenUsage: totalTokenUsage,
+        responseTimeMs,
+        handedOff: true,
+        handoffReason: 'UNANSWERABLE_FALLBACK',
+        limit: maxLimit,
+        messageCount: currentMessageCount + 1,
+        limitExceeded: false,
+      };
+    }
 
     // 10. Save Assistant Final Message
     await this.memoryService.addMessage(
@@ -457,6 +649,38 @@ export class AgentOrchestratorService {
         limit: maxLimit,
         messageCount: currentMessageCount,
         limitExceeded: true,
+      };
+    }
+
+    const autoHandoffOnKeywords = tenant.settings?.autoHandoffOnKeywords !== false;
+    if (
+      autoHandoffOnKeywords &&
+      this.isEscalationKeyword(userMessage, tenant.settings?.autoHandoffKeywords)
+    ) {
+      await this.memoryService.handoverConversation(conversation.id);
+      const handoffNotice =
+        tenant.settings?.handoffMessage ||
+        '⚠️ Escalation requested by user. AI chat stopped and handed off to human support.';
+      onChunk(handoffNotice);
+      await this.memoryService.addMessage(
+        conversation.id,
+        MessageRole.SYSTEM,
+        handoffNotice,
+        channelType,
+      );
+      return {
+        response: handoffNotice,
+        conversationId: conversation.id,
+        status: ConversationStatus.HANDED_OFF,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        handedOff: true,
+        handoffReason: 'USER_KEYWORD_ESCALATION',
+        limit: maxLimit,
+        messageCount: currentMessageCount,
+        limitExceeded: isLimitExceeded,
       };
     }
 

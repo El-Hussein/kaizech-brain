@@ -158,6 +158,19 @@ Header: x-api-key: kb_demo_tenant_key
 }
 ```
 
+### D. Client-Initiated Human Handoff API
+```http
+POST /api/v1/channels/handoff
+Header: Content-Type: application/json
+Header: x-api-key: kb_demo_tenant_key
+
+{
+  "sessionId": "user_session_98765",
+  "reason": "client_button_clicked",
+  "notice": "Customer requested live agent support"
+}
+```
+
 ---
 
 ## 5. Dashboard Features & Enhancements

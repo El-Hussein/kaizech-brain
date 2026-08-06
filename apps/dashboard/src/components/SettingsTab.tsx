@@ -202,6 +202,10 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   // ── Conversation Message Limit & Human Handoff Settings ────────────────────
   const [maxMessagesLimit, setMaxMessagesLimit] = useState<number>(0);
   const [handoffNoticeText, setHandoffNoticeText] = useState<string>('');
+  const [autoHandoffOnLowKnowledge, setAutoHandoffOnLowKnowledge] = useState<boolean>(false);
+  const [autoHandoffOnKeywords, setAutoHandoffOnKeywords] = useState<boolean>(true);
+  const [autoHandoffOnUncertainty, setAutoHandoffOnUncertainty] = useState<boolean>(true);
+  const [autoHandoffKeywordsText, setAutoHandoffKeywordsText] = useState<string>('agent, human, support, representative, موظف, دعم');
   const [limitSaved, setLimitSaved] = useState(false);
   const [savingLimitSettings, setSavingLimitSettings] = useState(false);
 
@@ -365,6 +369,18 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           if (res.data.settings?.handoffMessage) {
             setHandoffNoticeText(res.data.settings.handoffMessage);
           }
+          if (typeof res.data.settings?.autoHandoffOnLowKnowledge === 'boolean') {
+            setAutoHandoffOnLowKnowledge(res.data.settings.autoHandoffOnLowKnowledge);
+          }
+          if (typeof res.data.settings?.autoHandoffOnKeywords === 'boolean') {
+            setAutoHandoffOnKeywords(res.data.settings.autoHandoffOnKeywords);
+          }
+          if (typeof res.data.settings?.autoHandoffOnUncertainty === 'boolean') {
+            setAutoHandoffOnUncertainty(res.data.settings.autoHandoffOnUncertainty);
+          }
+          if (res.data.settings?.autoHandoffKeywords) {
+            setAutoHandoffKeywordsText(res.data.settings.autoHandoffKeywords);
+          }
           if (Array.isArray(res.data.knowledgeSources)) {
             const hasFaq = res.data.knowledgeSources.some(
               (ks: any) => ks.sourceType === 'FAQ' || ks.sourceType === 'faq',
@@ -411,6 +427,10 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           settings: {
             maxMessagesPerConversation: maxMessagesLimit,
             handoffMessage: handoffNoticeText,
+            autoHandoffOnLowKnowledge,
+            autoHandoffOnKeywords,
+            autoHandoffOnUncertainty,
+            autoHandoffKeywords: autoHandoffKeywordsText,
           },
         },
         { headers: { 'x-api-key': apiKey } },
@@ -1008,19 +1028,70 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 placeholder="⚠️ Conversation message limit reached. AI chat stopped and handed off to human support."
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
-                Sent to user when message limit is exceeded.
+                Sent to user when message limit or auto-handoff rule is triggered.
               </span>
             </div>
           </div>
 
+          {/* ── Automatic Escalation Rules ── */}
+          <div style={{ padding: '14px', borderRadius: '8px', background: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              ⚡ Automatic Escalation & Handoff Rules
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={autoHandoffOnKeywords}
+                  onChange={(e) => setAutoHandoffOnKeywords(e.target.checked)}
+                />
+                Auto-Handoff on User Escalation Keywords
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={autoHandoffOnUncertainty}
+                  onChange={(e) => setAutoHandoffOnUncertainty(e.target.checked)}
+                />
+                Auto-Handoff on AI Uncertainty / Fallbacks
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={autoHandoffOnLowKnowledge}
+                  onChange={(e) => setAutoHandoffOnLowKnowledge(e.target.checked)}
+                />
+                Auto-Handoff when Knowledge (RAG) Context is Empty
+              </label>
+            </div>
+
+            {autoHandoffOnKeywords && (
+              <div style={{ marginTop: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  Custom Escalation Keywords (comma-separated):
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={autoHandoffKeywordsText}
+                  onChange={(e) => setAutoHandoffKeywordsText(e.target.value)}
+                  placeholder="agent, human, support, representative, real person, موظف, دعم"
+                />
+              </div>
+            )}
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '12px', color: maxMessagesLimit > 0 ? 'var(--accent-amber)' : 'var(--text-muted)' }}>
-              {maxMessagesLimit > 0
-                ? `⚡ Active: Conversations will automatically handoff to human support at ${maxMessagesLimit} messages.`
-                : 'ℹ️ Automatic handoff by message count is disabled (Unlimited mode).'}
+            <div style={{ fontSize: '12px', color: maxMessagesLimit > 0 || autoHandoffOnKeywords ? 'var(--accent-amber)' : 'var(--text-muted)' }}>
+              {maxMessagesLimit > 0 || autoHandoffOnKeywords
+                ? `⚡ Active: Automated handoff configured (Limit: ${maxMessagesLimit > 0 ? maxMessagesLimit + ' msgs' : 'Disabled'}, Keywords & Fallback triggers active).`
+                : 'ℹ️ Automatic handoff rules are disabled.'}
             </div>
             <Button variant="primary" onClick={handleSaveLimitSettings} loading={savingLimitSettings} loadingText="Saving…">
-              {limitSaved ? <><Check size={15} /> Limit Settings Saved!</> : 'Save Limit Settings'}
+              {limitSaved ? <><Check size={15} /> Handoff Settings Saved!</> : 'Save Handoff Settings'}
             </Button>
           </div>
         </div>

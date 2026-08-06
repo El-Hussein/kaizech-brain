@@ -329,18 +329,61 @@ x-api-key: kb_live_your_secret_api_key_here
 {
   "reply": "Our operating hours are Sunday through Thursday, 9:00 AM to 6:00 PM (AST).",
   "sessionId": "user_session_98765",
+  "conversationId": "8f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c",
   "tenantId": "c39e248b-821a-4d7a-8b1e-089a85012345",
-  "tokens": {
-    "promptTokens": 142,
-    "completionTokens": 28,
-    "totalTokens": 170
-  }
+  "status": "active",
+  "handedOff": false,
+  "tokens": 170
+}
+```
+
+> 💡 **Handoff Response Payload**: If an automated handoff rule is triggered (e.g. user asks for human agent, RAG search finds 0 results, AI is uncertain, or message limit reached), `status` will return `"handed_off"` and `handedOff` will be `true`:
+```json
+{
+  "reply": "⚠️ Escalation requested by user. AI chat stopped and handed off to human support.",
+  "sessionId": "user_session_98765",
+  "conversationId": "8f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c",
+  "status": "handed_off",
+  "handedOff": true,
+  "limitExceeded": false
+}
+```
+
+---
+
+#### Client-Initiated Handoff API Endpoint
+
+Client applications (web chat widgets, mobile apps, or CRM bridges) can explicitly pause AI and trigger human handoff at any point.
+
+* **URL**: `POST https://your-brain-domain.com/api/v1/channels/handoff`
+* **Headers**: `x-api-key: kb_live_your_secret_api_key_here`, `Content-Type: application/json`
+
+##### Request Body
+```json
+{
+  "sessionId": "user_session_98765",
+  "reason": "client_button_clicked",
+  "notice": "Customer requested human support via mobile app."
+}
+```
+
+##### Response Payload (`200 OK`)
+```json
+{
+  "success": true,
+  "message": "Conversation paused and handed off to human support.",
+  "conversationId": "8f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c",
+  "sessionId": "user_session_98765",
+  "tenantId": "c39e248b-821a-4d7a-8b1e-089a85012345",
+  "status": "handed_off",
+  "handedOff": true,
+  "reason": "client_button_clicked"
 }
 ```
 
 #### Integration Code Examples
 
-##### cURL
+##### cURL (Send Message)
 ```bash
 curl -X POST "https://your-brain-domain.com/api/v1/channels/chat" \
   -H "Content-Type: application/json" \
@@ -351,8 +394,20 @@ curl -X POST "https://your-brain-domain.com/api/v1/channels/chat" \
   }'
 ```
 
+##### cURL (Trigger Human Handoff)
+```bash
+curl -X POST "https://your-brain-domain.com/api/v1/channels/handoff" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: kb_live_your_secret_api_key_here" \
+  -d '{
+    "sessionId": "session_123",
+    "reason": "user_requested_agent"
+  }'
+```
+
 ##### JavaScript / Node.js
 ```javascript
+// Check if response returned handedOff === true
 const response = await fetch("https://your-brain-domain.com/api/v1/channels/chat", {
   method: "POST",
   headers: {
@@ -360,13 +415,16 @@ const response = await fetch("https://your-brain-domain.com/api/v1/channels/chat
     "x-api-key": "kb_live_your_secret_api_key_here"
   },
   body: JSON.stringify({
-    message: "Hello, how can I place a bid?",
+    message: "Talk to human agent please",
     sessionId: "session_123"
   })
 });
 
 const data = await response.json();
-console.log("Agent Response:", data.reply);
+if (data.handedOff || data.status === 'handed_off') {
+  console.log("Conversation is handed off to human support:", data.reply);
+  // Transfer user to live human chat widget
+}
 ```
 
 ##### Python
@@ -383,8 +441,11 @@ payload = {
     "sessionId": "session_123"
 }
 
-response = requests.post(url, json=payload, headers=headers)
-print("Agent Response:", response.json()["reply"])
+response = requests.post(url, json=payload, headers=headers).json()
+if response.get("handedOff"):
+    print("AI handed off to human support:", response["reply"])
+else:
+    print("Agent Response:", response["reply"])
 ```
 
 ---

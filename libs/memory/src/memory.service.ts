@@ -45,6 +45,22 @@ export class MemoryService {
     return conversation;
   }
 
+  async findConversation(
+    tenantId: string,
+    idOrSessionId: string,
+  ): Promise<ConversationEntity | null> {
+    let conversation = await this.conversationRepository.findOne({
+      where: { id: idOrSessionId, tenantId },
+    });
+    if (!conversation) {
+      conversation = await this.conversationRepository.findOne({
+        where: { channelUserId: idOrSessionId, tenantId },
+        order: { createdAt: 'DESC' },
+      });
+    }
+    return conversation;
+  }
+
   async addMessage(
     conversationId: string,
     role: string,

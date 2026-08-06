@@ -41,7 +41,13 @@
       "@kaizech/knowledge": ["libs/knowledge/src"],
       "@kaizech/knowledge/*": ["libs/knowledge/src/*"],
       "@kaizech/tickets": ["libs/tickets/src"],
-      "@kaizech/tickets/*": ["libs/tickets/src/*"]
+      "@kaizech/tickets/*": ["libs/tickets/src/*"],
+      "@kaizech/chat-core": ["libs/chat-core/src"],
+      "@kaizech/chat-core/*": ["libs/chat-core/src/*"],
+      "@kaizech/chat-react": ["libs/chat-react/src"],
+      "@kaizech/chat-react/*": ["libs/chat-react/src/*"],
+      "@kaizech/chat-react-native": ["libs/chat-react-native/src"],
+      "@kaizech/chat-react-native/*": ["libs/chat-react-native/src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

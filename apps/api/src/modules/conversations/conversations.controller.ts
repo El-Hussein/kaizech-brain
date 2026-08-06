@@ -441,5 +441,53 @@ export class ConversationsController {
 
     return conversation;
   }
+
+  @Post(':id/handoff')
+  @ApiOperation({ summary: 'Pause AI and trigger human handoff for a specific conversation ID' })
+  async triggerHandoff(
+    @TenantContext() tenant: ITenantContext,
+    @Param('id') id: string,
+    @Body() body: { reason?: string; notice?: string },
+  ) {
+    let conversation = await this.conversationRepo.findOne({
+      where: { id, tenantId: tenant.tenantId },
+    });
+
+    if (!conversation) {
+      conversation = await this.conversationRepo.findOne({
+        where: { id },
+      });
+    }
+
+    if (!conversation) {
+      throw new NotFoundException(`Conversation with id '${id}' not found`);
+    }
+
+    conversation.status = 'handed_off';
+    await this.conversationRepo.save(conversation);
+
+    const tenantEntity = await this.tenantRepo.findOne({ where: { id: tenant.tenantId } });
+    const handoffNotice =
+      body.notice ||
+      tenantEntity?.settings?.handoffMessage ||
+      '⚠️ Conversation handed off to human support.';
+
+    const systemMsg = this.messageRepo.create({
+      conversationId: id,
+      role: 'system',
+      content: handoffNotice,
+      channelType: conversation.channelType || 'api',
+    });
+    await this.messageRepo.save(systemMsg);
+
+    return {
+      success: true,
+      message: 'Conversation handed off successfully',
+      conversationId: id,
+      status: 'handed_off',
+      handedOff: true,
+      reason: body.reason || 'MANUAL_CLIENT_HANDOFF',
+    };
+  }
 }
 

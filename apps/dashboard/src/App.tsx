@@ -13,6 +13,7 @@ import {
   LogOut,
   UserCheck,
   ShieldCheck,
+  Code2,
 } from 'lucide-react';
 import axios from 'axios';
 import { LoginPage } from './components/LoginPage';
@@ -23,6 +24,7 @@ import { ToolsTab } from './components/ToolsTab';
 import { PlaygroundTab } from './components/PlaygroundTab';
 import { ConversationsTab } from './components/ConversationsTab';
 import { SettingsTab } from './components/SettingsTab';
+import { WidgetConfiguratorTab } from './components/WidgetConfiguratorTab';
 import { Button } from './components/ui/Button';
 
 axios.defaults.baseURL =
@@ -80,7 +82,7 @@ class ErrorBoundary extends React.Component<
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'conversations' | 'settings'
+    'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'embed' | 'conversations' | 'settings'
   >('overview');
 
   // Auth Session State
@@ -228,6 +230,12 @@ export const App: React.FC = () => {
             <PlayCircle size={18} /> AI Playground
           </li>
           <li
+            className={`nav-item ${activeTab === 'embed' ? 'active' : ''}`}
+            onClick={() => setActiveTab('embed')}
+          >
+            <Code2 size={18} /> Embed & SDKs
+          </li>
+          <li
             className={`nav-item ${activeTab === 'conversations' ? 'active' : ''}`}
             onClick={() => setActiveTab('conversations')}
           >
@@ -285,6 +293,9 @@ export const App: React.FC = () => {
           {activeTab === 'knowledge' && <KnowledgeTab apiKey={tenant.apiKey} />}
           {activeTab === 'tools' && <ToolsTab apiKey={tenant.apiKey} />}
           {activeTab === 'playground' && <PlaygroundTab apiKey={tenant.apiKey} />}
+          {activeTab === 'embed' && (
+            <WidgetConfiguratorTab apiKey={tenant.apiKey} tenantName={tenant.name} />
+          )}
           {activeTab === 'conversations' && <ConversationsTab apiKey={tenant.apiKey} />}
           {activeTab === 'settings' && <SettingsTab apiKey={tenant.apiKey} />}
         </ErrorBoundary>

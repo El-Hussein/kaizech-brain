@@ -9,10 +9,13 @@ import {
   UseGuards,
   Req,
   Res,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity, ApiBody } from '@nestjs/swagger';
 import { WhatsAppService, MetaSignatureGuard } from '@kaizech/channels';
 import { AgentOrchestratorService } from '@kaizech/agent';
+import { MemoryService } from '@kaizech/memory';
 import { TenantsService } from '../tenants/tenants.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MessageChannel } from '@kaizech/shared';
@@ -37,6 +40,7 @@ export class ChannelsController {
     private readonly whatsappService: WhatsAppService,
     private readonly tenantsService: TenantsService,
     private readonly agentOrchestrator: AgentOrchestratorService,
+    private readonly memoryService: MemoryService,
   ) {}
 
   // ─── Channel 1: WhatsApp via Meta ─────────────────
@@ -242,5 +246,65 @@ export class ChannelsController {
 
     (res as any).write(`data: ${JSON.stringify({ event: 'DONE', meta: result })}\n\n`);
     (res as any).end();
+  }
+
+  @Post('handoff')
+  @UseGuards(ApiKeyGuard)
+  @ApiSecurity('api-key')
+  @ApiOperation({ summary: 'Pause AI and trigger human handoff directly from client' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        sessionId: { type: 'string', example: 'user-abc-123' },
+        conversationId: { type: 'string', example: '8f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c' },
+        reason: { type: 'string', example: 'client_requested' },
+        notice: { type: 'string', example: 'Transferred to live human agent by client app request.' },
+      },
+    },
+  })
+  async handoff(
+    @Req() req: any,
+    @Body() body: { sessionId?: string; conversationId?: string; reason?: string; notice?: string },
+  ) {
+    const tenantContext = req.tenant;
+    const identifier = body.conversationId || body.sessionId;
+
+    if (!identifier) {
+      throw new BadRequestException('Either sessionId or conversationId must be provided in request body');
+    }
+
+    const conversation = await this.memoryService.findConversation(tenantContext.tenantId, identifier);
+
+    if (!conversation) {
+      throw new NotFoundException(`Conversation with id/sessionId '${identifier}' not found for tenant`);
+    }
+
+    await this.memoryService.handoverConversation(conversation.id);
+
+    const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
+    const handoffNotice =
+      body.notice ||
+      tenant?.settings?.handoffMessage ||
+      '⚠️ Conversation handed off to human support via client request.';
+
+    await this.memoryService.addMessage(
+      conversation.id,
+      'system',
+      handoffNotice,
+      conversation.channelType || 'api',
+      { metadata: { handoffReason: body.reason || 'CLIENT_REQUESTED' } },
+    );
+
+    return {
+      success: true,
+      message: 'Conversation paused and handed off to human support.',
+      conversationId: conversation.id,
+      sessionId: conversation.channelUserId,
+      tenantId: tenantContext.tenantId,
+      status: 'handed_off',
+      handedOff: true,
+      reason: body.reason || 'CLIENT_REQUESTED',
+    };
   }
 }

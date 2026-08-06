@@ -1105,12 +1105,28 @@ Header: X-Hub-Signature-256: sha256={HMAC_SHA256_SIGNATURE}</pre>
   <span class="code-keyword">"reply"</span>: <span class="code-string">"Our operating hours are Sunday to Thursday, 9:00 AM to 6:00 PM (AST)."</span>,
   <span class="code-keyword">"sessionId"</span>: <span class="code-string">"session_user_98765"</span>,
   <span class="code-keyword">"tenantId"</span>: <span class="code-string">"c39e248b-821a-4d7a-8b1e-089a85012345"</span>,
-  <span class="code-keyword">"tokens"</span>: {
-    <span class="code-keyword">"promptTokens"</span>: 142,
-    <span class="code-keyword">"completionTokens"</span>: 28,
-    <span class="code-keyword">"totalTokens"</span>: 170
-  }
+  <span class="code-keyword">"status"</span>: <span class="code-string">"active"</span>,
+  <span class="code-keyword">"handedOff"</span>: <span class="code-keyword">false</span>
 }</pre>
+        </div>
+
+        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">Pause AI & Trigger Human Handoff Endpoint</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          Manually pause AI and transfer the conversation to human support from your client app:
+        </p>
+
+        <div class="code-box">
+          <div class="code-header">
+            <span>POST /api/v1/channels/handoff</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="code-keyword">curl</span> -X POST <span class="code-string">"https://your-brain-domain.com/api/v1/channels/handoff"</span> \
+  -H <span class="code-string">"Content-Type: application/json"</span> \
+  -H <span class="code-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
+  -d <span class="code-string">'{
+    "sessionId": "session_user_98765",
+    "reason": "client_requested"
+  }'</span></pre>
         </div>
       </section>
 
