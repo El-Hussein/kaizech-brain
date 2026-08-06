@@ -37,19 +37,19 @@ async function bootstrap() {
   const apiPrefix = process.env.API_PREFIX || 'api/v1';
   app.setGlobalPrefix(apiPrefix);
 
-  // Swagger
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('Kaizech Brain API')
-      .setDescription('Multi-tenant AI Agent Platform API')
-      .setVersion('1.0')
-      .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
-      .addBearerAuth()
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('docs', app, document);
-    logger.log(`Swagger docs available at /docs`);
-  }
+  // Swagger Documentation Setup (always active)
+  const config = new DocumentBuilder()
+    .setTitle('Kaizech Brain API')
+    .setDescription('Multi-tenant Enterprise AI Agent Platform — API Specification & Integration Guide')
+    .setVersion('1.0')
+    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
+  logger.log(`📚 Swagger OpenAPI docs available at /docs and /${apiPrefix}/docs`);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
