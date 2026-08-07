@@ -156,6 +156,7 @@ export class GroqProvider implements ILLMProvider {
         max_tokens: options.maxTokens,
         top_p: options.topP,
         stream: true,
+        stream_options: { include_usage: true },
       };
 
       if (options.tools && options.tools.length > 0) {
@@ -166,9 +167,19 @@ export class GroqProvider implements ILLMProvider {
       let fullContent = '';
       let finishReason = 'stop';
       const accumulatedToolCalls: Map<number, { id: string; name: string; arguments: string }> = new Map();
+      let promptTokens = 0;
+      let completionTokens = 0;
+      let totalTokens = 0;
 
       for await (const chunk of stream as any) {
-        const choice = chunk.choices[0];
+        const usage = chunk.usage || chunk.x_groq?.usage;
+        if (usage) {
+          promptTokens = usage.prompt_tokens || 0;
+          completionTokens = usage.completion_tokens || 0;
+          totalTokens = usage.total_tokens || 0;
+        }
+
+        const choice = chunk.choices?.[0];
         if (!choice) continue;
 
         if (choice.finish_reason) {
@@ -213,9 +224,9 @@ export class GroqProvider implements ILLMProvider {
         content: fullContent || null,
         toolCalls,
         usage: {
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
+          promptTokens,
+          completionTokens,
+          totalTokens,
         },
         finishReason,
         model,
