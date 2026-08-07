@@ -13,6 +13,7 @@ import { PromptsModule } from './modules/prompts/prompts.module';
 import { PlaygroundModule } from './modules/playground/playground.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { ChannelsModule } from './modules/channels/channels.module';
+import { DocsController } from './docs.controller';
 
 import * as path from 'path';
 
@@ -44,6 +45,7 @@ import * as path from 'path';
     AnalyticsModule,
     ChannelsModule,
   ],
+  controllers: [DocsController],
   providers: [
     {
       provide: APP_GUARD,

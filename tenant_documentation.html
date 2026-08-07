@@ -695,6 +695,7 @@
       <li><a href="#knowledge-base">Knowledge RAG</a></li>
       <li><a href="#prompt-builder">Prompt Builder</a></li>
       <li><a href="#tools">API Tools</a></li>
+      <li><a href="#embed-sdks">Embed SDKs</a></li>
       <li><a href="#whatsapp-integration">WhatsApp</a></li>
       <li><a href="#api-reference">REST API</a></li>
       <li><a href="#checklist">Checklist</a></li>
@@ -765,11 +766,12 @@
         <li><a href="#prompt-builder">Prompt Builder System</a></li>
       </ul>
 
-      <div class="sidebar-heading">Integrations</div>
+      <div class="sidebar-heading">Integrations & SDKs</div>
       <ul class="sidebar-menu">
+        <li><a href="#embed-sdks">Embed Chatbot SDKs</a></li>
         <li><a href="#tools">Custom API Tools</a></li>
         <li><a href="#whatsapp-integration">WhatsApp Integration</a></li>
-        <li><a href="#api-reference">Direct REST API</a></li>
+        <li><a href="#api-reference">Direct REST API & Streaming</a></li>
       </ul>
 
       <div class="sidebar-heading">Testing & Deployment</div>
@@ -1040,7 +1042,104 @@
         </div>
       </section>
 
-      <!-- 6. WhatsApp Business API -->
+      <!-- 6. Embed Chatbot SDKs (Web, React, React Native, REST API) -->
+      <section id="embed-sdks" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Embed AI Chatbot SDKs & Web Widget</h2>
+            <div class="badge">Multi-Platform SDK Family</div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Kaizech Brain provides a complete SDK family to embed your trained AI bot on any platform with minimal integration effort.
+        </p>
+
+        <!-- SDK 1: Vanilla JS Script Tag -->
+        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">1. Vanilla JS Script Snippet (&lt;script&gt;)</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          Drop this snippet into any HTML page, WordPress, Shopify, Webflow, or PHP website. Uses Web Components &amp; Shadow DOM to prevent style leakage:
+        </p>
+        <div class="code-box">
+          <div class="code-header">
+            <span>INDEX.HTML (SCRIPT EMBED)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre>&lt;!-- Kaizech AI Chatbot Widget --&gt;
+&lt;script&gt;
+  window.KaizechChatConfig = {
+    apiUrl: <span class="code-string">"https://your-brain-domain.com"</span>,
+    apiKey: <span class="code-string">"kb_live_your_api_key"</span>,
+    theme: {
+      primaryColor: <span class="code-string">"#0066FF"</span>,
+      position: <span class="code-string">"bottom-right"</span>,
+      botTitle: <span class="code-string">"AI Assistant"</span>,
+      welcomeMessage: <span class="code-string">"Hello! How can I help you today?"</span>
+    }
+  };
+&lt;/script&gt;
+&lt;script src=<span class="code-string">"https://your-brain-domain.com/widget.js"</span> async defer&gt;&lt;/script&gt;</pre>
+        </div>
+
+        <!-- SDK 2: React Web Package -->
+        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">2. React Web SDK (@kaizech/chat-react)</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          For Next.js, Vite, Remix, or Create React App projects:
+        </p>
+        <div class="code-box">
+          <div class="code-header">
+            <span>REACT_EMBED.tsx</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="code-keyword">import</span> React <span class="code-keyword">from</span> <span class="code-string">'react'</span>;
+<span class="code-keyword">import</span> { KaizechChatProvider, ChatWidget } <span class="code-keyword">from</span> <span class="code-string">'@kaizech/chat-react'</span>;
+
+<span class="code-keyword">export default function</span> Layout({ children }) {
+  <span class="code-keyword">return</span> (
+    &lt;KaizechChatProvider
+      apiUrl=<span class="code-string">"https://your-brain-domain.com"</span>
+      apiKey=<span class="code-string">"kb_live_your_api_key"</span>
+      theme={{ primaryColor: <span class="code-string">"#0066FF"</span>, position: <span class="code-string">"bottom-right"</span> }}
+    &gt;
+      {children}
+      &lt;ChatWidget /&gt;
+    &lt;/KaizechChatProvider&gt;
+  );
+}</pre>
+        </div>
+
+        <!-- SDK 3: React Native Mobile Package -->
+        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">3. React Native Mobile SDK (@kaizech/chat-react-native)</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          Native mobile components built with React Native primitives for iOS &amp; Android:
+        </p>
+        <div class="code-box">
+          <div class="code-header">
+            <span>MOBILE_SUPPORT.tsx</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="code-keyword">import</span> React <span class="code-keyword">from</span> <span class="code-string">'react'</span>;
+<span class="code-keyword">import</span> { SafeAreaView } <span class="code-keyword">from</span> <span class="code-string">'react-native'</span>;
+<span class="code-keyword">import</span> { KaizechChatScreen } <span class="code-keyword">from</span> <span class="code-string">'@kaizech/chat-react-native'</span>;
+
+<span class="code-keyword">export default function</span> SupportScreen() {
+  <span class="code-keyword">return</span> (
+    &lt;SafeAreaView style={{ flex: 1 }}&gt;
+      &lt;KaizechChatScreen
+        apiUrl=<span class="code-string">"https://your-brain-domain.com"</span>
+        apiKey=<span class="code-string">"kb_live_your_api_key"</span>
+        theme={{ primaryColor: <span class="code-string">"#0066FF"</span>, botTitle: <span class="code-string">"Mobile Support AI"</span> }}
+      /&gt;
+    &lt;/SafeAreaView&gt;
+  );
+}</pre>
+        </div>
+      </section>
+
+      <!-- 7. WhatsApp Business API -->
       <section id="whatsapp-integration" class="section-card">
         <div class="section-header">
           <div class="section-icon">

@@ -263,13 +263,81 @@ Before deploying a tool live:
 
 ---
 
-## 6. Channel Integration Guide (WhatsApp & REST API)
+## 6. Channel Integration Guide (WhatsApp, Web Script, React, React Native, REST API)
 
-Kaizech Brain supports simultaneous deployment across **Meta WhatsApp Business** and **Direct REST API**.
+Kaizech Brain supports multi-platform deployment across **Vanilla JS Script**, **React Web**, **React Native Mobile**, **Meta WhatsApp Business**, and **Direct REST API**.
 
 ---
 
-### Option A: WhatsApp Business API Integration
+### Option A: Embed Chatbot SDK Family (Web Script, React, React Native)
+
+Kaizech Brain provides an SDK ecosystem so you can drop your AI bot onto any website or mobile app without building custom UI components from scratch:
+
+#### 1. Vanilla JS Script Tag (`<script>`)
+Best for WordPress, Shopify, Webflow, PHP, or static HTML websites. Uses Web Components & Shadow DOM to isolate styles:
+
+```html
+<!-- Kaizech AI Chatbot Script -->
+<script>
+  window.KaizechChatConfig = {
+    apiUrl: "https://your-brain-domain.com",
+    apiKey: "kb_live_your_api_key",
+    theme: {
+      primaryColor: "#0066FF",
+      position: "bottom-right",
+      botTitle: "AI Support",
+      welcomeMessage: "Hello! How can I help you today?"
+    }
+  };
+</script>
+<script src="https://your-brain-domain.com/widget.js" async defer></script>
+```
+
+#### 2. React Web SDK (`@kaizech/chat-react`)
+For Next.js, Vite, Remix, or React single-page applications:
+
+```tsx
+import React from 'react';
+import { KaizechChatProvider, ChatWidget } from '@kaizech/chat-react';
+
+export default function App() {
+  return (
+    <KaizechChatProvider
+      apiUrl="https://your-brain-domain.com"
+      apiKey="kb_live_your_api_key"
+      theme={{ primaryColor: '#0066FF', position: 'bottom-right' }}
+    >
+      <YourMainApp />
+      <ChatWidget />
+    </KaizechChatProvider>
+  );
+}
+```
+
+#### 3. React Native Mobile SDK (`@kaizech/chat-react-native`)
+Native components built for iOS & Android apps using React Native primitives (`View`, `FlatList`, `TextInput`):
+
+```tsx
+import React from 'react';
+import { SafeAreaView } from 'react-native';
+import { KaizechChatScreen } from '@kaizech/chat-react-native';
+
+export default function SupportScreen() {
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <KaizechChatScreen
+        apiUrl="https://your-brain-domain.com"
+        apiKey="kb_live_your_api_key"
+        theme={{ primaryColor: '#0066FF', botTitle: 'Mobile Support' }}
+      />
+    </SafeAreaView>
+  );
+}
+```
+
+---
+
+### Option B: WhatsApp Business API Integration
 
 Connect your AI Agent directly to Meta's WhatsApp Cloud API.
 

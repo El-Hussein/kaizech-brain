@@ -183,3 +183,17 @@ Header: x-api-key: kb_demo_tenant_key
 2. **Editing Registered Tools**:
    - Each card under **Active Registered Tools** includes an **`Edit`** button.
    - Clicking **`Edit`** populates the tool registration form so you can update the URL endpoint, HTTP method, description, or parameter schema seamlessly.
+
+---
+
+## 6. Multi-Platform AI Chatbot SDKs & Embed Options
+
+Kaizech Brain provides an SDK ecosystem to embed the trained AI bot on any website or mobile app:
+
+| Package | Target Platform | Description | Integration Code |
+| :--- | :--- | :--- | :--- |
+| **`@kaizech/widget`** | Standalone Web (`<script>`) | 16.95 KB Shadow DOM bundle (`widget.js`) for HTML, WordPress, Shopify, Webflow | `<script src="https://your-domain.com/widget.js"></script>` |
+| **`@kaizech/chat-react`** | React Web App | React provider `<KaizechChatProvider>` & `<ChatWidget />` | `import { ChatWidget } from '@kaizech/chat-react';` |
+| **`@kaizech/chat-react-native`** | React Native (iOS / Android) | Native mobile support component `<KaizechChatScreen />` | `import { KaizechChatScreen } from '@kaizech/chat-react-native';` |
+| **`@kaizech/chat-core`** | Universal TS Engine | Headless state machine, session storage, SSE token stream parser | `import { KaizechChatEngine } from '@kaizech/chat-core';` |
+
