@@ -4,7 +4,7 @@ import {
   ChatEngineConfig,
   ChatState,
   ChatMessage,
-} from '@kaizech/chat-core';
+} from '@husseinsalah96/chat-core';
 
 interface KaizechChatContextValue {
   engine: KaizechChatEngine | null;

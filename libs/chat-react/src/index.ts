@@ -1,3 +1,3 @@
 export * from './KaizechChatContext';
 export * from './ChatWidget';
-export * from '@kaizech/chat-core';
+export * from '@husseinsalah96/chat-core';

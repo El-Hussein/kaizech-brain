@@ -1,2 +1,2 @@
 export * from './KaizechChatScreen';
-export * from '@kaizech/chat-core';
+export * from '@husseinsalah96/chat-core';
