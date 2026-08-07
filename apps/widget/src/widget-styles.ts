@@ -1,278 +1,465 @@
 export const WIDGET_STYLES = `
 :host {
-  --primary-color: #0066FF;
-  --primary-hover: #0052CC;
-  --bg-color: #FFFFFF;
-  --text-color: #1E293B;
-  --bot-msg-bg: #F1F5F9;
-  --user-msg-bg: #0066FF;
-  --user-msg-text: #FFFFFF;
-  --border-color: #E2E8F0;
-  
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --primary:       #5B5FEF;
+  --primary-light: #7C7FF5;
+  --primary-glow:  rgba(91, 95, 239, 0.45);
+  --accent:        #00E5C3;
+  --bg-panel:      #0D0F1C;
+  --bg-msg:        #161828;
+  --bg-user-msg:   var(--primary);
+  --text-main:     #E8EAFF;
+  --text-muted:    #6B6F9A;
+  --border:        rgba(255,255,255,0.07);
+  --radius-panel:  20px;
+  --radius-bubble: 18px;
+
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
-  z-index: 999999;
 }
 
-*, *:before, *:after {
-  box-sizing: inherit;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-.kaizech-launcher-button {
+*, *:before, *:after { box-sizing: inherit; }
+
+/* ── Robot launcher ──────────────────────────────────────────────── */
+.k-launcher {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
-  background: var(--primary-color);
-  color: #FFFFFF;
+  bottom: 28px;
+  right: 28px;
+  width: 68px;
+  height: 68px;
+  background: transparent;
   border: none;
-  box-shadow: 0 8px 24px rgba(0, 102, 255, 0.35);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-  z-index: 999999;
+  padding: 0;
+  z-index: 2147483640;
+  animation: k-float 3s ease-in-out infinite;
+  filter: drop-shadow(0 8px 20px var(--primary-glow));
+  transition: filter 0.3s ease;
 }
 
-.kaizech-launcher-button:hover {
-  transform: scale(1.08);
-  box-shadow: 0 12px 28px rgba(0, 102, 255, 0.45);
+.k-launcher.left { right: auto; left: 28px; }
+
+.k-launcher:hover {
+  filter: drop-shadow(0 12px 30px var(--primary-glow)) brightness(1.08);
+  animation-play-state: paused;
 }
 
-.kaizech-launcher-button.left {
-  right: auto;
-  left: 24px;
+.k-launcher:hover .k-robot-body {
+  transform: scale(1.06);
 }
 
-.kaizech-launcher-icon {
-  width: 28px;
-  height: 28px;
-  fill: currentColor;
-  transition: transform 0.2s ease;
+.k-launcher.is-open {
+  animation-play-state: paused;
 }
 
-.kaizech-window {
+/* Floating keyframe */
+@keyframes k-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* ── Robot SVG parts ─────────────────────────────────────────────── */
+.k-robot-body {
+  width: 68px;
+  height: 68px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Antenna blink */
+.k-antenna-light {
+  animation: k-blink 2s ease-in-out infinite;
+}
+
+@keyframes k-blink {
+  0%, 90%, 100% { opacity: 1; r: 3; }
+  95%            { opacity: 0.2; r: 2; }
+}
+
+/* Eye scan */
+.k-eye-left, .k-eye-right {
+  animation: k-eye-scan 4s ease-in-out infinite;
+}
+.k-eye-right { animation-delay: 0.2s; }
+
+@keyframes k-eye-scan {
+  0%, 80%, 100% { transform: translateX(0); }
+  40%            { transform: translateX(2px); }
+  60%            { transform: translateX(-1px); }
+}
+
+/* Mouth when open: show smile */
+.k-mouth-line {
+  transition: d 0.3s ease;
+}
+
+/* ── Chat panel ──────────────────────────────────────────────────── */
+.k-panel {
   position: fixed;
-  bottom: 96px;
-  right: 24px;
+  bottom: 108px;
+  right: 28px;
   width: 380px;
-  max-width: calc(100vw - 32px);
-  height: 600px;
-  max-height: calc(100vh - 120px);
-  background: var(--bg-color);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  max-width: calc(100vw - 40px);
+  height: 560px;
+  max-height: calc(100vh - 130px);
+  background: var(--bg-panel);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   opacity: 0;
-  transform: translateY(20px) scale(0.95);
+  transform: translateY(16px) scale(0.96);
+  transform-origin: bottom right;
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 999998;
+  transition:
+    opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 2147483639;
 }
 
-.kaizech-window.open {
+.k-panel.left {
+  right: auto;
+  left: 28px;
+  transform-origin: bottom left;
+}
+
+.k-panel.open {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
-.kaizech-window.left {
-  right: auto;
-  left: 24px;
-}
-
-.kaizech-header {
-  background: var(--primary-color);
-  color: #FFFFFF;
-  padding: 16px;
+/* ── Panel header ────────────────────────────────────────────────── */
+.k-header {
+  padding: 16px 18px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: linear-gradient(135deg, rgba(91,95,239,0.25) 0%, rgba(0,229,195,0.1) 100%);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
-.kaizech-header-title {
+.k-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
 }
 
-.kaizech-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+.k-header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
 
-.kaizech-header-info h4 {
-  margin: 0;
+.k-header-name {
   font-size: 15px;
   font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.2;
 }
 
-.kaizech-header-info p {
-  margin: 2px 0 0 0;
-  font-size: 12px;
-  opacity: 0.85;
+.k-header-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
 }
 
-.kaizech-close-btn {
-  background: transparent;
-  border: none;
-  color: #FFFFFF;
+.k-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: k-pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes k-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.8); }
+}
+
+.k-status-text {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.k-close-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   cursor: pointer;
-  padding: 6px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.8;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.kaizech-close-btn:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.15);
+.k-close-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--text-main);
+  border-color: rgba(255,255,255,0.15);
 }
 
-.kaizech-messages {
+/* ── Messages area ───────────────────────────────────────────────── */
+.k-messages {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background: #F8FAFC;
+  gap: 10px;
+  background: var(--bg-panel);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
 
-.kaizech-msg-bubble {
-  max-width: 82%;
-  padding: 12px 16px;
-  border-radius: 14px;
+.k-messages::-webkit-scrollbar { width: 4px; }
+.k-messages::-webkit-scrollbar-track { background: transparent; }
+.k-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+/* Welcome state (empty messages) */
+.k-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex: 1;
+  padding: 24px 16px;
+  text-align: center;
+  animation: k-fade-in 0.4s ease;
+}
+
+.k-welcome-emoji {
+  font-size: 48px;
+  line-height: 1;
+  animation: k-float 2.5s ease-in-out infinite;
+}
+
+.k-welcome-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.k-welcome-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+@keyframes k-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Message bubbles ─────────────────────────────────────────────── */
+.k-bubble {
+  max-width: 80%;
+  padding: 11px 15px;
+  border-radius: var(--radius-bubble);
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
   word-break: break-word;
   white-space: pre-wrap;
+  animation: k-bubble-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.kaizech-msg-bubble.user {
+@keyframes k-bubble-in {
+  from { opacity: 0; transform: scale(0.85) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.k-bubble.user {
   align-self: flex-end;
-  background: var(--user-msg-bg);
-  color: var(--user-msg-text);
-  border-bottom-right-radius: 4px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
 
-.kaizech-msg-bubble.assistant {
+.k-bubble.assistant {
   align-self: flex-start;
-  background: var(--bot-msg-bg);
-  color: var(--text-color);
-  border-bottom-left-radius: 4px;
-  border: 1px solid var(--border-color);
+  background: var(--bg-msg);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
 }
 
-.kaizech-typing-indicator {
+/* Typing dots */
+.k-typing {
   display: flex;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: 5px;
+  padding: 12px 16px;
   align-self: flex-start;
+  background: var(--bg-msg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-bubble);
+  border-bottom-left-radius: 5px;
+  animation: k-bubble-in 0.22s ease both;
 }
 
-.kaizech-typing-dot {
-  width: 6px;
-  height: 6px;
+.k-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #94A3B8;
-  animation: kaizechPulse 1.4s infinite ease-in-out both;
+  background: var(--primary-light);
+  animation: k-bounce 1.2s ease-in-out infinite;
 }
 
-.kaizech-typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.kaizech-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.k-dot:nth-child(1) { animation-delay: 0s; }
+.k-dot:nth-child(2) { animation-delay: 0.15s; }
+.k-dot:nth-child(3) { animation-delay: 0.3s; }
 
-@keyframes kaizechPulse {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
+@keyframes k-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%            { transform: translateY(-6px); }
 }
 
-.kaizech-suggestions {
+/* ── Suggestions ─────────────────────────────────────────────────── */
+.k-suggestions {
+  padding: 6px 16px 10px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 0 16px 12px 16px;
-  background: #F8FAFC;
+  gap: 7px;
+  background: var(--bg-panel);
+  flex-shrink: 0;
 }
 
-.kaizech-suggestion-chip {
-  background: #FFFFFF;
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
-  padding: 6px 12px;
-  border-radius: 16px;
+.k-chip {
+  background: rgba(91, 95, 239, 0.12);
+  border: 1px solid rgba(91, 95, 239, 0.35);
+  color: var(--primary-light);
+  padding: 6px 13px;
+  border-radius: 20px;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.kaizech-suggestion-chip:hover {
-  background: var(--primary-color);
-  color: #FFFFFF;
+.k-chip:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px var(--primary-glow);
 }
 
-.kaizech-input-area {
-  padding: 12px 16px;
-  background: #FFFFFF;
-  border-top: 1px solid var(--border-color);
+/* ── Input area ──────────────────────────────────────────────────── */
+.k-input-area {
+  padding: 12px 14px;
+  background: var(--bg-msg);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  flex-shrink: 0;
 }
 
-.kaizech-input {
+.k-input {
   flex: 1;
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 10px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 15px;
   font-size: 14px;
+  color: var(--text-main);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: inherit;
 }
 
-.kaizech-input:focus {
-  border-color: var(--primary-color);
+.k-input::placeholder { color: var(--text-muted); }
+
+.k-input:focus {
+  border-color: rgba(91, 95, 239, 0.6);
+  background: rgba(91, 95, 239, 0.06);
 }
 
-.kaizech-send-btn {
-  background: var(--primary-color);
-  color: #FFFFFF;
+.k-send-btn {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: #fff;
   border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
 
-.kaizech-send-btn:hover {
-  background: var(--primary-hover);
+.k-send-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 18px var(--primary-glow);
 }
 
-.kaizech-footer {
+.k-send-btn:active { transform: scale(0.96); }
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+.k-footer {
   text-align: center;
-  padding: 6px;
+  padding: 7px;
   font-size: 10px;
-  color: #94A3B8;
-  background: #FFFFFF;
-  border-top: 1px solid #F1F5F9;
+  color: var(--text-muted);
+  background: var(--bg-msg);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Notification badge ──────────────────────────────────────────── */
+.k-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FF4D6D;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  animation: k-badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.k-badge[hidden] { display: none; }
+
+@keyframes k-badge-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
 }
 `;

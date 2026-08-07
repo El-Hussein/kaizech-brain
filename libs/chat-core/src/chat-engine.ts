@@ -159,12 +159,12 @@ export class KaizechChatEngine {
         this.state.handedOff = true;
       }
     } catch (err: any) {
-      this.state.error = err.message || 'Failed to send message';
+      console.error('[KaizechChat] [chat-engine] Error in sendMessage:', err);
+      const errMsg = err?.message || String(err);
+      this.state.error = errMsg;
       const target = this.state.messages.find((m) => m.id === assistantMsgId);
       if (target) {
-        if (!target.content) {
-          target.content = 'Sorry, I encountered an issue connecting to the assistant. Please try again.';
-        }
+        target.content = `Sorry, I encountered an issue: ${errMsg}`;
         target.isStreaming = false;
         target.status = 'error';
       }
