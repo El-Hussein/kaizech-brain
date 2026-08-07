@@ -12,6 +12,7 @@ build/
 .env.*.local
 .npmrc
 *.npmrc
+bunfig.toml
 
 # IDE
 .idea/

@@ -64,10 +64,13 @@ export default function App() {
   );
 }`;
 
-  const reactNativeSnippet = `// 1. Configure .npmrc for GitHub Packages:
-// @husseinsalah96:registry=https://npm.pkg.github.com
+  const reactNativeSnippet = `// 1. For Bun: create bunfig.toml in project root:
+// [install.scopes]
+// "@husseinsalah96" = { url = "https://npm.pkg.github.com", token = "YOUR_TOKEN" }
+//
 // 2. Install package:
-// npm install @husseinsalah96/chat-react-native
+// bun add @husseinsalah96/chat-react-native@1.0.3
+// (or npm install @husseinsalah96/chat-react-native@1.0.3)
 
 import React from 'react';
 import { SafeAreaView } from 'react-native';
