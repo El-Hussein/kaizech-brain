@@ -61,6 +61,8 @@ export class KnowledgeController {
       sourceType = KnowledgeSourceType.XLSX;
     } else if (filename.endsWith('.md') || filename.endsWith('.markdown')) {
       sourceType = KnowledgeSourceType.MARKDOWN;
+    } else if (filename.endsWith('.txt')) {
+      sourceType = KnowledgeSourceType.TEXT;
     } else {
       throw new BadRequestException('Unsupported file format. Please upload PDF, DOCX, XLSX, or Markdown (.md) files.');
     }
