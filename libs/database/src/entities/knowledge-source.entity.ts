@@ -2,11 +2,15 @@ import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { TenantEntity } from './tenant.entity';
 import { KnowledgeChunkEntity } from './knowledge-chunk.entity';
+import { IndustryEntity } from './industry.entity';
 
 @Entity('knowledge_sources')
 export class KnowledgeSourceEntity extends BaseEntity {
-  @Column({ name: 'tenant_id' })
+  @Column({ name: 'tenant_id', nullable: true })
   tenantId: string;
+
+  @Column({ name: 'industry_id', nullable: true })
+  industryId: string;
 
   @Column()
   name: string;
@@ -38,4 +42,8 @@ export class KnowledgeSourceEntity extends BaseEntity {
 
   @OneToMany(() => KnowledgeChunkEntity, (chunk) => chunk.source)
   chunks: KnowledgeChunkEntity[];
+
+  @ManyToOne(() => IndustryEntity, (industry) => industry.knowledgeSources)
+  @JoinColumn({ name: 'industry_id' })
+  industry: IndustryEntity;
 }

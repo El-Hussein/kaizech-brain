@@ -1,47 +1,17 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import pdfParse from 'pdf-parse';
-import * as mammoth from 'mammoth';
-import * as XLSX from 'xlsx';
+import { extractBytes } from '@kreuzberg/node';
 
 @Injectable()
 export class DocumentParserService {
   private readonly logger = new Logger(DocumentParserService.name);
 
-  async parsePdf(buffer: Buffer): Promise<string> {
+  async parseFileToMarkdown(buffer: Buffer, mimeType: string): Promise<string> {
     try {
-      const data = await pdfParse(buffer);
-      return data.text;
+      const result = await extractBytes(buffer, mimeType);
+      return result.content;
     } catch (error: any) {
-      this.logger.error(`PDF parse error: ${error.message}`);
-      throw new BadRequestException(`Failed to parse PDF document: ${error.message}`);
-    }
-  }
-
-  async parseDocx(buffer: Buffer): Promise<string> {
-    try {
-      const result = await mammoth.extractRawText({ buffer });
-      return result.value;
-    } catch (error: any) {
-      this.logger.error(`DOCX parse error: ${error.message}`);
-      throw new BadRequestException(`Failed to parse DOCX document: ${error.message}`);
-    }
-  }
-
-  async parseXlsx(buffer: Buffer): Promise<string> {
-    try {
-      const workbook = XLSX.read(buffer, { type: 'buffer' });
-      const textParts: string[] = [];
-
-      for (const sheetName of workbook.SheetNames) {
-        const sheet = workbook.Sheets[sheetName];
-        const csv = XLSX.utils.sheet_to_csv(sheet);
-        textParts.push(`--- Sheet: ${sheetName} ---\n${csv}`);
-      }
-
-      return textParts.join('\n\n');
-    } catch (error: any) {
-      this.logger.error(`XLSX parse error: ${error.message}`);
-      throw new BadRequestException(`Failed to parse XLSX document: ${error.message}`);
+      this.logger.error(`Document parse error: ${error.message}`);
+      throw new BadRequestException(`Failed to parse document: ${error.message}`);
     }
   }
 

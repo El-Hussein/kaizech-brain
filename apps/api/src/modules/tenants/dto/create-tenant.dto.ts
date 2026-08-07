@@ -51,4 +51,15 @@ export class CreateTenantDto {
   @IsOptional()
   @IsObject()
   settings?: Record<string, any>;
+
+  @ApiPropertyOptional({ description: 'Main Industry ID' })
+  @IsOptional()
+  @IsString()
+  mainIndustryId?: string;
+
+  @ApiPropertyOptional({ description: 'Related Industry IDs' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  relatedIndustryIds?: string[];
 }

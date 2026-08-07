@@ -26,17 +26,19 @@ export class KnowledgeManagerService {
   ) {}
 
   async processDocumentUpload(
-    tenantId: string,
+    tenantId: string | null,
     name: string,
     sourceType: KnowledgeSourceType,
     fileBuffer?: Buffer,
     url?: string,
     rawContent?: string,
     faqData?: Array<{ question: string; answer: string; category?: string }>,
+    industryId?: string | null,
   ): Promise<KnowledgeSourceEntity> {
     const typeVal = String(sourceType || KnowledgeSourceType.TEXT);
     const source = new KnowledgeSourceEntity();
-    source.tenantId = tenantId;
+    if (tenantId) source.tenantId = tenantId;
+    if (industryId) source.industryId = industryId;
     source.name = name;
     source.sourceType = typeVal;
     if (url) source.url = url;
@@ -48,11 +50,11 @@ export class KnowledgeManagerService {
       let extractedText = '';
 
       if (sourceType === KnowledgeSourceType.PDF && fileBuffer) {
-        extractedText = await this.parser.parsePdf(fileBuffer);
+        extractedText = await this.parser.parseFileToMarkdown(fileBuffer, 'application/pdf');
       } else if (sourceType === KnowledgeSourceType.DOCX && fileBuffer) {
-        extractedText = await this.parser.parseDocx(fileBuffer);
+        extractedText = await this.parser.parseFileToMarkdown(fileBuffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
       } else if (sourceType === KnowledgeSourceType.XLSX && fileBuffer) {
-        extractedText = await this.parser.parseXlsx(fileBuffer);
+        extractedText = await this.parser.parseFileToMarkdown(fileBuffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       } else if (sourceType === KnowledgeSourceType.MARKDOWN && fileBuffer) {
         extractedText = this.parser.parseMarkdown(fileBuffer);
       } else if (sourceType === KnowledgeSourceType.FAQ && faqData) {
@@ -73,12 +75,15 @@ export class KnowledgeManagerService {
       }
 
       this.logger.log(
-        `Generated ${textChunks.length} chunk(s) for knowledge source '${name}' (Tenant ${tenantId})`,
+        `Generated ${textChunks.length} chunk(s) for knowledge source '${name}' (Tenant ${tenantId}, Industry ${industryId})`,
       );
 
       // Fetch tenant custom API key if configured
-      const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
-      const customApiKey = tenant?.settings?.openaiApiKey;
+      let customApiKey = undefined;
+      if (tenantId) {
+        const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
+        customApiKey = tenant?.settings?.openaiApiKey;
+      }
 
       // Generate Embeddings
       const provider = this.providerFactory.getProvider('openai');
@@ -100,7 +105,7 @@ export class KnowledgeManagerService {
       }));
 
       // Store in pgvector database
-      await this.vectorSearch.storeChunks(tenantId, savedSource.id, chunksData);
+      await this.vectorSearch.storeChunks(tenantId, savedSource.id, chunksData, industryId);
 
       // Update source status
       savedSource.status = KnowledgeStatus.COMPLETED;

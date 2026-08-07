@@ -16,15 +16,11 @@
     "@kaizech/database": "workspace:*",
     "@kaizech/rag": "workspace:*",
     "@kaizech/agent": "workspace:*",
-    "pdf-parse": "^1.1.1",
-    "mammoth": "^1.8.0",
-    "xlsx": "^0.18.5",
+    "@kreuzberg/node": "^4.10.2",
     "axios": "^1.7.2",
     "cheerio": "^1.0.0-rc.12",
     "puppeteer": "^23.6.0",
     "typeorm": "^0.3.20"
   },
-  "devDependencies": {
-    "@types/pdf-parse": "^1.1.4"
-  }
+  "devDependencies": {}
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { KnowledgeChunkEntity } from '@kaizech/database';
+import { KnowledgeChunkEntity, TenantEntity } from '@kaizech/database';
 
 export interface VectorSearchResult {
   id: string;
@@ -21,6 +21,8 @@ export class VectorSearchService {
     private readonly dataSource: DataSource,
     @InjectRepository(KnowledgeChunkEntity)
     private readonly chunkRepository: Repository<KnowledgeChunkEntity>,
+    @InjectRepository(TenantEntity)
+    private readonly tenantRepository: Repository<TenantEntity>,
   ) {}
 
   async search(
@@ -32,6 +34,18 @@ export class VectorSearchService {
     try {
       const formattedVector = `[${queryEmbedding.join(',')}]`;
 
+      let industryIds: string[] = [];
+      const tenant = await this.tenantRepository.findOne({
+        where: { id: tenantId },
+        relations: ['relatedIndustries'],
+      });
+      if (tenant) {
+        if (tenant.mainIndustryId) industryIds.push(tenant.mainIndustryId);
+        if (tenant.relatedIndustries?.length) {
+          industryIds.push(...tenant.relatedIndustries.map(i => i.id));
+        }
+      }
+
       const rawResults = await this.dataSource.query(
         `
         SELECT 
@@ -42,12 +56,12 @@ export class VectorSearchService {
           metadata,
           1 - (embedding <=> $1::vector) as similarity
         FROM knowledge_chunks
-        WHERE tenant_id = $2
+        WHERE (tenant_id = $2 OR (tenant_id IS NULL AND industry_id = ANY($4::uuid[])))
           AND embedding IS NOT NULL
         ORDER BY embedding <=> $1::vector ASC
         LIMIT $3
         `,
-        [formattedVector, tenantId, topK],
+        [formattedVector, tenantId, topK, industryIds],
       );
 
       const filtered = rawResults
@@ -73,9 +87,10 @@ export class VectorSearchService {
   }
 
   async storeChunks(
-    tenantId: string,
+    tenantId: string | null,
     sourceId: string,
     chunks: Array<{ content: string; embedding: number[]; chunkIndex: number; metadata?: Record<string, any> }>,
+    industryId?: string | null,
   ): Promise<KnowledgeChunkEntity[]> {
     const entities: KnowledgeChunkEntity[] = [];
 
@@ -84,12 +99,13 @@ export class VectorSearchService {
 
       const result = await this.dataSource.query(
         `
-        INSERT INTO knowledge_chunks (id, tenant_id, source_id, content, embedding, chunk_index, metadata, created_at, updated_at)
-        VALUES (uuid_generate_v4(), $1, $2, $3, $4::vector, $5, $6, NOW(), NOW())
-        RETURNING id, tenant_id as "tenantId", source_id as "sourceId", content, chunk_index as "chunkIndex", created_at as "createdAt";
+        INSERT INTO knowledge_chunks (id, tenant_id, industry_id, source_id, content, embedding, chunk_index, metadata, created_at, updated_at)
+        VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5::vector, $6, $7, NOW(), NOW())
+        RETURNING id, tenant_id as "tenantId", industry_id as "industryId", source_id as "sourceId", content, chunk_index as "chunkIndex", created_at as "createdAt";
         `,
         [
           tenantId,
+          industryId || null,
           sourceId,
           chunk.content,
           formattedVector,
@@ -147,6 +163,18 @@ export class VectorSearchService {
       if (cachedChunks && Date.now() - cachedChunks.timestamp < this.CACHE_TTL_MS) {
         rawResults = cachedChunks.chunks;
       } else {
+        let industryIds: string[] = [];
+        const tenant = await this.tenantRepository.findOne({
+          where: { id: tenantId },
+          relations: ['relatedIndustries'],
+        });
+        if (tenant) {
+          if (tenant.mainIndustryId) industryIds.push(tenant.mainIndustryId);
+          if (tenant.relatedIndustries?.length) {
+            industryIds.push(...tenant.relatedIndustries.map(i => i.id));
+          }
+        }
+
         rawResults = await this.dataSource.query(
           `
           SELECT 
@@ -157,10 +185,10 @@ export class VectorSearchService {
             c.metadata
           FROM knowledge_chunks c
           LEFT JOIN knowledge_sources s ON c.source_id = s.id
-          WHERE c.tenant_id = $1
+          WHERE (c.tenant_id = $1 OR (c.tenant_id IS NULL AND c.industry_id = ANY($2::uuid[])))
             AND (LOWER(s.source_type) = 'faq' OR LOWER(c.metadata->>'sourceType') = 'faq')
           `,
-          [tenantId],
+          [tenantId, industryIds],
         );
         this.faqChunksCache.set(tenantId, { chunks: rawResults, timestamp: Date.now() });
       }
@@ -202,6 +230,18 @@ export class VectorSearchService {
     try {
       const formattedVector = `[${queryEmbedding.join(',')}]`;
 
+      let industryIds: string[] = [];
+      const tenant = await this.tenantRepository.findOne({
+        where: { id: tenantId },
+        relations: ['relatedIndustries'],
+      });
+      if (tenant) {
+        if (tenant.mainIndustryId) industryIds.push(tenant.mainIndustryId);
+        if (tenant.relatedIndustries?.length) {
+          industryIds.push(...tenant.relatedIndustries.map(i => i.id));
+        }
+      }
+
       const rawResults = await this.dataSource.query(
         `
         SELECT 
@@ -213,13 +253,13 @@ export class VectorSearchService {
           1 - (c.embedding <=> $1::vector) as similarity
         FROM knowledge_chunks c
         LEFT JOIN knowledge_sources s ON c.source_id = s.id
-        WHERE c.tenant_id = $2
+        WHERE (c.tenant_id = $2 OR (c.tenant_id IS NULL AND c.industry_id = ANY($4::uuid[])))
           AND c.embedding IS NOT NULL
           AND (LOWER(s.source_type) = 'faq' OR LOWER(c.metadata->>'sourceType') = 'faq')
         ORDER BY c.embedding <=> $1::vector ASC
         LIMIT $3
         `,
-        [formattedVector, tenantId, topK],
+        [formattedVector, tenantId, topK, industryIds],
       );
 
       const filtered = rawResults

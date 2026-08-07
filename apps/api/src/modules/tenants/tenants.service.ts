@@ -48,6 +48,8 @@ export class TenantsService {
       greetingMessage: dto.greetingMessage,
       apiEndpoint: dto.apiEndpoint,
       branding: dto.branding,
+      mainIndustryId: dto.mainIndustryId,
+      relatedIndustries: dto.relatedIndustryIds?.map((id) => ({ id } as any)),
       settings: {
         ...(dto.settings || {}),
         ownerEmail: initialOwnerEmail,
@@ -93,7 +95,7 @@ export class TenantsService {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
     let tenant = await this.tenantRepository.findOne({
       where: isUuid ? { id: idOrSlug } : { slug: idOrSlug },
-      relations: ['knowledgeSources', 'toolManifests', 'promptTemplates'],
+      relations: ['knowledgeSources', 'toolManifests', 'promptTemplates', 'relatedIndustries', 'mainIndustry'],
     });
 
     if (!tenant && idOrSlug === 'mrkoon-auctions') {
@@ -146,7 +148,12 @@ export class TenantsService {
       }
       tenant.settings = mergedSettings;
     }
-    const { settings, ownerEmail: _, password: __, ...rest } = dto as any;
+    const { settings, ownerEmail: _, password: __, relatedIndustryIds, ...rest } = dto as any;
+    
+    if (relatedIndustryIds) {
+      tenant.relatedIndustries = relatedIndustryIds.map((id: string) => ({ id } as any));
+    }
+    
     Object.assign(tenant, rest);
     return this.tenantRepository.save(tenant);
   }

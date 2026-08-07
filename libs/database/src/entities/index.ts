@@ -10,3 +10,4 @@ export * from './prompt-template.entity';
 export * from './ticket.entity';
 export * from './user-profile.entity';
 export * from './analytics-event.entity';
+export * from './industry.entity';

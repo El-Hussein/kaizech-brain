@@ -744,11 +744,14 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             <div style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '12px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                  Groq API Key (Secret Variable)
+                  Groq API Key (Optional)
                   <span style={{ marginLeft: '8px', color: 'var(--accent-cyan)', fontSize: '12px' }}>
                     (Get free key at console.groq.com — starts with gsk_...)
                   </span>
                 </label>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  Leave blank to use the platform's default AI key (included in your subscription).
+                </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type={showGroqKey ? 'text' : 'password'}
@@ -796,11 +799,14 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '12px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                  OpenAI API Key (Secret Variable)
+                  OpenAI API Key (Optional)
                   <span style={{ marginLeft: '8px', color: 'var(--accent-amber)', fontSize: '12px' }}>
                     (starts with sk-proj-...)
                   </span>
                 </label>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  Leave blank to use the platform's default AI key (included in your subscription).
+                </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type={showOpenAiKey ? 'text' : 'password'}

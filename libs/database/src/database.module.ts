@@ -12,6 +12,7 @@ import { PromptTemplateEntity } from './entities/prompt-template.entity';
 import { TicketEntity } from './entities/ticket.entity';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { AnalyticsEventEntity } from './entities/analytics-event.entity';
+import { IndustryEntity } from './entities/industry.entity';
 
 const entities = [
   TenantEntity,
@@ -25,6 +26,7 @@ const entities = [
   TicketEntity,
   UserProfileEntity,
   AnalyticsEventEntity,
+  IndustryEntity,
 ];
 
 @Global()
