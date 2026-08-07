@@ -62,8 +62,14 @@ export class KnowledgeManagerService {
       } else if (sourceType === KnowledgeSourceType.WEBSITE && url) {
         const crawled = await this.crawler.crawlUrl(url);
         extractedText = crawled.content;
-      } else if (sourceType === KnowledgeSourceType.TEXT && rawContent) {
-        extractedText = rawContent;
+      } else if (sourceType === KnowledgeSourceType.TEXT) {
+        if (rawContent) {
+          extractedText = rawContent;
+        } else if (fileBuffer) {
+          extractedText = fileBuffer.toString('utf8');
+        } else {
+          throw new BadRequestException('Text content or file buffer is required for TEXT source type.');
+        }
       } else {
         throw new BadRequestException('Invalid knowledge source input or missing required file/URL/content.');
       }
