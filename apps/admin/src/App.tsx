@@ -14,6 +14,8 @@ import { IndustryCreateEditModal, IndustryKnowledgeModal } from './components/mo
 
 axios.defaults.baseURL =
   (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
+axios.defaults.headers.common['x-api-key'] = 
+  (import.meta as any).env?.VITE_ADMIN_API_KEY || 'kb_demo_tenant_key';
 
 export const App: React.FC = () => {
   const [tenants, setTenants] = useState<any[]>([]);
