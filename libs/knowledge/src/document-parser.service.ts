@@ -1,5 +1,4 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { extractBytes } from '@kreuzberg/node';
 
 @Injectable()
 export class DocumentParserService {
@@ -7,8 +6,35 @@ export class DocumentParserService {
 
   async parseFileToMarkdown(buffer: Buffer, mimeType: string): Promise<string> {
     try {
-      const result = await extractBytes(buffer, mimeType);
-      return result.content;
+      // Safely attempt kreuzberg extraction if available
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { extractBytes } = require('@kreuzberg/node');
+        if (typeof extractBytes === 'function') {
+          const result = await extractBytes(buffer, mimeType);
+          if (result && result.content) {
+            return result.content;
+          }
+        }
+      } catch (e: any) {
+        this.logger.warn(`@kreuzberg/node extraction unavailable, falling back: ${e.message}`);
+      }
+
+      // Fallback parsers based on MIME type
+      if (mimeType.includes('pdf')) {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const pdfParse = require('pdf-parse');
+        const parsed = await pdfParse(buffer);
+        return parsed.text || '';
+      }
+      if (mimeType.includes('word') || mimeType.includes('docx') || mimeType.includes('officedocument')) {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const mammoth = require('mammoth');
+        const parsed = await mammoth.extractRawText({ buffer });
+        return parsed.value || '';
+      }
+
+      return buffer.toString('utf-8');
     } catch (error: any) {
       this.logger.error(`Document parse error: ${error.message}`);
       throw new BadRequestException(`Failed to parse document: ${error.message}`);
