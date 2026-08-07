@@ -1,7 +1,14 @@
 {
-  "name": "@kaizech/chat-core",
+  "name": "@husseinsalah96/chat-core",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HusseinSalah96/kaizech-brain.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",

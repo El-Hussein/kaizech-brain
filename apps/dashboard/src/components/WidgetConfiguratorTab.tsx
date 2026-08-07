@@ -38,11 +38,13 @@ export const WidgetConfiguratorTab: React.FC<WidgetConfiguratorTabProps> = ({
 </script>
 <script src="${apiUrl}/widget.js" async defer></script>`;
 
-  const reactSnippet = `// 1. Install package
-// npm install @kaizech/chat-react
+  const reactSnippet = `// 1. Configure .npmrc for GitHub Packages:
+// @husseinsalah96:registry=https://npm.pkg.github.com
+// 2. Install package:
+// npm install @husseinsalah96/chat-react
 
 import React from 'react';
-import { KaizechChatProvider, ChatWidget } from '@kaizech/chat-react';
+import { KaizechChatProvider, ChatWidget } from '@husseinsalah96/chat-react';
 
 export default function App() {
   return (
@@ -62,12 +64,14 @@ export default function App() {
   );
 }`;
 
-  const reactNativeSnippet = `// 1. Install package
-// npm install @kaizech/chat-react-native
+  const reactNativeSnippet = `// 1. Configure .npmrc for GitHub Packages:
+// @husseinsalah96:registry=https://npm.pkg.github.com
+// 2. Install package:
+// npm install @husseinsalah96/chat-react-native
 
 import React from 'react';
 import { SafeAreaView } from 'react-native';
-import { KaizechChatScreen } from '@kaizech/chat-react-native';
+import { KaizechChatScreen } from '@husseinsalah96/chat-react-native';
 
 export default function SupportScreen() {
   return (
