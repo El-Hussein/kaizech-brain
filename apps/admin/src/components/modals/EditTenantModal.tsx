@@ -15,13 +15,18 @@ interface EditTenantModalProps {
   languages: string; setLanguages: (v: string) => void;
   timezone: string; setTimezone: (v: string) => void;
   greetingMessage: string; setGreetingMessage: (v: string) => void;
+  industries: any[];
+  mainIndustryId: string; setMainIndustryId: (v: string) => void;
+  relatedIndustryIds: string[]; setRelatedIndustryIds: (v: string[]) => void;
 }
 
 export const EditTenantModal: React.FC<EditTenantModalProps> = ({
   tenant, onClose, onSubmit, saving,
   name, setName, slug, setSlug, ownerEmail, setOwnerEmail,
   password, setPassword, languages, setLanguages,
-  timezone, setTimezone, greetingMessage, setGreetingMessage
+  timezone, setTimezone, greetingMessage, setGreetingMessage,
+  industries, mainIndustryId, setMainIndustryId,
+  relatedIndustryIds, setRelatedIndustryIds
 }) => {
   return (
     <BaseModal
@@ -111,6 +116,41 @@ export const EditTenantModal: React.FC<EditTenantModalProps> = ({
             value={greetingMessage}
             onChange={(e) => setGreetingMessage(e.target.value)}
           />
+        </div>
+
+        <div>
+          <label className="text-[13px] font-semibold text-slate-400 block mb-1.5">Main Industry</label>
+          <select
+            className="input-field bg-slate-900 cursor-pointer appearance-none"
+            value={mainIndustryId}
+            onChange={(e) => setMainIndustryId(e.target.value)}
+          >
+            <option value="" className="bg-slate-800 text-slate-400">-- Select Main Industry --</option>
+            {industries.map((ind) => (
+              <option key={ind.id} value={ind.id} className="bg-slate-800 text-white">
+                {ind.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-[13px] font-semibold text-slate-400 block mb-1.5">Related Industries (Hold Cmd/Ctrl to select multiple)</label>
+          <select
+            multiple
+            className="input-field bg-slate-900 cursor-pointer min-h-[100px]"
+            value={relatedIndustryIds}
+            onChange={(e) => {
+              const values = Array.from(e.target.selectedOptions, option => option.value);
+              setRelatedIndustryIds(values);
+            }}
+          >
+            {industries.map((ind) => (
+              <option key={ind.id} value={ind.id} className="bg-slate-800 text-white p-2 border-b border-white/5">
+                {ind.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-white/10">

@@ -49,6 +49,8 @@ export const App: React.FC = () => {
   const [timezone, setTimezone] = useState('Asia/Riyadh');
   const [apiEndpoint, setApiEndpoint] = useState('');
   const [greetingMessage, setGreetingMessage] = useState('');
+  const [mainIndustryId, setMainIndustryId] = useState('');
+  const [relatedIndustryIds, setRelatedIndustryIds] = useState<string[]>([]);
 
   // Edit Tenant State
   const [savingEdit, setSavingEdit] = useState(false);
@@ -59,6 +61,8 @@ export const App: React.FC = () => {
   const [editLanguages, setEditLanguages] = useState('');
   const [editTimezone, setEditTimezone] = useState('');
   const [editGreetingMessage, setEditGreetingMessage] = useState('');
+  const [editMainIndustryId, setEditMainIndustryId] = useState('');
+  const [editRelatedIndustryIds, setEditRelatedIndustryIds] = useState<string[]>([]);
   
   // Delete State
   const [deleting, setDeleting] = useState(false);
@@ -156,7 +160,11 @@ export const App: React.FC = () => {
       setCreating(true);
       const langArray = languages.split(',').map((l) => l.trim());
       const passToUse = password.trim() || `${slug || name}@123`;
-      const res = await axios.post('/api/v1/tenants', { name, slug, ownerEmail, password: passToUse, languages: langArray, timezone, apiEndpoint, greetingMessage });
+      const res = await axios.post('/api/v1/tenants', { 
+        name, slug, ownerEmail, password: passToUse, languages: langArray, timezone, apiEndpoint, greetingMessage,
+        mainIndustryId: mainIndustryId || undefined,
+        relatedIndustryIds: relatedIndustryIds.length > 0 ? relatedIndustryIds : undefined
+      });
       setNewTenantResult(res.data);
       fetchTenants();
     } catch (err: any) {
@@ -178,13 +186,20 @@ export const App: React.FC = () => {
     setEditLanguages(Array.isArray(tenant.languages) ? tenant.languages.join(', ') : tenant.languages || 'en, ar');
     setEditTimezone(tenant.timezone || 'Asia/Riyadh');
     setEditGreetingMessage(tenant.greetingMessage || '');
+    setEditMainIndustryId(tenant.mainIndustry?.id || '');
+    setEditRelatedIndustryIds(tenant.relatedIndustries?.map((ind: any) => ind.id) || []);
   };
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTenant) return;
     try {
       setSavingEdit(true);
-      const payload = { name: editName, slug: editSlug, ownerEmail: editOwnerEmail, password: editPassword, languages: editLanguages.split(',').map(l => l.trim()), timezone: editTimezone, greetingMessage: editGreetingMessage };
+      const payload = { 
+        name: editName, slug: editSlug, ownerEmail: editOwnerEmail, password: editPassword, 
+        languages: editLanguages.split(',').map(l => l.trim()), timezone: editTimezone, greetingMessage: editGreetingMessage,
+        mainIndustryId: editMainIndustryId || null,
+        relatedIndustryIds: editRelatedIndustryIds
+      };
       await axios.put(`/api/v1/tenants/${editingTenant.id}`, payload);
       setTenants(prev => prev.map(t => t.id === editingTenant.id ? { ...t, ...payload } : t));
       setEditingTenant(null);
@@ -265,20 +280,33 @@ export const App: React.FC = () => {
     if (!uploadIndModal || !indFile) return;
     try {
       setProcessingIndKnowledge(true);
-      await new Promise(r => setTimeout(r, 1000)); // Mock wait
+      const formData = new FormData();
+      formData.append('file', indFile);
+      await axios.post(`/api/v1/industries/${uploadIndModal.id}/knowledge/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       alert('Document uploaded successfully for industry!');
       setUploadIndModal(null); setIndFile(null);
-    } catch (err: any) {} finally { setProcessingIndKnowledge(false); }
+      fetchIndustries(); // Refresh to get the new knowledge source
+    } catch (err: any) {
+      alert(`Failed to upload document: ${err.response?.data?.message || err.message}`);
+    } finally { setProcessingIndKnowledge(false); }
   };
   const handleIndustryCrawl = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!crawlIndModal || !indUrl) return;
     try {
       setProcessingIndKnowledge(true);
-      await new Promise(r => setTimeout(r, 1000));
+      await axios.post(`/api/v1/industries/${crawlIndModal.id}/knowledge/crawl`, {
+        url: indUrl,
+        name: indUrlName
+      });
       alert('Website crawling initiated for industry!');
       setCrawlIndModal(null); setIndUrl(''); setIndUrlName('');
-    } catch (err: any) {} finally { setProcessingIndKnowledge(false); }
+      fetchIndustries(); // Refresh to get the new knowledge source
+    } catch (err: any) {
+      alert(`Failed to crawl website: ${err.response?.data?.message || err.message}`);
+    } finally { setProcessingIndKnowledge(false); }
   };
 
   const activeTenantsCount = tenants.filter((t) => t.status === 'active').length;
@@ -337,6 +365,8 @@ export const App: React.FC = () => {
         ownerEmail={ownerEmail} setOwnerEmail={setOwnerEmail} password={password} setPassword={setPassword}
         languages={languages} setLanguages={setLanguages} timezone={timezone} setTimezone={setTimezone}
         greetingMessage={greetingMessage} setGreetingMessage={setGreetingMessage}
+        industries={industries} mainIndustryId={mainIndustryId} setMainIndustryId={setMainIndustryId}
+        relatedIndustryIds={relatedIndustryIds} setRelatedIndustryIds={setRelatedIndustryIds}
       />
 
       <EditTenantModal
@@ -346,6 +376,8 @@ export const App: React.FC = () => {
         ownerEmail={editOwnerEmail} setOwnerEmail={setEditOwnerEmail} password={editPassword} setPassword={setEditPassword}
         languages={editLanguages} setLanguages={setEditLanguages} timezone={editTimezone} setTimezone={setEditTimezone}
         greetingMessage={editGreetingMessage} setGreetingMessage={setEditGreetingMessage}
+        industries={industries} mainIndustryId={editMainIndustryId} setMainIndustryId={setEditMainIndustryId}
+        relatedIndustryIds={editRelatedIndustryIds} setRelatedIndustryIds={setEditRelatedIndustryIds}
       />
 
       <DeleteTenantModal tenant={deletingTenant} onClose={() => setDeletingTenant(null)} onDelete={handleDeleteTenant} deleting={deleting} />

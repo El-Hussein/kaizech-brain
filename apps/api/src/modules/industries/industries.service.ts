@@ -11,7 +11,10 @@ export class IndustriesService {
   ) {}
 
   async findAll() {
-    return this.industryRepo.find({ order: { name: 'ASC' } });
+    return this.industryRepo.find({ 
+      order: { name: 'ASC' },
+      relations: ['knowledgeSources']
+    });
   }
 
   async findOne(id: string) {

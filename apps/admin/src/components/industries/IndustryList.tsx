@@ -57,6 +57,21 @@ export const IndustryList: React.FC<IndustryListProps> = ({
                   <div className="text-slate-500 text-sm mt-1">
                     {ind.description || 'No description provided.'}
                   </div>
+
+                  {ind.knowledgeSources && ind.knowledgeSources.length > 0 && (
+                    <div className="mt-4 flex flex-col gap-2">
+                      <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Knowledge Sources</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {ind.knowledgeSources.map((ks: any) => (
+                          <div key={ks.id} className="text-xs flex items-center gap-1.5 bg-black/20 px-2.5 py-1.5 rounded border border-white/5 text-slate-300">
+                            {ks.type === 'WEBSITE' ? <LinkIcon size={12} className="text-emerald-400" /> : <Upload size={12} className="text-accent-cyan" />}
+                            <span className="truncate max-w-[200px]" title={ks.name}>{ks.name}</span>
+                            <span className={`w-2 h-2 rounded-full ${ks.status === 'READY' ? 'bg-emerald-500' : ks.status === 'ERROR' ? 'bg-rose-500' : 'bg-amber-500 animate-pulse'}`} title={`Status: ${ks.status}`}></span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center flex-wrap gap-2 shrink-0">
