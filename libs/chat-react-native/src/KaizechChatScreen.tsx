@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import {
   KaizechChatEngine,
@@ -17,8 +18,37 @@ import {
   ChatState,
   ChatMessage,
 } from './core';
+import { CuteRobotIcon } from './CuteRobotIcon';
 
 export interface KaizechChatScreenProps extends ChatEngineConfig {
+  /** Custom image URL for the bot avatar/icon */
+  botImage?: string;
+  /** Primary brand accent color (e.g. '#04cd1c') */
+  primaryColor?: string;
+  /** Custom container background color */
+  backgroundColor?: string;
+  /** Custom text color */
+  textColor?: string;
+  /** Custom user message bubble background */
+  userBubbleBg?: string;
+  /** Custom user message bubble text color */
+  userBubbleText?: string;
+  /** Custom assistant message bubble background */
+  assistantBubbleBg?: string;
+  /** Custom assistant message bubble text color */
+  assistantBubbleText?: string;
+  /** Custom bot header title */
+  botTitle?: string;
+  /** Custom welcome message text */
+  welcomeMessage?: string;
+  /** Custom input placeholder text */
+  placeholderText?: string;
+  /** List of suggested question chips */
+  suggestedQuestions?: string[];
+  /** Color theme mode: 'dark' (default) or 'light' */
+  mode?: 'dark' | 'light';
+  /** Set to true to hide the top internal header bar */
+  hideHeader?: boolean;
   style?: any;
 }
 
@@ -29,6 +59,20 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
   theme,
   userMetadata,
   storage,
+  botImage = theme?.botAvatarUrl,
+  primaryColor = theme?.primaryColor || '#04cd1c',
+  backgroundColor = theme?.backgroundColor,
+  textColor = theme?.textColor,
+  userBubbleBg = theme?.userBubbleBg,
+  userBubbleText = theme?.userBubbleText,
+  assistantBubbleBg = theme?.assistantBubbleBg,
+  assistantBubbleText = theme?.assistantBubbleText,
+  botTitle = theme?.botTitle || 'Mrkoon AI Support',
+  welcomeMessage = theme?.welcomeMessage,
+  placeholderText = theme?.placeholderText || 'Ask me anything…',
+  suggestedQuestions = theme?.suggestedQuestions || [],
+  mode = theme?.mode || 'dark',
+  hideHeader = false,
   style,
 }) => {
   const engine = useMemo(() => {
@@ -36,7 +80,15 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
       apiUrl,
       apiKey,
       sessionId,
-      theme,
+      theme: {
+        ...theme,
+        primaryColor,
+        botTitle,
+        welcomeMessage,
+        placeholderText,
+        suggestedQuestions,
+        botAvatarUrl: botImage,
+      },
       userMetadata,
       storage,
     });
@@ -52,8 +104,34 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
     return () => unsub();
   }, [engine]);
 
-  const primaryColor = theme?.primaryColor || '#5B5FEF';
-  const suggestedQuestions = theme?.suggestedQuestions || [];
+  const isDark = mode === 'dark';
+
+  const colors = {
+    bg: backgroundColor || (isDark ? '#0D0F1C' : '#F8FAFC'),
+    headerBg: isDark ? '#161828' : '#FFFFFF',
+    headerTitle: textColor || (isDark ? '#E8EAFF' : '#111827'),
+    border: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E5E7EB',
+    userBubbleBg: userBubbleBg || primaryColor,
+    userBubbleText: userBubbleText || '#FFFFFF',
+    assistantBubbleBg: assistantBubbleBg || (isDark ? '#161828' : '#F1F5F9'),
+    assistantBubbleText: assistantBubbleText || (isDark ? '#E8EAFF' : '#1E293B'),
+    inputBg: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F1F5F9',
+    inputText: isDark ? '#E8EAFF' : '#0F172A',
+    placeholder: isDark ? '#6B6F9A' : '#94A3B8',
+    mutedText: isDark ? '#6B6F9A' : '#64748B',
+  };
+
+  const renderBotAvatar = (size: number) => {
+    if (botImage) {
+      return (
+        <Image
+          source={{ uri: botImage }}
+          style={{ width: size, height: size, borderRadius: size / 2, resizeMode: 'cover' }}
+        />
+      );
+    }
+    return <CuteRobotIcon size={size} />;
+  };
 
   const handleSend = (textToSend?: string) => {
     const text = textToSend || input;
@@ -67,18 +145,16 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
     const isUser = item.sender === 'user';
     return (
       <View style={[styles.msgRow, isUser ? styles.msgRowUser : styles.msgRowAssistant]}>
-        {!isUser && (
-          <View style={[styles.msgAvatar, { backgroundColor: primaryColor }]}>
-            <Text style={{ fontSize: 14 }}>🤖</Text>
-          </View>
-        )}
+        {!isUser && <View style={styles.msgAvatarWrapper}>{renderBotAvatar(24)}</View>}
         <View
           style={[
             styles.messageBubble,
-            isUser ? [styles.userBubble, { backgroundColor: primaryColor }] : styles.assistantBubble,
+            isUser
+              ? [styles.userBubble, { backgroundColor: colors.userBubbleBg }]
+              : [styles.assistantBubble, { backgroundColor: colors.assistantBubbleBg, borderColor: colors.border }],
           ]}
         >
-          <Text style={[styles.messageText, isUser ? styles.userText : styles.assistantText]}>
+          <Text style={[styles.messageText, { color: isUser ? colors.userBubbleText : colors.assistantBubbleText }]}>
             {item.content}
           </Text>
         </View>
@@ -89,23 +165,25 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.container, style]}
+      style={[styles.container, { backgroundColor: colors.bg }, style]}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.avatar, { backgroundColor: primaryColor }]}>
-            <Text style={{ fontSize: 20 }}>🤖</Text>
-          </View>
-          <View>
-            <Text style={styles.headerTitle}>{theme?.botTitle || 'AI Assistant'}</Text>
-            <View style={styles.statusRow}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.headerSubtitle}>Online</Text>
+      {/* Internal Header */}
+      {!hideHeader && (
+        <View style={[styles.header, { backgroundColor: colors.headerBg, borderBottomColor: colors.border }]}>
+          <View style={styles.headerLeft}>
+            <View style={[styles.avatarWrapper, { backgroundColor: primaryColor + '20' }]}>
+              {renderBotAvatar(32)}
+            </View>
+            <View>
+              <Text style={[styles.headerTitle, { color: colors.headerTitle }]}>{botTitle}</Text>
+              <View style={styles.statusRow}>
+                <View style={[styles.onlineDot, { backgroundColor: primaryColor }]} />
+                <Text style={[styles.headerSubtitle, { color: primaryColor }]}>Online</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
+      )}
 
       {/* Message List */}
       <FlatList
@@ -115,20 +193,20 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeEmoji}>🤖</Text>
-            <Text style={styles.welcomeTitle}>Hey there! 👋</Text>
-            <Text style={styles.welcomeSub}>I'm your AI assistant. Ask me anything — I'm here to help!</Text>
+            {renderBotAvatar(54)}
+            <Text style={[styles.welcomeTitle, { color: colors.headerTitle }]}>Hey there! 👋</Text>
+            <Text style={[styles.welcomeSub, { color: colors.mutedText }]}>
+              {welcomeMessage || "I'm your AI assistant. Ask me anything — I'm here to help!"}
+            </Text>
           </View>
         }
         ListFooterComponent={
           state.isTyping || state.isStreaming ? (
             <View style={styles.msgRowAssistant}>
-              <View style={[styles.msgAvatar, { backgroundColor: primaryColor }]}>
-                <Text style={{ fontSize: 14 }}>🤖</Text>
-              </View>
-              <View style={styles.typingBubble}>
-                <ActivityIndicator size="small" color="#00E5C3" />
-                <Text style={styles.typingText}>AI is thinking...</Text>
+              <View style={styles.msgAvatarWrapper}>{renderBotAvatar(24)}</View>
+              <View style={[styles.typingBubble, { backgroundColor: colors.assistantBubbleBg, borderColor: colors.border }]}>
+                <ActivityIndicator size="small" color={primaryColor} />
+                <Text style={[styles.typingText, { color: primaryColor }]}>AI is thinking...</Text>
               </View>
             </View>
           ) : null
@@ -142,7 +220,7 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
             {suggestedQuestions.map((q, idx) => (
               <TouchableOpacity
                 key={idx}
-                style={[styles.chip, { borderColor: primaryColor }]}
+                style={[styles.chip, { borderColor: primaryColor + '60', backgroundColor: primaryColor + '15' }]}
                 onPress={() => handleSend(q)}
                 activeOpacity={0.7}
               >
@@ -154,13 +232,13 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
       )}
 
       {/* Input Area */}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.headerBg, borderTopColor: colors.border }]}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.inputText }]}
           value={input}
           onChangeText={setInput}
-          placeholder={theme?.placeholderText || 'Ask me anything…'}
-          placeholderTextColor="#6B6F9A"
+          placeholder={placeholderText}
+          placeholderTextColor={colors.placeholder}
           onSubmitEditing={() => handleSend()}
         />
         <TouchableOpacity
@@ -173,8 +251,8 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
       </View>
 
       {/* Footer Branding */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Powered by Kaizech Brain AI ✦</Text>
+      <View style={[styles.footer, { backgroundColor: colors.headerBg, borderTopColor: colors.border }]}>
+        <Text style={[styles.footerText, { color: colors.mutedText }]}>Powered by Kaizech Brain AI ✦</Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -183,14 +261,11 @@ export const KaizechChatScreen: React.FC<KaizechChatScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D0F1C',
   },
   header: {
     paddingHorizontal: 18,
     paddingVertical: 14,
-    backgroundColor: '#161828',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.07)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -200,20 +275,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  avatar: {
-    width: 42,
-    height: 42,
+  avatarWrapper: {
+    width: 44,
+    height: 44,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#5B5FEF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
-    elevation: 6,
   },
   headerTitle: {
-    color: '#E8EAFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -227,10 +296,8 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: '#00E5C3',
   },
   headerSubtitle: {
-    color: '#00E5C3',
     fontSize: 11,
     fontWeight: '500',
   },
@@ -244,19 +311,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 40,
   },
-  welcomeEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
   welcomeTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#E8EAFF',
+    marginTop: 12,
     marginBottom: 6,
   },
   welcomeSub: {
     fontSize: 13,
-    color: '#6B6F9A',
     textAlign: 'center',
     maxWidth: 240,
     lineHeight: 18,
@@ -273,7 +335,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: 8,
   },
-  msgAvatar: {
+  msgAvatarWrapper: {
     width: 28,
     height: 28,
     borderRadius: 10,
@@ -293,8 +355,6 @@ const styles = StyleSheet.create({
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#161828',
-    borderColor: 'rgba(255, 255, 255, 0.07)',
     borderWidth: 1,
     borderBottomLeftRadius: 4,
   },
@@ -302,19 +362,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  userText: {
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  assistantText: {
-    color: '#E8EAFF',
-  },
   typingBubble: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#161828',
-    borderColor: 'rgba(255, 255, 255, 0.07)',
     borderWidth: 1,
     borderRadius: 18,
     paddingHorizontal: 14,
@@ -323,7 +374,6 @@ const styles = StyleSheet.create({
   },
   typingText: {
     fontSize: 12,
-    color: '#00E5C3',
   },
   suggestionsContainer: {
     paddingVertical: 8,
@@ -333,7 +383,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    backgroundColor: 'rgba(91, 95, 239, 0.12)',
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -348,21 +397,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#161828',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.07)',
     gap: 10,
   },
   textInput: {
     flex: 1,
     height: 42,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
     borderRadius: 14,
     paddingHorizontal: 15,
     fontSize: 14,
-    color: '#E8EAFF',
   },
   sendButton: {
     width: 42,
@@ -379,12 +423,9 @@ const styles = StyleSheet.create({
   footer: {
     paddingVertical: 8,
     alignItems: 'center',
-    backgroundColor: '#161828',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.07)',
   },
   footerText: {
     fontSize: 10,
-    color: '#6B6F9A',
   },
 });

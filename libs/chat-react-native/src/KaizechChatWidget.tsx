@@ -8,25 +8,26 @@ import {
   StyleSheet,
   Platform,
   StatusBar,
+  Image,
 } from 'react-native';
 import { KaizechChatScreen, KaizechChatScreenProps } from './KaizechChatScreen';
+import { CuteRobotIcon } from './CuteRobotIcon';
 
 export interface KaizechChatWidgetProps extends KaizechChatScreenProps {
-  /**
-   * Optional custom position override. Defaults to 'bottom-right'.
-   */
   position?: 'bottom-right' | 'bottom-left';
-  /**
-   * Duration in ms to display the welcome tooltip next to the robot. Defaults to 3000ms.
-   */
   tooltipDurationMs?: number;
 }
 
 export const KaizechChatWidget: React.FC<KaizechChatWidgetProps> = (props) => {
   const {
     theme,
-    position = theme?.position || 'bottom-right',
+    position = props.theme?.position || 'bottom-right',
     tooltipDurationMs = 3000,
+    mode = props.theme?.mode || 'dark',
+    botImage = props.theme?.botAvatarUrl,
+    primaryColor = props.theme?.primaryColor || '#04cd1c',
+    botTitle = props.theme?.botTitle || 'Mrkoon AI Support',
+    welcomeMessage = props.theme?.welcomeMessage || 'Hello! Welcome to Mrkoon. How can I help you today?',
   } = props;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -34,9 +35,8 @@ export const KaizechChatWidget: React.FC<KaizechChatWidgetProps> = (props) => {
   const tooltipOpacity = useRef(new Animated.Value(0)).current;
   const robotBounce = useRef(new Animated.Value(1)).current;
 
-  const primaryColor = theme?.primaryColor || '#5B5FEF';
-  const welcomeText = theme?.welcomeMessage || 'Hello! How can I help you today?';
   const isLeft = position === 'bottom-left';
+  const isDark = mode === 'dark';
 
   useEffect(() => {
     // Fade in tooltip bubble
@@ -71,6 +71,18 @@ export const KaizechChatWidget: React.FC<KaizechChatWidgetProps> = (props) => {
     setIsOpen(true);
   };
 
+  const renderLauncherAvatar = (size: number) => {
+    if (botImage) {
+      return (
+        <Image
+          source={{ uri: botImage }}
+          style={{ width: size, height: size, borderRadius: size / 2, resizeMode: 'cover' }}
+        />
+      );
+    }
+    return <CuteRobotIcon size={size} />;
+  };
+
   return (
     <>
       {/* Floating Robot Widget Container */}
@@ -87,14 +99,14 @@ export const KaizechChatWidget: React.FC<KaizechChatWidgetProps> = (props) => {
             style={[
               styles.tooltipContainer,
               isLeft ? styles.tooltipLeft : styles.tooltipRight,
-              { opacity: tooltipOpacity },
+              { opacity: tooltipOpacity, backgroundColor: isDark ? '#161828' : '#FFFFFF' },
             ]}
           >
-            <Text style={styles.tooltipText}>{welcomeText}</Text>
+            <Text style={[styles.tooltipText, { color: isDark ? '#E8EAFF' : '#1E293B' }]}>{welcomeMessage}</Text>
           </Animated.View>
         )}
 
-        {/* Cute Robot Floating Button */}
+        {/* Floating Robot Button */}
         <Animated.View style={{ transform: [{ scale: robotBounce }] }}>
           <TouchableOpacity
             activeOpacity={0.85}
@@ -103,9 +115,7 @@ export const KaizechChatWidget: React.FC<KaizechChatWidgetProps> = (props) => {
             accessibilityLabel="Open AI Support Chat"
             accessibilityRole="button"
           >
-            <View style={styles.robotFace}>
-              <Text style={{ fontSize: 28 }}>🤖</Text>
-            </View>
+            {renderLauncherAvatar(40)}
             <View style={styles.onlineBadge} />
           </TouchableOpacity>
         </Animated.View>
@@ -119,32 +129,34 @@ export const KaizechChatWidget: React.FC<KaizechChatWidgetProps> = (props) => {
         onRequestClose={() => setIsOpen(false)}
         statusBarTranslucent={false}
       >
-        <View style={styles.modalContent}>
-          {/* Top Bar with Close Button */}
-          <View style={styles.topCloseBar}>
+        <View style={[styles.modalContent, { backgroundColor: isDark ? '#0D0F1C' : '#F8FAFC' }]}>
+          {/* Single Top Bar with Close Button */}
+          <View style={[styles.topCloseBar, { backgroundColor: isDark ? '#161828' : '#FFFFFF' }]}>
             <View style={styles.headerTitleGroup}>
-              <View style={[styles.miniAvatar, { backgroundColor: primaryColor }]}>
-                <Text style={{ fontSize: 18 }}>🤖</Text>
+              <View style={[styles.miniAvatar, { backgroundColor: primaryColor + '20' }]}>
+                {renderLauncherAvatar(26)}
               </View>
               <View>
-                <Text style={styles.topTitle}>{theme?.botTitle || 'Mrkoon AI Support'}</Text>
+                <Text style={[styles.topTitle, { color: isDark ? '#E8EAFF' : '#111827' }]}>
+                  {botTitle}
+                </Text>
                 <View style={styles.statusRow}>
-                  <View style={styles.greenDot} />
-                  <Text style={styles.statusText}>Online</Text>
+                  <View style={[styles.greenDot, { backgroundColor: primaryColor }]} />
+                  <Text style={[styles.statusText, { color: primaryColor }]}>Online</Text>
                 </View>
               </View>
             </View>
             <TouchableOpacity
               onPress={() => setIsOpen(false)}
-              style={styles.closeBtn}
+              style={[styles.closeBtn, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F3F4F6' }]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Text style={styles.closeIconText}>✕</Text>
+              <Text style={[styles.closeIconText, { color: isDark ? '#6B6F9A' : '#6B7280' }]}>✕</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Chat Screen Component */}
-          <KaizechChatScreen {...props} />
+          {/* Chat Screen (hideHeader=true to eliminate duplicate headers) */}
+          <KaizechChatScreen hideHeader={true} {...props} />
         </View>
       </Modal>
     </>
@@ -162,7 +174,6 @@ const styles = StyleSheet.create({
   tooltipContainer: {
     position: 'absolute',
     bottom: 10,
-    backgroundColor: '#161828',
     borderColor: 'rgba(255, 255, 255, 0.12)',
     borderWidth: 1,
     paddingHorizontal: 14,
@@ -182,7 +193,6 @@ const styles = StyleSheet.create({
     left: 76,
   },
   tooltipText: {
-    color: '#E8EAFF',
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '500',
@@ -193,15 +203,11 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#5B5FEF',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.45,
+    shadowOpacity: 0.35,
     shadowRadius: 10,
     elevation: 10,
-  },
-  robotFace: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   onlineBadge: {
     position: 'absolute',
@@ -216,7 +222,6 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    backgroundColor: '#0D0F1C',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   topCloseBar: {
@@ -225,7 +230,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#161828',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.07)',
   },
@@ -242,7 +246,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topTitle: {
-    color: '#E8EAFF',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -256,10 +259,8 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00E5C3',
   },
   statusText: {
-    color: '#00E5C3',
     fontSize: 11,
     fontWeight: '500',
   },
@@ -267,12 +268,10 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeIconText: {
-    color: '#6B6F9A',
     fontSize: 14,
     fontWeight: '600',
   },

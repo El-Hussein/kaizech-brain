@@ -12,6 +12,12 @@ export interface ChatThemeConfig {
   secondaryColor?: string;
   backgroundColor?: string;
   textColor?: string;
+  userBubbleBg?: string;
+  userBubbleText?: string;
+  assistantBubbleBg?: string;
+  assistantBubbleText?: string;
+  inputBg?: string;
+  inputText?: string;
   botTitle?: string;
   botAvatarUrl?: string;
   welcomeMessage?: string;
@@ -19,6 +25,7 @@ export interface ChatThemeConfig {
   suggestedQuestions?: string[];
   placeholderText?: string;
   autoOpen?: boolean;
+  mode?: 'dark' | 'light';
 }
 
 export interface UserMetadata {
