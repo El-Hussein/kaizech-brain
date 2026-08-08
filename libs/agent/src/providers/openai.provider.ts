@@ -10,7 +10,7 @@ import {
   decryptSecret,
 } from '@kaizech/shared';
 
-function generateFallbackEmbedding(text: string, dimensions: number = 1536): number[] {
+function generateFallbackEmbedding(text: string, dimensions: number = 3072): number[] {
   const vector = new Array(dimensions).fill(0);
   const cleanText = (text || '').toLowerCase().replace(/[^\w\s\u0600-\u06FF]/g, '');
   const words = cleanText.split(/\s+/).filter(Boolean);
@@ -56,7 +56,7 @@ export class OpenAIProvider implements ILLMProvider {
     this.defaultModel = this.configService.get<string>('OPENAI_MODEL', 'gpt-4o-mini');
     this.defaultEmbeddingModel = this.configService.get<string>(
       'OPENAI_EMBEDDING_MODEL',
-      'text-embedding-3-small',
+      'text-embedding-3-large',
     );
   }
 
@@ -295,7 +295,7 @@ export class OpenAIProvider implements ILLMProvider {
     const client = this.getClient(customApiKey);
     if (!client) {
       this.logger.warn('No OpenAI API key found. Using fallback vector embedding.');
-      return generateFallbackEmbedding(text, 1536);
+      return generateFallbackEmbedding(text, 3072);
     }
 
     try {
@@ -323,7 +323,7 @@ export class OpenAIProvider implements ILLMProvider {
     const client = this.getClient(customApiKey);
     if (!client) {
       this.logger.warn('No OpenAI API key found. Using fallback vector embeddings for batch.');
-      return texts.map((t) => generateFallbackEmbedding(t, 1536));
+      return texts.map((t) => generateFallbackEmbedding(t, 3072));
     }
 
     try {
@@ -343,7 +343,7 @@ export class OpenAIProvider implements ILLMProvider {
       return embeddings;
     } catch (error: any) {
       this.logger.warn(`OpenAI Embeddings error (${error.message}). Using fallback vector embeddings for batch.`);
-      return texts.map((t) => generateFallbackEmbedding(t, 1536));
+      return texts.map((t) => generateFallbackEmbedding(t, 3072));
     }
   }
 }

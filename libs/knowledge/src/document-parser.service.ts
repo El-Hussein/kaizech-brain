@@ -68,7 +68,7 @@ export class DocumentParserService {
       .join('\n\n---\n\n');
   }
 
-  chunkText(text: string, chunkSize: number = 1000, overlap: number = 200): string[] {
+  chunkText(text: string, contextSummary: string = '', chunkSize: number = 1000, overlap: number = 200): string[] {
     if (!text || text.trim().length === 0) return [];
 
     const cleanedText = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
@@ -88,7 +88,11 @@ export class DocumentParserService {
 
       const chunk = cleanedText.substring(startIndex, endIndex).trim();
       if (chunk.length > 0) {
-        chunks.push(chunk);
+        if (contextSummary) {
+          chunks.push(`[Document Context: ${contextSummary}]\n\n${chunk}`);
+        } else {
+          chunks.push(chunk);
+        }
       }
 
       startIndex += chunkSize - overlap;

@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { KnowledgeSourceEntity, KnowledgeChunkEntity, TenantEntity } from '@kaizech/database';
+import { KnowledgeSourceEntity, KnowledgeChunkEntity, TenantEntity, KnowledgeNodeEntity, KnowledgeEdgeEntity } from '@kaizech/database';
 import { VectorSearchService } from '@kaizech/rag';
 import { AIProviderFactory } from '@kaizech/agent';
 import { DocumentParserService } from './document-parser.service';
@@ -17,6 +17,10 @@ export class KnowledgeManagerService {
     private readonly sourceRepository: Repository<KnowledgeSourceEntity>,
     @InjectRepository(KnowledgeChunkEntity)
     private readonly chunkRepository: Repository<KnowledgeChunkEntity>,
+    @InjectRepository(KnowledgeNodeEntity)
+    private readonly nodeRepository: Repository<KnowledgeNodeEntity>,
+    @InjectRepository(KnowledgeEdgeEntity)
+    private readonly edgeRepository: Repository<KnowledgeEdgeEntity>,
     @InjectRepository(TenantEntity)
     private readonly tenantRepository: Repository<TenantEntity>,
     private readonly parser: DocumentParserService,
@@ -74,8 +78,35 @@ export class KnowledgeManagerService {
         throw new BadRequestException('Invalid knowledge source input or missing required file/URL/content.');
       }
 
+      // Fetch tenant custom API key if configured
+      let customApiKey = undefined;
+      if (tenantId) {
+        const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
+        customApiKey = tenant?.settings?.openaiApiKey;
+      }
+
+      const provider = this.providerFactory.getProvider('openai');
+
+      // Generate context summary for Contextual Chunking
+      let contextSummary = '';
+      if (extractedText.length > 500) {
+        try {
+          const summaryPrompt = `Please read the following document and provide a brief, 1-3 sentence summary of its main topic, context, and purpose. This will be used to provide context for smaller chunks of this document.\n\nDocument:\n${extractedText.substring(0, 50000)}`;
+          const summaryResponse = await provider.chatCompletion({
+            messages: [{ role: 'user', content: summaryPrompt }],
+            maxTokens: 150,
+            temperature: 0.2,
+            apiKey: customApiKey,
+          });
+          contextSummary = summaryResponse.content || '';
+          this.logger.log(`Generated context summary for '${name}'`);
+        } catch (err: any) {
+          this.logger.warn(`Failed to generate context summary: ${err.message}`);
+        }
+      }
+
       // Chunk text
-      const textChunks = this.parser.chunkText(extractedText, 1000, 200);
+      const textChunks = this.parser.chunkText(extractedText, contextSummary, 1000, 200);
       if (!textChunks || textChunks.length === 0) {
         throw new BadRequestException('Document content is empty or contains no readable text to index.');
       }
@@ -84,15 +115,7 @@ export class KnowledgeManagerService {
         `Generated ${textChunks.length} chunk(s) for knowledge source '${name}' (Tenant ${tenantId}, Industry ${industryId})`,
       );
 
-      // Fetch tenant custom API key if configured
-      let customApiKey = undefined;
-      if (tenantId) {
-        const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
-        customApiKey = tenant?.settings?.openaiApiKey;
-      }
-
       // Generate Embeddings
-      const provider = this.providerFactory.getProvider('openai');
       let embeddings: number[][];
       try {
         embeddings = await provider.generateEmbeddings(textChunks, undefined, customApiKey);
@@ -112,6 +135,55 @@ export class KnowledgeManagerService {
 
       // Store in pgvector database
       await this.vectorSearch.storeChunks(tenantId, savedSource.id, chunksData, industryId);
+
+      // Graph Extraction Logic (Graph RAG)
+      try {
+        const graphPrompt = `Extract key entities (nodes) and their relationships (edges) from the following text. 
+Return ONLY valid JSON with this structure: 
+{ "nodes": [{ "name": "...", "type": "..." }], "edges": [{ "source": "...", "target": "...", "relation": "..." }] }. 
+Text:\n${extractedText.substring(0, 30000)}`;
+
+        const graphResponse = await provider.chatCompletion({
+          messages: [{ role: 'user', content: graphPrompt }],
+          maxTokens: 1000,
+          temperature: 0.1,
+          apiKey: customApiKey,
+        });
+        
+        const content = graphResponse.content?.replace(/```json/g, '').replace(/```/g, '').trim() || '{}';
+        const parsedGraph = JSON.parse(content);
+        
+        const nodeMap = new Map<string, KnowledgeNodeEntity>();
+        
+        if (parsedGraph.nodes && Array.isArray(parsedGraph.nodes)) {
+          for (const nodeData of parsedGraph.nodes) {
+            const node = new KnowledgeNodeEntity();
+            node.name = nodeData.name;
+            node.type = nodeData.type;
+            if (tenantId) node.tenantId = tenantId;
+            const savedNode = await this.nodeRepository.save(node);
+            nodeMap.set(nodeData.name, savedNode);
+          }
+        }
+        
+        if (parsedGraph.edges && Array.isArray(parsedGraph.edges)) {
+          for (const edgeData of parsedGraph.edges) {
+            const sourceNode = nodeMap.get(edgeData.source);
+            const targetNode = nodeMap.get(edgeData.target);
+            if (sourceNode && targetNode) {
+              const edge = new KnowledgeEdgeEntity();
+              edge.sourceNodeId = sourceNode.id;
+              edge.targetNodeId = targetNode.id;
+              edge.relationType = edgeData.relation;
+              if (tenantId) edge.tenantId = tenantId;
+              await this.edgeRepository.save(edge);
+            }
+          }
+        }
+        this.logger.log(`Extracted Graph nodes/edges for '${name}'`);
+      } catch (err: any) {
+        this.logger.warn(`Failed to extract graph data: ${err.message}`);
+      }
 
       // Update source status
       savedSource.status = KnowledgeStatus.COMPLETED;

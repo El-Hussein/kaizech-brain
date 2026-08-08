@@ -11,3 +11,5 @@ export * from './ticket.entity';
 export * from './user-profile.entity';
 export * from './analytics-event.entity';
 export * from './industry.entity';
+export * from './knowledge-node.entity';
+export * from './knowledge-edge.entity';

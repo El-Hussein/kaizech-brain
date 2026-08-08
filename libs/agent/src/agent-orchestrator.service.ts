@@ -89,6 +89,8 @@ export class AgentOrchestratorService {
     return fallbackPhrases.some((phrase) => lower.includes(phrase));
   }
 
+import { RagAgentDagService } from './rag-agent-dag.service';
+
   constructor(
     private readonly providerFactory: AIProviderFactory,
     private readonly promptBuilder: PromptBuilderService,
@@ -96,6 +98,7 @@ export class AgentOrchestratorService {
     private readonly userProfileService: UserProfileService,
     private readonly toolExecutor: ToolExecutorService,
     private readonly vectorSearch: VectorSearchService,
+    private readonly ragAgentDag: RagAgentDagService,
   ) {}
 
   async processMessage(input: AgentProcessInput): Promise<AgentProcessResult> {
@@ -326,79 +329,18 @@ export class AgentOrchestratorService {
       }
     }
 
-    // 6. RAG: Vector Search for relevant Knowledge
-    let knowledgeTexts: string[] = [];
-    try {
-      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 3, 0.4);
-      knowledgeTexts = chunks.map((c) => c.content);
-    } catch (err: any) {
-      this.logger.warn(`Knowledge retrieval warning: ${err.message}`);
-    }
-
-    // 6b. Check Low Knowledge Auto Handoff Rule
-    const autoHandoffOnLowKnowledge = tenant.settings?.autoHandoffOnLowKnowledge === true;
-    if (autoHandoffOnLowKnowledge && knowledgeTexts.length === 0 && !directMatch) {
-      this.logger.log(
-        `Low knowledge context (0 sources found) triggered automatic handoff for conversation ${conversation.id}`,
-      );
-
-      await this.memoryService.handoverConversation(conversation.id);
-
-      const handoffNotice =
-        tenant.settings?.handoffMessage ||
-        '⚠️ AI was unable to find verified knowledge to answer your request. Handed off to human support.';
-
-      await this.memoryService.addMessage(
-        conversation.id,
-        MessageRole.SYSTEM,
-        handoffNotice,
-        channelType,
-      );
-
-      return {
-        response: handoffNotice,
-        conversationId: conversation.id,
-        status: ConversationStatus.HANDED_OFF,
-        toolCallsExecuted: [],
-        knowledgeSourcesUsed: 0,
-        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-        responseTimeMs: Date.now() - startTime,
-        handedOff: true,
-        handoffReason: 'LOW_KNOWLEDGE_CONFIDENCE',
-        limit: maxLimit,
-        messageCount: currentMessageCount,
-        limitExceeded: isLimitExceeded,
-      };
-    }
-
-    // 7. Build System Prompt
-    const systemPrompt = await this.promptBuilder.buildSystemPrompt({
-      tenant,
-      userProfile,
-      summary,
-      knowledgeContext: knowledgeTexts,
-      currentLanguage: userProfile.preferredLanguage,
-    });
-
-    const llmMessages: ChatMessage[] = [
-      { role: 'system', content: systemPrompt },
-      ...recentMessages,
-    ];
-
-    // 8. Call LLM
+    // 6 & 7 & 8 & 9. RAG + Tool Loop using LangGraph DAG
+    let finalResponse = '';
     const totalTokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
-    const toolCallsExecuted: Array<{ name: string; args: any; result: any }> = [];
-
-    let llmResult: ChatCompletionResult;
+    const toolCallsExecuted: any[] = [];
+    
+    const historyForDag = recentMessages.map(m => ({ role: m.role, content: m.content || '' }));
+    
     try {
-      llmResult = await provider.chatCompletion({
-        messages: llmMessages,
-        tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-        apiKey: customApiKey,
-        model: customModel,
-      });
+      this.logger.log(`Invoking RagAgentDagService for conversation ${conversation.id}`);
+      finalResponse = await this.ragAgentDag.runAgent(tenant, userMessage, historyForDag);
     } catch (err: any) {
-      this.logger.error(`AI completion error (${activeProviderName}): ${err.message}`);
+      this.logger.error(`RagAgentDagService execution error: ${err.message}`);
       const autoHandoffOnError = tenant.settings?.autoHandoffOnError !== false;
       if (autoHandoffOnError) {
         await this.memoryService.handoverConversation(conversation.id);
@@ -418,7 +360,7 @@ export class AgentOrchestratorService {
           conversationId: conversation.id,
           status: ConversationStatus.HANDED_OFF,
           toolCallsExecuted: [],
-          knowledgeSourcesUsed: knowledgeTexts.length,
+          knowledgeSourcesUsed: 0,
           tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
           responseTimeMs: Date.now() - startTime,
           handedOff: true,
@@ -429,13 +371,13 @@ export class AgentOrchestratorService {
         };
       }
 
-      const errResponse = `⚠️ AI Provider (${activeProviderName.toUpperCase()}) Error: ${err.message}. Please verify your API key in tenant settings or environment variables.`;
+      const errResponse = `⚠️ AI Error: ${err.message}. Please verify your API key in tenant settings or environment variables.`;
       return {
         response: errResponse,
         conversationId: conversation.id,
         status: ConversationStatus.ACTIVE,
         toolCallsExecuted: [],
-        knowledgeSourcesUsed: knowledgeTexts.length,
+        knowledgeSourcesUsed: 0,
         tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
         responseTimeMs: Date.now() - startTime,
         handedOff: false,
@@ -445,68 +387,8 @@ export class AgentOrchestratorService {
       };
     }
 
-    totalTokenUsage.promptTokens += llmResult.usage.promptTokens;
-    totalTokenUsage.completionTokens += llmResult.usage.completionTokens;
-    totalTokenUsage.totalTokens += llmResult.usage.totalTokens;
-
-    // 9. Handle Tool Calls Loop (up to 3 turns)
-    let turns = 0;
-    while (llmResult.toolCalls && llmResult.toolCalls.length > 0 && turns < 3) {
-      turns++;
-      this.logger.log(`LLM requested ${llmResult.toolCalls.length} tool call(s) (Turn ${turns})`);
-
-      llmMessages.push({
-        role: 'assistant',
-        content: llmResult.content || '',
-        toolCalls: llmResult.toolCalls,
-      });
-
-      for (const toolCall of llmResult.toolCalls) {
-        const toolName = toolCall.function.name;
-        let args: Record<string, any> = {};
-
-        try {
-          args = JSON.parse(toolCall.function.arguments || '{}');
-        } catch {
-          args = {};
-        }
-
-        let result: any;
-        try {
-          result = await this.toolExecutor.executeTool(tenant, toolName, args);
-        } catch (error: any) {
-          const errorMsg = error.response?.data?.message || error.message || `Tool '${toolName}' execution failed`;
-          result = { error: errorMsg };
-        }
-
-        toolCallsExecuted.push({ name: toolName, args, result });
-
-        llmMessages.push({
-          role: 'tool',
-          content: typeof result === 'string' ? result : JSON.stringify(result),
-          toolCallId: toolCall.id,
-        });
-      }
-
-      try {
-        llmResult = await provider.chatCompletion({
-          messages: llmMessages,
-          tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-          apiKey: customApiKey,
-          model: customModel,
-        });
-      } catch (err: any) {
-        this.logger.error(`AI completion error in tool loop: ${err.message}`);
-        break;
-      }
-
-      totalTokenUsage.promptTokens += llmResult.usage.promptTokens;
-      totalTokenUsage.completionTokens += llmResult.usage.completionTokens;
-      totalTokenUsage.totalTokens += llmResult.usage.totalTokens;
-    }
-
-    const finalResponse = llmResult.content || 'I have completed your request.';
     const responseTimeMs = Date.now() - startTime;
+    const knowledgeTexts: string[] = []; // Tracked internally by DAG now
 
     // 9b. Check Fallback / Unanswerable Auto-Handoff Rule
     const autoHandoffOnUncertainty = tenant.settings?.autoHandoffOnUncertainty !== false;

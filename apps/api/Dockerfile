@@ -8,6 +8,7 @@ COPY libs ./libs
 COPY apps/api ./apps/api
 
 RUN pnpm install
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter @kaizech/api build
 
 FROM node:22-alpine AS runner

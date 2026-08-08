@@ -13,6 +13,8 @@ import { TicketEntity } from './entities/ticket.entity';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { AnalyticsEventEntity } from './entities/analytics-event.entity';
 import { IndustryEntity } from './entities/industry.entity';
+import { KnowledgeNodeEntity } from './entities/knowledge-node.entity';
+import { KnowledgeEdgeEntity } from './entities/knowledge-edge.entity';
 
 const entities = [
   TenantEntity,
@@ -27,6 +29,8 @@ const entities = [
   UserProfileEntity,
   AnalyticsEventEntity,
   IndustryEntity,
+  KnowledgeNodeEntity,
+  KnowledgeEdgeEntity,
 ];
 
 @Global()
