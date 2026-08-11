@@ -42,8 +42,8 @@ export class LearningsCronService {
     }
 
     for (const conv of conversations) {
-      // Skip if conversation is too short and has no explicit rating
-      if (!conv.satisfactionScore && conv.messageCount < 4) {
+      // Skip if conversation is too short to learn anything
+      if (conv.messageCount < 4) {
         conv.isLearned = true;
         await this.conversationRepo.save(conv);
         continue;
@@ -75,6 +75,8 @@ export class LearningsCronService {
       rule: z.string().describe('The extracted learning rule for the agent, if hasLearning is true'),
       category: z.string().describe('The category of the learning (e.g. tone, fact, policy)'),
       confidenceScore: z.number().min(0).max(100).describe('Confidence score in this extraction (0-100)'),
+      inferredSatisfactionScore: z.number().min(1).max(5).describe('Infer a satisfaction score out of 5 based on how happy/satisfied the user seems at the end.'),
+      inferredFeedback: z.string().describe('Briefly summarize why you gave this inferred score.'),
     });
 
     const customApiKey = conversation.tenant?.settings?.openaiApiKey || process.env.OPENAI_API_KEY;
@@ -90,14 +92,13 @@ export class LearningsCronService {
 
     const prompt = `
 You are an AI Analyst. Review the following conversation transcript. 
-The user gave a satisfaction score of ${conversation.satisfactionScore || 'N/A'}/5.
-User Feedback: ${conversation.satisfactionFeedback || 'None'}
-Tags: ${JSON.stringify(conversation.metadata?.feedbackTags || [])}
+If the user provided an explicit rating, it is: ${conversation.satisfactionScore || 'N/A'}/5.
 
-Analyze the conversation to extract a concise learning rule that the agent should follow in the future.
-- If the score is 4 or 5, extract what the agent did well.
-- If the score is 1, 2, or 3, extract the mistake and how the agent should correct it.
-- If there is no score, look for instances where the user corrects the agent, provides a specific fact, or expresses frustration.
+Analyze the conversation and do two things:
+1. Infer a satisfaction score (1-5) based on keywords, tone, and whether the user got their answer. If they asked follow-ups, expressed frustration, or had to correct the agent, score lower (1-3). If they thanked the agent or seemed satisfied, score higher (4-5).
+2. Extract a concise learning rule that the agent should follow in the future.
+- Look for instances where the user corrects the agent, provides a specific fact, or expresses frustration.
+- If the score is low, extract the mistake and how the agent should correct it.
 - If there is nothing meaningful to learn (just normal chatter or small talk), set hasLearning to false.
 Keep the rule under 2 sentences.
 
@@ -120,6 +121,9 @@ ${transcript}
       await this.agentLearningRepo.save(learning);
     }
 
+    // Save the inferred score so the dashboard can display it later
+    conversation.satisfactionScore = conversation.satisfactionScore || result.inferredSatisfactionScore;
+    conversation.satisfactionFeedback = conversation.satisfactionFeedback || result.inferredFeedback;
     conversation.isLearned = true;
     await this.conversationRepo.save(conversation);
   }
