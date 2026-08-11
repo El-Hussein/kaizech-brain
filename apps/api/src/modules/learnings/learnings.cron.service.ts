@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { ConversationEntity, MessageEntity, AgentLearningEntity } from '@kaizech/database';
 import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ export class LearningsCronService {
     
     // Fetch conversations marked for learning in chunks of 50
     const limit = 50;
-    const whereClause: any = { isLearned: false };
+    const whereClause: FindOptionsWhere<ConversationEntity> = { isLearned: false };
     if (tenantId) {
       whereClause.tenantId = tenantId;
     }

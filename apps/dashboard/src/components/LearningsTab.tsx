@@ -19,7 +19,7 @@ interface LearningRule {
   suggestedRule: string;
   confidenceScore: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  metadata?: any;
+  metadata?: { reasoning?: string; [key: string]: unknown };
   createdAt: string;
 }
 
@@ -32,7 +32,7 @@ export const LearningsTab: React.FC = () => {
   const [extracting, setExtracting] = useState(false);
   
   // Undo snackbar state
-  const [undoSnack, setUndoSnack] = useState<{ id: string; timeout: any } | null>(null);
+  const [undoSnack, setUndoSnack] = useState<{ id: string; timeout: ReturnType<typeof setTimeout> } | null>(null);
 
   // Cleanup timeout on unmount to execute immediately
   useEffect(() => {
