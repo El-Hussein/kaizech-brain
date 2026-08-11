@@ -39,7 +39,7 @@ export const LearningsTab: React.FC = () => {
     return () => {
       if (undoSnack) {
         clearTimeout(undoSnack.timeout);
-        axios.post(`/learnings/${undoSnack.id}/reject`).catch(err => console.error('Failed to reject on unmount:', err));
+        axios.post(`/api/v1/learnings/${undoSnack.id}/reject`).catch(err => console.error('Failed to reject on unmount:', err));
       }
     };
   }, [undoSnack]);
@@ -47,7 +47,7 @@ export const LearningsTab: React.FC = () => {
   const fetchLearnings = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/learnings');
+      const res = await axios.get('/api/v1/learnings');
       setLearnings(res.data);
     } catch (err) {
       console.error('Failed to fetch learnings:', err);
@@ -63,7 +63,7 @@ export const LearningsTab: React.FC = () => {
   const handleApprove = async (id: string, isEdited: boolean) => {
     try {
       const modifiedRule = editedRules[id];
-      await axios.post(`/learnings/${id}/approve`, { modifiedRule });
+      await axios.post(`/api/v1/learnings/${id}/approve`, { modifiedRule });
       // Update local state to APPROVED
       setLearnings(prev => prev.map(l => l.id === id ? { ...l, status: 'APPROVED', suggestedRule: modifiedRule || l.suggestedRule } : l));
     } catch (err) {
@@ -74,7 +74,7 @@ export const LearningsTab: React.FC = () => {
   const handleTriggerExtraction = async () => {
     try {
       setExtracting(true);
-      await axios.post('/learnings/trigger-extraction');
+      await axios.post('/api/v1/learnings/trigger-extraction');
       // Briefly show extracting state, then re-fetch
       setTimeout(() => {
         fetchLearnings();
@@ -93,7 +93,7 @@ export const LearningsTab: React.FC = () => {
       
       const timeout = setTimeout(async () => {
         // Execute API call after 5s if not undone
-        await axios.post(`/learnings/${id}/reject`);
+        await axios.post(`/api/v1/learnings/${id}/reject`);
         setUndoSnack(null);
       }, 5000);
 

@@ -168,7 +168,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (session) {
-      axios.get<LearningRule[]>('/learnings').then(res => {
+      axios.get<LearningRule[]>('/api/v1/learnings').then(res => {
         const count = res.data.filter(l => l.status === 'PENDING').length;
         setPendingLearningsCount(count);
       }).catch(err => console.error('Error fetching learnings count:', err));
