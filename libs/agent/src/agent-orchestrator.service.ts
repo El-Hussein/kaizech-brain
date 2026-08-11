@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { TenantEntity } from '@kaizech/database';
 import { PromptBuilderService } from '@kaizech/prompts';
 import { MemoryService, UserProfileService } from '@kaizech/memory';
 import { ToolExecutorService } from '@kaizech/tools';
 import { VectorSearchService } from '@kaizech/rag';
+import { RagAgentDagService } from './rag-agent-dag.service';
 import { AIProviderFactory } from './providers/ai-provider.factory';
 import { ChatMessage, MessageRole, ToolCall, ConversationStatus, ChatCompletionResult } from '@kaizech/shared';
 
@@ -88,8 +89,6 @@ export class AgentOrchestratorService {
     ];
     return fallbackPhrases.some((phrase) => lower.includes(phrase));
   }
-
-import { RagAgentDagService } from './rag-agent-dag.service';
 
   constructor(
     private readonly providerFactory: AIProviderFactory,
