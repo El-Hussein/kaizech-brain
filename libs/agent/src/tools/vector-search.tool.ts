@@ -9,13 +9,13 @@ export const createVectorSearchTool = (
   providerFactory: AIProviderFactory,
   customApiKey?: string
 ) => {
-  return new DynamicStructuredTool({
+  return new (DynamicStructuredTool as any)({
     name: 'vector_search',
     description: 'Search the knowledge base for semantic matches to the user query. Use this for general information retrieval from documents.',
-    schema: z.object({
-      query: z.string().describe('The search query to find information about.'),
+    schema: (z as any).object({
+      query: (z as any).string().describe('The search query to find information about.'),
     }),
-    func: async ({ query }) => {
+    func: async ({ query }: { query: string }) => {
       try {
         const provider = providerFactory.getProvider('openai');
         const embedding = await provider.generateEmbedding(query, undefined, customApiKey);
@@ -31,5 +31,5 @@ export const createVectorSearchTool = (
         return `Error searching vector store: ${err.message}`;
       }
     },
-  }) as any;
+  });
 };

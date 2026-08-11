@@ -6,13 +6,13 @@ export const createGraphSearchTool = (
   tenantId: string,
   dataSource: DataSource
 ) => {
-  return new DynamicStructuredTool({
+  return new (DynamicStructuredTool as any)({
     name: 'graph_search',
     description: 'Search the knowledge graph for relationships between entities. Use this to find connections, people, organizations, or concepts that are linked together.',
-    schema: z.object({
-      entityName: z.string().describe('The name of the entity to search for in the graph.'),
+    schema: (z as any).object({
+      entityName: (z as any).string().describe('The name of the entity to search for in the graph.'),
     }),
-    func: async ({ entityName }) => {
+    func: async ({ entityName }: { entityName: string }) => {
       try {
         // Find edges where the source or target matches the entity (case insensitive)
         const edges = await dataSource.query(`
@@ -41,5 +41,5 @@ export const createGraphSearchTool = (
         return `Error searching graph store: ${err.message}`;
       }
     },
-  }) as any;
+  });
 };

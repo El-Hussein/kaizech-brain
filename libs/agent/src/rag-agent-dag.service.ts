@@ -35,7 +35,7 @@ export class RagAgentDagService {
     const graphTool = createGraphSearchTool(tenant.id, this.dataSource);
     
     const tools = [vectorTool, graphTool] as any[];
-    const toolNode = new ToolNode(tools);
+    const toolNode = new (ToolNode as any)(tools);
 
     const model = new ChatOpenAI({
       apiKey: customApiKey,
