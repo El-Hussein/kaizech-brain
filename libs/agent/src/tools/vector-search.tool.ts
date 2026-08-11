@@ -31,5 +31,5 @@ export const createVectorSearchTool = (
         return `Error searching vector store: ${err.message}`;
       }
     },
-  });
+  }) as any;
 };

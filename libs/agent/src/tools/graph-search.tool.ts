@@ -41,5 +41,5 @@ export const createGraphSearchTool = (
         return `Error searching graph store: ${err.message}`;
       }
     },
-  });
+  }) as any;
 };
