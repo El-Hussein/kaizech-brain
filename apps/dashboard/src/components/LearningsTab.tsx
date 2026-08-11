@@ -29,6 +29,7 @@ export const LearningsTab: React.FC = () => {
   const [subTab, setSubTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
   const [editedRules, setEditedRules] = useState<Record<string, string>>({});
   const [expandedContexts, setExpandedContexts] = useState<Record<string, boolean>>({});
+  const [extracting, setExtracting] = useState(false);
   
   // Undo snackbar state
   const [undoSnack, setUndoSnack] = useState<{ id: string; timeout: any } | null>(null);
@@ -57,6 +58,21 @@ export const LearningsTab: React.FC = () => {
       setLearnings(prev => prev.map(l => l.id === id ? { ...l, status: 'APPROVED', suggestedRule: modifiedRule || l.suggestedRule } : l));
     } catch (err) {
       console.error('Failed to approve:', err);
+    }
+  };
+
+  const handleTriggerExtraction = async () => {
+    try {
+      setExtracting(true);
+      await axios.post('/learnings/trigger-extraction');
+      // Briefly show extracting state, then re-fetch
+      setTimeout(() => {
+        fetchLearnings();
+        setExtracting(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to trigger extraction:', err);
+      setExtracting(false);
     }
   };
 
@@ -110,7 +126,7 @@ export const LearningsTab: React.FC = () => {
       </div>
 
       {/* Sub-tabs */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '1px solid var(--border-glass)', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '1px solid var(--border-glass)', paddingBottom: '12px', alignItems: 'center' }}>
         {(['PENDING', 'APPROVED', 'REJECTED'] as const).map(tab => (
           <button
             key={tab}
@@ -143,6 +159,20 @@ export const LearningsTab: React.FC = () => {
             )}
           </button>
         ))}
+
+        <div style={{ marginLeft: 'auto' }}>
+          <Button 
+            variant="secondary" 
+            onClick={handleTriggerExtraction} 
+            disabled={extracting}
+          >
+            {extracting ? (
+              <><RotateCcw size={16} className="animate-spin" /> Extracting...</>
+            ) : (
+              <><BrainCircuit size={16} /> Force AI Learning Now</>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* List */}

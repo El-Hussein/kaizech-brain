@@ -6,6 +6,7 @@ import { AgentLearningEntity, AgentLearningStatus } from '@kaizech/database';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { TenantContext, ITenantContext } from '@kaizech/shared';
 import { LearningsService } from './learnings.service';
+import { LearningsCronService } from './learnings.cron.service';
 
 @ApiTags('Learnings')
 @ApiSecurity('api-key')
@@ -16,6 +17,7 @@ export class LearningsController {
     @InjectRepository(AgentLearningEntity)
     private readonly learningRepo: Repository<AgentLearningEntity>,
     private readonly learningsService: LearningsService,
+    private readonly learningsCronService: LearningsCronService,
   ) {}
 
   @Get()
@@ -48,5 +50,15 @@ export class LearningsController {
   @ApiOperation({ summary: 'Reject a learning rule' })
   async reject(@Param('id') id: string) {
     return this.learningsService.rejectLearning(id);
+  }
+
+  @Post('trigger-extraction')
+  @ApiOperation({ summary: 'Manually trigger learning extraction' })
+  async triggerExtraction() {
+    // Run it asynchronously so we don't block the HTTP response
+    this.learningsCronService.handleLearningExtraction().catch(err => {
+      console.error('Error in manual learning extraction:', err);
+    });
+    return { success: true, message: 'Extraction started in the background.' };
   }
 }
