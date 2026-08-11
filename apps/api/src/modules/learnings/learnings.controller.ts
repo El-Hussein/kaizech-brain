@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { AgentLearningEntity, AgentLearningStatus } from '@kaizech/database';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { TenantContext, ITenantContext } from '@kaizech/shared';
@@ -26,7 +26,7 @@ export class LearningsController {
     @TenantContext() tenant: ITenantContext,
     @Query('status') status?: AgentLearningStatus
   ) {
-    const whereClause: any = { tenantId: tenant.tenantId };
+    const whereClause: FindOptionsWhere<AgentLearningEntity> = { tenantId: tenant.tenantId };
     if (status) {
       whereClause.status = status;
     }
@@ -54,9 +54,9 @@ export class LearningsController {
 
   @Post('trigger-extraction')
   @ApiOperation({ summary: 'Manually trigger learning extraction' })
-  async triggerExtraction() {
+  async triggerExtraction(@TenantContext() tenant: ITenantContext) {
     // Run it asynchronously so we don't block the HTTP response
-    this.learningsCronService.handleLearningExtraction().catch(err => {
+    this.learningsCronService.handleLearningExtraction(tenant.tenantId).catch(err => {
       console.error('Error in manual learning extraction:', err);
     });
     return { success: true, message: 'Extraction started in the background.' };

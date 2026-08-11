@@ -29,6 +29,10 @@ import { WidgetConfiguratorTab } from './components/WidgetConfiguratorTab';
 import { LearningsTab } from './components/LearningsTab';
 import { Button } from './components/ui/Button';
 
+interface LearningRule {
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
 axios.defaults.baseURL =
   (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
 
@@ -164,8 +168,8 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (session) {
-      axios.get('/learnings').then(res => {
-        const count = res.data.filter((l: any) => l.status === 'PENDING').length;
+      axios.get<LearningRule[]>('/learnings').then(res => {
+        const count = res.data.filter(l => l.status === 'PENDING').length;
         setPendingLearningsCount(count);
       }).catch(err => console.error('Error fetching learnings count:', err));
     }

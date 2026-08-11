@@ -20,15 +20,18 @@ export class LearningsCronService {
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleLearningExtraction() {
-    this.logger.log('Starting learning extraction job...');
+  async handleLearningExtraction(tenantId?: string) {
+    this.logger.log(`Starting learning extraction job${tenantId ? ` for tenant ${tenantId}` : ''}...`);
     
     // Fetch conversations marked for learning in chunks of 50
     const limit = 50;
+    const whereClause: any = { isLearned: false };
+    if (tenantId) {
+      whereClause.tenantId = tenantId;
+    }
+
     const conversations = await this.conversationRepo.find({
-      where: {
-        isLearned: false,
-      },
+      where: whereClause,
       relations: ['tenant'],
       take: limit,
     });

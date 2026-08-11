@@ -34,6 +34,16 @@ export const LearningsTab: React.FC = () => {
   // Undo snackbar state
   const [undoSnack, setUndoSnack] = useState<{ id: string; timeout: any } | null>(null);
 
+  // Cleanup timeout on unmount to execute immediately
+  useEffect(() => {
+    return () => {
+      if (undoSnack) {
+        clearTimeout(undoSnack.timeout);
+        axios.post(`/learnings/${undoSnack.id}/reject`).catch(err => console.error('Failed to reject on unmount:', err));
+      }
+    };
+  }, [undoSnack]);
+
   const fetchLearnings = async () => {
     try {
       setLoading(true);
