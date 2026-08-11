@@ -1,9 +1,10 @@
-import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { TenantEntity } from './tenant.entity';
 import { MessageEntity } from './message.entity';
 
 @Entity('conversations')
+@Index('idx_conv_unlearned', ['tenantId', 'isLearned'])
 export class ConversationEntity extends BaseEntity {
   @Column({ name: 'tenant_id' })
   tenantId: string;
@@ -31,6 +32,15 @@ export class ConversationEntity extends BaseEntity {
 
   @Column({ nullable: true, name: 'last_message_at' })
   lastMessageAt: Date;
+
+  @Column({ name: 'satisfaction_score', nullable: true, type: 'int' })
+  satisfactionScore: number;
+
+  @Column({ name: 'satisfaction_feedback', nullable: true, type: 'text' })
+  satisfactionFeedback: string;
+
+  @Column({ name: 'is_learned', default: false })
+  isLearned: boolean;
 
   @ManyToOne(() => TenantEntity, (tenant) => tenant.conversations)
   @JoinColumn({ name: 'tenant_id' })

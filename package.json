@@ -38,6 +38,7 @@
     "@langchain/core": "^0.3.80",
     "@langchain/langgraph": "^0.2.74",
     "@langchain/openai": "^0.3.17",
+    "openai": "^4.104.0",
     "zod": "^3.25.76"
   }
 }

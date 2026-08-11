@@ -363,6 +363,47 @@ export class ConversationsController {
     return savedMsg;
   }
 
+  @Post(':id/satisfaction')
+  @ApiOperation({ summary: 'Submit user satisfaction rating for a conversation' })
+  async submitSatisfaction(
+    @TenantContext() tenant: ITenantContext,
+    @Param('id') id: string,
+    @Body() body: { score: number; feedback?: string; tags?: string[] },
+  ) {
+    if (body.score < 1 || body.score > 5) {
+      throw new BadRequestException('Satisfaction score must be between 1 and 5');
+    }
+
+    let conversation = await this.conversationRepo.findOne({
+      where: { id, tenantId: tenant.tenantId },
+    });
+
+    if (!conversation) {
+      conversation = await this.conversationRepo.findOne({
+        where: { id },
+      });
+    }
+
+    if (!conversation) {
+      throw new NotFoundException(`Conversation with id '${id}' not found`);
+    }
+
+    conversation.satisfactionScore = body.score;
+    conversation.satisfactionFeedback = body.feedback || '';
+    
+    if (body.tags && body.tags.length > 0) {
+      conversation.metadata = {
+        ...(conversation.metadata || {}),
+        feedbackTags: body.tags,
+      };
+    }
+
+    conversation.isLearned = false; // Mark for extraction by the cron job
+    await this.conversationRepo.save(conversation);
+
+    return { success: true, conversationId: id, score: body.score };
+  }
+
   @Patch(':id/limit')
   @ApiOperation({ summary: 'Update per-conversation message limit (0 = unlimited)' })
   async updateLimit(

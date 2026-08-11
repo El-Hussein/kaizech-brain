@@ -15,6 +15,7 @@ import { AnalyticsEventEntity } from './entities/analytics-event.entity';
 import { IndustryEntity } from './entities/industry.entity';
 import { KnowledgeNodeEntity } from './entities/knowledge-node.entity';
 import { KnowledgeEdgeEntity } from './entities/knowledge-edge.entity';
+import { AgentLearningEntity } from './entities/agent-learning.entity';
 
 const entities = [
   TenantEntity,
@@ -31,6 +32,7 @@ const entities = [
   IndustryEntity,
   KnowledgeNodeEntity,
   KnowledgeEdgeEntity,
+  AgentLearningEntity,
 ];
 
 @Global()

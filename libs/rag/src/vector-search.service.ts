@@ -283,4 +283,54 @@ export class VectorSearchService {
       return [];
     }
   }
+
+  async searchLearnings(
+    tenantId: string,
+    queryEmbedding: number[],
+    topK: number = 3,
+    minSimilarity: number = 0.60,
+  ): Promise<VectorSearchResult[]> {
+    try {
+      const formattedVector = `[${queryEmbedding.join(',')}]`;
+
+      const rawResults = await this.dataSource.query(
+        `
+        SELECT 
+          id, 
+          source_id as "sourceId", 
+          content, 
+          chunk_index as "chunkIndex", 
+          metadata,
+          1 - (embedding <=> $1::vector) as similarity
+        FROM knowledge_chunks
+        WHERE tenant_id = $2
+          AND embedding IS NOT NULL
+          AND metadata->>'sourceType' = 'learning'
+        ORDER BY embedding <=> $1::vector ASC
+        LIMIT $3
+        `,
+        [formattedVector, tenantId, topK],
+      );
+
+      const filtered = rawResults
+        .filter((row: any) => parseFloat(row.similarity) >= minSimilarity)
+        .map((row: any) => ({
+          id: row.id,
+          sourceId: row.sourceId,
+          content: row.content,
+          chunkIndex: row.chunkIndex,
+          similarity: parseFloat(row.similarity),
+          metadata: row.metadata,
+        }));
+
+      this.logger.debug(
+        `Learnings search for tenant '${tenantId}' returned ${filtered.length} matches above threshold ${minSimilarity}`,
+      );
+
+      return filtered;
+    } catch (error: any) {
+      this.logger.error(`Learnings vector search failed: ${error.message}`, error.stack);
+      return [];
+    }
+  }
 }
