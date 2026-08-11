@@ -184,6 +184,12 @@ Header: x-api-key: kb_demo_tenant_key
    - Each card under **Active Registered Tools** includes an **`Edit`** button.
    - Clicking **`Edit`** populates the tool registration form so you can update the URL endpoint, HTTP method, description, or parameter schema seamlessly.
 
+3. **AI Memory & Rules**:
+   - The AI natively learns from chat conversations and auto-infers user satisfaction.
+   - Displays autonomous rules extracted by the AI in the **AI Memory & Rules** tab.
+   - Allows human operators to review, edit, approve, or reject these AI-learned rules to enforce long-term memory.
+   - Includes a "Force AI Learning Now" feature to manually trigger extraction from recent unlearned conversations.
+
 ---
 
 ## 6. Multi-Platform AI Chatbot SDKs & Embed Options
