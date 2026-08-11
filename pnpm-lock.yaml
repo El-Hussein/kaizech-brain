@@ -174,7 +174,7 @@ importers:
         version: 1.12.0
       openai:
         specifier: ^4.52.0
-        version: 4.104.0(ws@8.21.1)(zod@4.4.3)
+        version: 4.104.0(ws@8.21.1)(zod@3.25.76)
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -203,8 +203,8 @@ importers:
         specifier: ^0.18.5
         version: 0.18.5
       zod:
-        specifier: ^4.4.3
-        version: 4.4.3
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@nestjs/cli':
         specifier: ^10.4.0
@@ -6089,9 +6089,6 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
-
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -11018,21 +11015,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  openai@4.104.0(ws@8.21.1)(zod@4.4.3):
-    dependencies:
-      '@types/node': 18.19.130
-      '@types/node-fetch': 2.6.13
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0
-    optionalDependencies:
-      ws: 8.21.1
-      zod: 4.4.3
-    transitivePeerDependencies:
-      - encoding
-
   option@0.2.4: {}
 
   ora@5.4.1:
@@ -12486,5 +12468,3 @@ snapshots:
   zod@3.23.8: {}
 
   zod@3.25.76: {}
-
-  zod@4.4.3: {}
