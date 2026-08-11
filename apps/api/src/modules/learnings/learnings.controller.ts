@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -19,13 +19,18 @@ export class LearningsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'List pending agent learnings' })
-  async findPending(@TenantContext() tenant: ITenantContext) {
+  @ApiOperation({ summary: 'List agent learnings by status' })
+  async findLearnings(
+    @TenantContext() tenant: ITenantContext,
+    @Query('status') status?: AgentLearningStatus
+  ) {
+    const whereClause: any = { tenantId: tenant.tenantId };
+    if (status) {
+      whereClause.status = status;
+    }
+    
     return this.learningRepo.find({
-      where: { 
-        tenantId: tenant.tenantId,
-        status: AgentLearningStatus.PENDING 
-      },
+      where: whereClause,
       order: { createdAt: 'DESC' },
     });
   }

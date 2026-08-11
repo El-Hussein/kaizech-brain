@@ -14,6 +14,7 @@ import {
   UserCheck,
   ShieldCheck,
   Code2,
+  BrainCircuit,
 } from 'lucide-react';
 import axios from 'axios';
 import { LoginPage } from './components/LoginPage';
@@ -25,6 +26,7 @@ import { PlaygroundTab } from './components/PlaygroundTab';
 import { ConversationsTab } from './components/ConversationsTab';
 import { SettingsTab } from './components/SettingsTab';
 import { WidgetConfiguratorTab } from './components/WidgetConfiguratorTab';
+import { LearningsTab } from './components/LearningsTab';
 import { Button } from './components/ui/Button';
 
 axios.defaults.baseURL =
@@ -82,7 +84,7 @@ class ErrorBoundary extends React.Component<
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'embed' | 'conversations' | 'settings'
+    'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'embed' | 'conversations' | 'settings' | 'learnings'
   >('overview');
 
   // Auth Session State
@@ -157,6 +159,17 @@ export const App: React.FC = () => {
   }
 
   const { tenant, user } = session;
+
+  const [pendingLearningsCount, setPendingLearningsCount] = useState(0);
+
+  useEffect(() => {
+    if (session) {
+      axios.get('/learnings').then(res => {
+        const count = res.data.filter((l: any) => l.status === 'PENDING').length;
+        setPendingLearningsCount(count);
+      }).catch(err => console.error('Error fetching learnings count:', err));
+    }
+  }, [session, activeTab]);
 
   return (
     <div className="app-container">
@@ -242,6 +255,27 @@ export const App: React.FC = () => {
             <MessageSquare size={18} /> Conversations & Support
           </li>
           <li
+            className={`nav-item ${activeTab === 'learnings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('learnings')}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BrainCircuit size={18} /> AI Memory & Rules
+            </div>
+            {pendingLearningsCount > 0 && (
+              <span style={{
+                background: 'var(--accent-rose)',
+                color: 'white',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                padding: '2px 6px',
+                borderRadius: '10px'
+              }}>
+                {pendingLearningsCount}
+              </span>
+            )}
+          </li>
+          <li
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
@@ -297,6 +331,7 @@ export const App: React.FC = () => {
             <WidgetConfiguratorTab apiKey={tenant.apiKey} tenantName={tenant.name} />
           )}
           {activeTab === 'conversations' && <ConversationsTab apiKey={tenant.apiKey} />}
+          {activeTab === 'learnings' && <LearningsTab />}
           {activeTab === 'settings' && <SettingsTab apiKey={tenant.apiKey} />}
         </ErrorBoundary>
       </main>
