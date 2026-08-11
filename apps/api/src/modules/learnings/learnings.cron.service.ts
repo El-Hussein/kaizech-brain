@@ -72,9 +72,9 @@ export class LearningsCronService {
 
     const schema = z.object({
       hasLearning: z.boolean().describe('True if there is a meaningful learning to extract from this conversation, False if it was just normal chatter'),
-      rule: z.string().describe('The extracted learning rule for the agent, if hasLearning is true'),
-      category: z.string().describe('The category of the learning (e.g. tone, fact, policy)'),
-      confidenceScore: z.number().min(0).max(100).describe('Confidence score in this extraction (0-100)'),
+      rule: z.string().optional().describe('The extracted learning rule for the agent, if hasLearning is true'),
+      category: z.string().optional().describe('The category of the learning (e.g. tone, fact, policy)'),
+      confidenceScore: z.number().min(0).max(100).optional().describe('Confidence score in this extraction (0-100)'),
       inferredSatisfactionScore: z.number().min(1).max(5).describe('Infer a satisfaction score out of 5 based on how happy/satisfied the user seems at the end.'),
       inferredFeedback: z.string().describe('Briefly summarize why you gave this inferred score.'),
     });
@@ -107,8 +107,10 @@ ${transcript}
 `;
 
     const result = await llm.invoke(prompt);
+    
+    this.logger.log(`LLM Extraction Result for conv ${conversation.id}: hasLearning=${result.hasLearning}, inferredScore=${result.inferredSatisfactionScore}`);
 
-    if (result.hasLearning && result.rule) {
+    if (result.hasLearning && result.rule && result.category && result.confidenceScore !== undefined) {
       const learning = this.agentLearningRepo.create({
         tenantId: conversation.tenantId,
         conversationId: conversation.id,
