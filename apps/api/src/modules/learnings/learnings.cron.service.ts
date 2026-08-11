@@ -42,7 +42,8 @@ export class LearningsCronService {
     }
 
     for (const conv of conversations) {
-      if (!conv.satisfactionScore) {
+      // Skip if conversation is too short and has no explicit rating
+      if (!conv.satisfactionScore && conv.messageCount < 4) {
         conv.isLearned = true;
         await this.conversationRepo.save(conv);
         continue;
@@ -70,7 +71,8 @@ export class LearningsCronService {
     const transcript = messages.map(m => `[${m.role}]: ${m.content}`).join('\n');
 
     const schema = z.object({
-      rule: z.string().describe('The extracted learning rule for the agent'),
+      hasLearning: z.boolean().describe('True if there is a meaningful learning to extract from this conversation, False if it was just normal chatter'),
+      rule: z.string().describe('The extracted learning rule for the agent, if hasLearning is true'),
       category: z.string().describe('The category of the learning (e.g. tone, fact, policy)'),
       confidenceScore: z.number().min(0).max(100).describe('Confidence score in this extraction (0-100)'),
     });
@@ -88,13 +90,15 @@ export class LearningsCronService {
 
     const prompt = `
 You are an AI Analyst. Review the following conversation transcript. 
-The user gave a satisfaction score of ${conversation.satisfactionScore}/5.
+The user gave a satisfaction score of ${conversation.satisfactionScore || 'N/A'}/5.
 User Feedback: ${conversation.satisfactionFeedback || 'None'}
 Tags: ${JSON.stringify(conversation.metadata?.feedbackTags || [])}
 
-Extract a concise learning rule that the agent should follow in the future.
-If the score is 4 or 5, extract what the agent did well.
-If the score is 1, 2, or 3, extract the mistake and how the agent should correct it.
+Analyze the conversation to extract a concise learning rule that the agent should follow in the future.
+- If the score is 4 or 5, extract what the agent did well.
+- If the score is 1, 2, or 3, extract the mistake and how the agent should correct it.
+- If there is no score, look for instances where the user corrects the agent, provides a specific fact, or expresses frustration.
+- If there is nothing meaningful to learn (just normal chatter or small talk), set hasLearning to false.
 Keep the rule under 2 sentences.
 
 Transcript:
@@ -103,16 +107,18 @@ ${transcript}
 
     const result = await llm.invoke(prompt);
 
-    const learning = this.agentLearningRepo.create({
-      tenantId: conversation.tenantId,
-      conversationId: conversation.id,
-      learningRule: result.rule,
-      category: result.category,
-      confidenceScore: result.confidenceScore,
-      originalLLMOutput: JSON.stringify(result),
-    });
+    if (result.hasLearning && result.rule) {
+      const learning = this.agentLearningRepo.create({
+        tenantId: conversation.tenantId,
+        conversationId: conversation.id,
+        learningRule: result.rule,
+        category: result.category,
+        confidenceScore: result.confidenceScore,
+        originalLLMOutput: JSON.stringify(result),
+      });
 
-    await this.agentLearningRepo.save(learning);
+      await this.agentLearningRepo.save(learning);
+    }
 
     conversation.isLearned = true;
     await this.conversationRepo.save(conversation);
