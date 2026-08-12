@@ -5,6 +5,7 @@ import { Repository, FindOptionsWhere } from 'typeorm';
 import { ConversationEntity, MessageEntity, AgentLearningEntity } from '@kaizech/database';
 import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
+import { decryptSecret } from '@kaizech/shared';
 
 @Injectable()
 export class LearningsCronService {
@@ -82,7 +83,8 @@ export class LearningsCronService {
       inferredFeedback: z.string().optional().describe('Briefly summarize why you gave this inferred score.'),
     });
 
-    const customApiKey = conversation.tenant?.settings?.openaiApiKey || process.env.OPENAI_API_KEY;
+    const rawApiKey = conversation.tenant?.settings?.openaiApiKey;
+    const customApiKey = rawApiKey ? decryptSecret(rawApiKey) : process.env.OPENAI_API_KEY;
     if (!customApiKey) {
       throw new Error("Missing API key for tenant");
     }
