@@ -78,7 +78,7 @@ export class LearningsCronService {
       hasLearning: z.boolean().describe('True if there is a meaningful learning to extract from this conversation, False if it was just normal chatter'),
       rule: z.string().optional().describe('The extracted learning rule for the agent, if hasLearning is true'),
       category: z.string().optional().describe('The category of the learning (e.g. tone, fact, policy)'),
-      confidenceScore: z.number().min(0).max(100).optional().describe('Confidence score in this extraction (0-100)'),
+      confidenceScore: z.number().min(0).max(100).describe('Factual reliability of the rule (0-100). 0-10: contradicts known facts. 10-30: unverified user correction. 30-50: ambiguous/subjective. 50-70: plausible with partial evidence. 70-85: strong evidence. 85-100: definitively verified.'),
       inferredSatisfactionScore: z.number().min(1).max(5).optional().describe('Infer a satisfaction score out of 5 based on how happy/satisfied the user seems at the end.'),
       inferredFeedback: z.string().optional().describe('Briefly summarize why you gave this inferred score.'),
     });
@@ -91,7 +91,7 @@ export class LearningsCronService {
 
     const llm = new ChatOpenAI({
       apiKey: customApiKey,
-      modelName: 'gpt-4o-mini',
+      modelName: process.env.OPENAI_MODEL || 'gpt-4o',
       temperature: 0,
     }).withStructuredOutput(schema);
 
@@ -106,10 +106,21 @@ Analyze the conversation and do two things:
 - If the score is low, extract the mistake and how the agent should correct it.
 - If there is nothing meaningful to learn (just normal chatter or small talk), set hasLearning to false.
 Keep the rule under 2 sentences.
-Crucially, provide a confidenceScore between 0 and 100 indicating how confident you are in this extracted rule.
+
+CRITICAL INSTRUCTION ON CONFIDENCE SCORE:
+The \`confidenceScore\` represents the FACTUAL RELIABILITY of the extracted rule — how trustworthy and verifiable the information is. It is NOT about how well you extracted it. Use the full 0-100 range according to this rubric:
+
+  0-10  — Contradicts known facts or system data. The user said something demonstrably wrong, or the rule is nonsensical.
+  10-30 — Unverified user claim that contradicts or corrects the AI's answer with no supporting evidence. Example: user says "Mrkoon is for scrap" but the AI had different information — this is a raw user assertion, not a verified fact.
+  30-50 — Ambiguous correction or subjective preference. The user may be right, but there is no way to confirm from the conversation alone. Example: user says "your tone should be more formal" or gives a fact that could be true but isn't proven.
+  50-70 — Plausible rule with partial evidence. The user's statement aligns with context clues in the conversation, or the rule is about a behavioral pattern (e.g., "always greet in Arabic first") that seems reasonable.
+  70-85 — Strong evidence from the conversation. The rule is supported by multiple messages, the user provided verifiable details, or it aligns with known system behavior.
+  85-100 — Definitively verified. The rule comes from system documentation, confirmed business logic, or undeniable facts visible in the transcript.
+
+REMEMBER: A user merely asserting a fact (e.g., correcting the AI) without evidence should NEVER score above 30. User corrections are unverified claims until proven otherwise.
 
 Transcript:
-${transcript}
+\${transcript}
 `;
 
     const result = await llm.invoke(prompt);
