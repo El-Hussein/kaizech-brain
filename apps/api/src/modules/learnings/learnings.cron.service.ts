@@ -113,13 +113,13 @@ ${transcript}
     
     this.logger.log(`LLM Extraction Result for conv ${conversation.id}: hasLearning=${result.hasLearning}, inferredScore=${result.inferredSatisfactionScore}`);
 
-    if (result.hasLearning && result.rule && result.category && result.confidenceScore !== undefined) {
+    if (result.hasLearning && result.rule) {
       const learning = this.agentLearningRepo.create({
         tenantId: conversation.tenantId,
         conversationId: conversation.id,
         learningRule: result.rule,
-        category: result.category,
-        confidenceScore: result.confidenceScore,
+        category: result.category || 'User Correction',
+        confidenceScore: result.confidenceScore !== undefined ? result.confidenceScore : 85,
         originalLLMOutput: JSON.stringify(result),
       });
 
