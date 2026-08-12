@@ -36,16 +36,31 @@ export class LearningsController {
       order: { createdAt: 'DESC' },
     });
 
-    return learnings.map(l => ({
-      id: l.id,
-      sourceConversationId: l.conversationId,
-      category: l.category,
-      suggestedRule: l.learningRule,
-      confidenceScore: l.confidenceScore,
-      status: l.status.toUpperCase(),
-      metadata: { reasoning: l.originalLLMOutput },
-      createdAt: l.createdAt,
-    }));
+    return learnings.map(l => {
+      let metadata = { reasoning: 'No reasoning provided by AI.', transcript: '' };
+      if (l.originalLLMOutput) {
+        try {
+          const parsed = JSON.parse(l.originalLLMOutput);
+          metadata = {
+            reasoning: parsed.inferredFeedback || parsed.reasoning || 'No reasoning provided by AI.',
+            transcript: parsed.transcript || '',
+          };
+        } catch (e) {
+          metadata.reasoning = l.originalLLMOutput;
+        }
+      }
+
+      return {
+        id: l.id,
+        sourceConversationId: l.conversationId,
+        category: l.category,
+        suggestedRule: l.learningRule,
+        confidenceScore: l.confidenceScore,
+        status: l.status.toUpperCase(),
+        metadata,
+        createdAt: l.createdAt,
+      };
+    });
   }
 
   @Post(':id/approve')

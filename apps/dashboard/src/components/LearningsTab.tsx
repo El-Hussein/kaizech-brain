@@ -253,8 +253,21 @@ export const LearningsTab: React.FC = () => {
                     {expandedContexts[learning.id] ? <ChevronUp size={14} style={{ marginLeft: 'auto' }} /> : <ChevronDown size={14} style={{ marginLeft: 'auto' }} />}
                   </button>
                   {expandedContexts[learning.id] && (
-                    <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '13px', color: '#e5e7eb', fontStyle: 'italic' }}>
-                      "{learning.metadata?.reasoning || 'No reasoning provided by AI.'}"
+                    <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '13px', color: '#e5e7eb', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {learning.metadata?.transcript ? (
+                        <>
+                          <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Conversation Snippet:</div>
+                          <pre style={{ whiteSpace: 'pre-wrap', fontFamily: '"JetBrains Mono", monospace', margin: 0, padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '12px' }}>
+                            {learning.metadata.transcript}
+                          </pre>
+                          <div style={{ fontWeight: 600, color: 'var(--text-muted)', marginTop: '8px' }}>AI Reasoning:</div>
+                          <div style={{ fontStyle: 'italic' }}>
+                            "{learning.metadata?.reasoning}"
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ fontStyle: 'italic' }}>"{learning.metadata?.reasoning || 'No reasoning provided by AI.'}"</div>
+                      )}
                     </div>
                   )}
                 </div>

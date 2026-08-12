@@ -106,6 +106,7 @@ Analyze the conversation and do two things:
 - If the score is low, extract the mistake and how the agent should correct it.
 - If there is nothing meaningful to learn (just normal chatter or small talk), set hasLearning to false.
 Keep the rule under 2 sentences.
+Crucially, provide a confidenceScore between 0 and 100 indicating how confident you are in this extracted rule.
 
 Transcript:
 ${transcript}
@@ -122,7 +123,10 @@ ${transcript}
         learningRule: result.rule,
         category: result.category || 'User Correction',
         confidenceScore: result.confidenceScore !== undefined ? result.confidenceScore : 85,
-        originalLLMOutput: JSON.stringify(result),
+        originalLLMOutput: JSON.stringify({
+          ...result,
+          transcript,
+        }),
       });
 
       await this.agentLearningRepo.save(learning);
