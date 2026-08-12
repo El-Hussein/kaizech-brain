@@ -19,7 +19,7 @@ interface LearningRule {
   suggestedRule: string;
   confidenceScore: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  metadata?: { reasoning?: string; [key: string]: unknown };
+  metadata?: { reasoning?: string; transcript?: string; [key: string]: unknown };
   createdAt: string;
 }
 
