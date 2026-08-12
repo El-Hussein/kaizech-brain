@@ -31,10 +31,21 @@ export class LearningsController {
       whereClause.status = status;
     }
     
-    return this.learningRepo.find({
+    const learnings = await this.learningRepo.find({
       where: whereClause,
       order: { createdAt: 'DESC' },
     });
+
+    return learnings.map(l => ({
+      id: l.id,
+      sourceConversationId: l.conversationId,
+      category: l.category,
+      suggestedRule: l.learningRule,
+      confidenceScore: l.confidenceScore,
+      status: l.status.toUpperCase(),
+      metadata: { reasoning: l.originalLLMOutput },
+      createdAt: l.createdAt,
+    }));
   }
 
   @Post(':id/approve')
