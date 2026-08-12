@@ -205,7 +205,7 @@ export const LearningsTab: React.FC = () => {
                 
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                     <span style={{ 
                       fontSize: '11px', 
                       fontFamily: '"JetBrains Mono", monospace', 
@@ -218,8 +218,11 @@ export const LearningsTab: React.FC = () => {
                     }}>
                       Confidence: {learning.confidenceScore}%
                     </span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: '"JetBrains Mono", monospace' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: '"JetBrains Mono", monospace' }} title="Learning ID">
                       ID: {learning.id.split('-')[0]}
+                    </span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: '"JetBrains Mono", monospace' }} title={`Conversation ID: ${learning.sourceConversationId}`}>
+                      Conv: {learning.sourceConversationId ? learning.sourceConversationId.split('-')[0] : 'N/A'}
                     </span>
                     <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px' }}>
                       {learning.category}

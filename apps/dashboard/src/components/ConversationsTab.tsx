@@ -206,6 +206,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     return conversations.filter((item) => {
       const matchesSearch =
         item.channelUserId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.summary && item.summary.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
@@ -635,7 +636,12 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                         ) : (
                           <Terminal size={13} color="var(--accent-primary)" />
                         )}
-                        <span>{c.channelUserId}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span>{c.channelUserId}</span>
+                          <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 400, fontFamily: '"JetBrains Mono", monospace' }}>
+                            ID: {c.id.split('-')[0]}
+                          </span>
+                        </div>
                       </div>
 
                       <span
