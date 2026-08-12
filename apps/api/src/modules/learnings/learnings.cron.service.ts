@@ -53,6 +53,9 @@ export class LearningsCronService {
         await this.extractLearning(conv);
       } catch (err) {
         this.logger.error(`Failed to extract learning for conv ${conv.id}:`, err);
+        // Mark as learned so it doesn't block the queue forever in case of persistent LLM validation errors
+        conv.isLearned = true;
+        await this.conversationRepo.save(conv);
       }
     }
   }
@@ -75,8 +78,8 @@ export class LearningsCronService {
       rule: z.string().optional().describe('The extracted learning rule for the agent, if hasLearning is true'),
       category: z.string().optional().describe('The category of the learning (e.g. tone, fact, policy)'),
       confidenceScore: z.number().min(0).max(100).optional().describe('Confidence score in this extraction (0-100)'),
-      inferredSatisfactionScore: z.number().min(1).max(5).describe('Infer a satisfaction score out of 5 based on how happy/satisfied the user seems at the end.'),
-      inferredFeedback: z.string().describe('Briefly summarize why you gave this inferred score.'),
+      inferredSatisfactionScore: z.number().min(1).max(5).optional().describe('Infer a satisfaction score out of 5 based on how happy/satisfied the user seems at the end.'),
+      inferredFeedback: z.string().optional().describe('Briefly summarize why you gave this inferred score.'),
     });
 
     const customApiKey = conversation.tenant?.settings?.openaiApiKey || process.env.OPENAI_API_KEY;
@@ -124,8 +127,8 @@ ${transcript}
     }
 
     // Save the inferred score so the dashboard can display it later
-    conversation.satisfactionScore = conversation.satisfactionScore || result.inferredSatisfactionScore;
-    conversation.satisfactionFeedback = conversation.satisfactionFeedback || result.inferredFeedback;
+    conversation.satisfactionScore = conversation.satisfactionScore || result.inferredSatisfactionScore || 3;
+    conversation.satisfactionFeedback = conversation.satisfactionFeedback || result.inferredFeedback || 'Inferred by AI Analyst';
     conversation.isLearned = true;
     await this.conversationRepo.save(conversation);
   }
