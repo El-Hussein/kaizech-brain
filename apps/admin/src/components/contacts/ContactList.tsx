@@ -56,7 +56,7 @@ export const ContactList: React.FC<Props> = ({ contacts, loading }) => {
                     </div>
                   </div>
                 </div>
-                <span className={\`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold \${contact.status === 'new' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}\`}>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${contact.status === 'new' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
                   <CheckCircle size={12} />
                   {contact.status.toUpperCase()}
                 </span>
