@@ -39,7 +39,7 @@ export const LearningsTab: React.FC = () => {
     return () => {
       if (undoSnack) {
         clearTimeout(undoSnack.timeout);
-        axios.post(`/api/v1/learnings/${undoSnack.id}/reject`).catch(err => console.error('Failed to reject on unmount:', err));
+        axios.post(`/api/v1/learnings/${undoSnack.id}/reject`).catch(() => {});
       }
     };
   }, [undoSnack]);
@@ -50,7 +50,7 @@ export const LearningsTab: React.FC = () => {
       const res = await axios.get('/api/v1/learnings');
       setLearnings(res.data);
     } catch (err) {
-      console.error('Failed to fetch learnings:', err);
+      // Handled by global interceptor
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ export const LearningsTab: React.FC = () => {
       // Update local state to APPROVED
       setLearnings(prev => prev.map(l => l.id === id ? { ...l, status: 'APPROVED', suggestedRule: modifiedRule || l.suggestedRule } : l));
     } catch (err) {
-      console.error('Failed to approve:', err);
+      // Handled by global interceptor
     }
   };
 
@@ -81,7 +81,7 @@ export const LearningsTab: React.FC = () => {
         setExtracting(false);
       }, 2000);
     } catch (err) {
-      console.error('Failed to trigger extraction:', err);
+      // Handled by global interceptor
       setExtracting(false);
     }
   };
@@ -99,7 +99,7 @@ export const LearningsTab: React.FC = () => {
 
       setUndoSnack({ id, timeout });
     } catch (err) {
-      console.error('Failed to reject:', err);
+      // Handled by global interceptor
     }
   };
 

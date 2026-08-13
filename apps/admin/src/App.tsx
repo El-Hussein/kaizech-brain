@@ -11,6 +11,7 @@ import { EditTenantModal } from './components/modals/EditTenantModal';
 import { DeleteTenantModal } from './components/modals/DeleteTenantModal';
 import { ApiKeyModal } from './components/modals/ApiKeyModal';
 import { IndustryCreateEditModal, IndustryKnowledgeModal } from './components/modals/IndustryModals';
+import { ContactList } from './components/contacts/ContactList';
 
 axios.defaults.baseURL =
   (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
@@ -22,7 +23,7 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   // Modals & States
-  const [activeTab, setActiveTab] = useState<'tenants' | 'industries'>('tenants');
+  const [activeTab, setActiveTab] = useState<'tenants' | 'industries' | 'contacts'>('tenants');
   
   // Tenant Modals
   const [showOnboardModal, setShowOnboardModal] = useState(false);
@@ -74,6 +75,10 @@ export const App: React.FC = () => {
   // Industry States
   const [industries, setIndustries] = useState<any[]>([]);
   const [loadingIndustries, setLoadingIndustries] = useState(false);
+
+  // Contact States
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
   
   // Industry Modals
   const [showIndustryModal, setShowIndustryModal] = useState(false);
@@ -101,6 +106,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     fetchTenants();
     fetchIndustries();
+    fetchContacts();
   }, []);
 
   const fetchTenants = async () => {
@@ -132,6 +138,20 @@ export const App: React.FC = () => {
       ]);
     } finally {
       setLoadingIndustries(false);
+    }
+  };
+
+  const fetchContacts = async () => {
+    try {
+      setLoadingContacts(true);
+      const res = await axios.get('/api/v1/contact');
+      setContacts(res.data || []);
+    } catch {
+      setContacts([
+        { id: '1', firstName: 'Jane', lastName: 'Doe', email: 'jane@acme.com', companySize: '51-200 employees', message: 'We want a RAG agent.', status: 'new', createdAt: new Date().toISOString() }
+      ]);
+    } finally {
+      setLoadingContacts(false);
     }
   };
 
@@ -353,6 +373,12 @@ export const App: React.FC = () => {
             }}
             onDeleteClick={handleDeleteIndustry}
           />
+        </div>
+      )}
+
+      {activeTab === 'contacts' && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <ContactList contacts={contacts} loading={loadingContacts} />
         </div>
       )}
 

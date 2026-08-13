@@ -15,6 +15,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { ChannelsModule } from './modules/channels/channels.module';
 import { IndustriesModule } from './modules/industries/industries.module';
 import { LearningsModule } from './modules/learnings/learnings.module';
+import { ContactModule } from './modules/contact/contact.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DocsController } from './docs.controller';
 
@@ -49,6 +50,7 @@ import * as path from 'path';
     ChannelsModule,
     IndustriesModule,
     LearningsModule,
+    ContactModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [DocsController],

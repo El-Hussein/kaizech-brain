@@ -1,0 +1,184 @@
+"use client";
+
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Database, Bot, Play, Beaker, FileText, CheckCircle2, Settings2, SlidersHorizontal, MessageSquare, Terminal, Smartphone } from "lucide-react";
+
+const steps = [
+  {
+    title: "1. Connect Knowledge",
+    description: "Upload your PDFs, link your website, or securely connect your proprietary databases. Kaizech processes and indexes your data instantly.",
+    color: "from-indigo-500 to-indigo-600",
+    bg: "bg-indigo-50",
+    visual: (
+      <div className="w-full h-full p-6 flex flex-col gap-3 justify-center">
+        <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-slate-100">
+          <FileText className="text-rose-500" size={24} />
+          <div className="flex-1">
+            <div className="h-2 w-24 bg-slate-200 rounded-full mb-2"></div>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full w-3/4 bg-emerald-500 rounded-full"></div>
+            </div>
+          </div>
+          <CheckCircle2 className="text-emerald-500" size={20} />
+        </div>
+        <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-slate-100/50">
+          <Database className="text-blue-500" size={24} />
+          <div className="flex-1">
+            <div className="h-2 w-32 bg-slate-200 rounded-full mb-2"></div>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full w-full bg-emerald-500 rounded-full"></div>
+            </div>
+          </div>
+          <CheckCircle2 className="text-emerald-500" size={20} />
+        </div>
+      </div>
+    )
+  },
+  {
+    title: "2. Configure Agent",
+    description: "Define the agent's persona, set behavioral rules, and attach custom API tools using our intuitive visual Prompt Builder.",
+    color: "from-cyan-500 to-cyan-600",
+    bg: "bg-cyan-50",
+    visual: (
+      <div className="w-full h-full p-6 flex flex-col gap-4 justify-center">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <Bot size={16} className="text-cyan-500" /> Persona Setup
+            </div>
+            <div className="h-4 w-16 bg-cyan-100 rounded-md"></div>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-2 w-20 bg-slate-200 rounded-full"></div>
+              <div className="w-8 h-4 bg-emerald-500 rounded-full relative"><div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div></div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="h-2 w-24 bg-slate-200 rounded-full"></div>
+              <div className="w-full max-w-[100px] h-2 bg-slate-100 rounded-full relative overflow-hidden"><div className="absolute left-0 top-0 h-full w-2/3 bg-cyan-500 rounded-full"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    title: "3. Test in Playground",
+    description: "Before going live, interact with your agent in our sandbox. Test edge cases, refine instructions, and ensure perfect behavior.",
+    color: "from-fuchsia-500 to-fuchsia-600",
+    bg: "bg-fuchsia-50",
+    visual: (
+      <div className="w-full h-full p-6 flex flex-col gap-3 justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 flex-1 flex flex-col overflow-hidden">
+          <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex items-center gap-2">
+            <Beaker size={14} className="text-fuchsia-600" /> <span className="text-xs font-semibold text-slate-600">Test Environment</span>
+          </div>
+          <div className="p-4 flex-1 flex flex-col gap-3">
+            <div className="self-end bg-fuchsia-600 text-white text-xs px-3 py-2 rounded-2xl rounded-tr-sm shadow-sm">What's your refund policy?</div>
+            <div className="self-start bg-slate-100 text-slate-700 text-xs px-3 py-2 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2">
+              <div className="flex gap-1"><div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div><div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-75"></div><div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-150"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    title: "4. Go Live Anywhere",
+    description: "Embed the widget with a 1-line script tag, activate the WhatsApp integration, or deploy natively via REST API.",
+    color: "from-emerald-500 to-emerald-600",
+    bg: "bg-emerald-50",
+    visual: (
+      <div className="w-full h-full p-6 flex flex-col gap-3 justify-center items-center">
+        <div className="flex gap-4 mb-4">
+          <div className="w-12 h-12 bg-white rounded-2xl shadow-md border border-slate-100 flex items-center justify-center text-slate-700">
+            <Terminal size={20} />
+          </div>
+          <div className="w-12 h-12 bg-white rounded-2xl shadow-md border border-slate-100 flex items-center justify-center text-emerald-500">
+            <Smartphone size={20} />
+          </div>
+        </div>
+        <div className="w-full bg-[#1e1e1e] rounded-xl p-3 shadow-lg">
+          <div className="flex gap-1.5 mb-2"><div className="w-2 h-2 rounded-full bg-rose-500"></div><div className="w-2 h-2 rounded-full bg-amber-500"></div><div className="w-2 h-2 rounded-full bg-emerald-500"></div></div>
+          <div className="h-1.5 w-3/4 bg-blue-400/50 rounded-full mb-1.5"></div>
+          <div className="h-1.5 w-1/2 bg-emerald-400/50 rounded-full mb-1.5"></div>
+          <div className="h-1.5 w-2/3 bg-blue-400/50 rounded-full"></div>
+        </div>
+      </div>
+    )
+  }
+];
+
+export function HowItWorks() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  return (
+    <section ref={containerRef} id="how-it-works" className="bg-slate-50 relative h-[400vh]">
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+            <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">How it Works</h2>
+            <h3 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">From zero to AI in minutes</h3>
+            <p className="text-lg text-slate-600">
+              We've abstracted away the complex engineering so you can focus on the experience.
+            </p>
+          </div>
+
+          <div className="relative h-[450px] flex items-center justify-center">
+            
+            {/* Progress Line */}
+            <div className="absolute left-12 md:left-1/2 top-0 bottom-0 w-1 bg-slate-200 md:-translate-x-1/2 hidden md:block rounded-full overflow-hidden">
+              <motion.div 
+                className="w-full bg-indigo-600 origin-top"
+                style={{ scaleY: scrollYProgress }}
+              />
+            </div>
+
+            {/* Cards */}
+            {steps.map((step, index) => {
+              // Calculate specific scroll windows for each of the 4 cards (0.25 duration each)
+              const duration = 0.25;
+              const start = index * duration;
+              const end = start + duration;
+              
+              const opacity = useTransform(scrollYProgress, [start, start + 0.08, end - 0.08, end], [0, 1, 1, 0]);
+              const y = useTransform(scrollYProgress, [start, start + 0.08, end - 0.08, end], [50, 0, 0, -50]);
+              const scale = useTransform(scrollYProgress, [start, start + 0.08, end - 0.08, end], [0.95, 1, 1, 0.95]);
+
+              return (
+                <motion.div
+                  key={index}
+                  style={{ opacity, y, scale }}
+                  className="absolute inset-0 flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full max-w-4xl mx-auto pointer-events-none"
+                >
+                  {/* Visual side */}
+                  <div className={`w-full md:w-1/2 h-64 md:h-[320px] rounded-3xl ${step.bg} border-2 border-white shadow-xl flex flex-col relative overflow-hidden pointer-events-auto`}>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-[0.03]`}></div>
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-50 ${step.color}"></div>
+                    {step.visual}
+                  </div>
+                  
+                  {/* Text side */}
+                  <div className="w-full md:w-1/2 text-center md:text-left pointer-events-auto">
+                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r ${step.color} text-white font-bold text-xl mb-6 shadow-md shadow-slate-200`}>
+                      {index + 1}
+                    </div>
+                    <h4 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">{step.title.split('. ')[1]}</h4>
+                    <p className="text-lg md:text-xl text-slate-600 leading-relaxed">{step.description}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

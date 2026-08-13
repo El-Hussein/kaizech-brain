@@ -34,7 +34,64 @@ interface LearningRule {
 }
 
 axios.defaults.baseURL =
-  (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
+  (import.meta as any).env?.VITE_API_URL || '';
+
+// Configure Global Axios Interceptors
+axios.interceptors.request.use((config) => {
+  try {
+    const saved = localStorage.getItem('kaizech_tenant_session');
+    if (saved) {
+      const session = JSON.parse(saved);
+      if (session?.tenant) {
+        config.headers['x-tenant-slug'] = session.tenant.slug;
+        config.headers['x-api-key'] = session.tenant.apiKey;
+      }
+    }
+  } catch (e) {
+    // Ignore parse errors
+  }
+  return config;
+});
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Global error handler
+    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+    
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.textContent = `Error: ${message}`;
+    Object.assign(toast.style, {
+      position: 'fixed',
+      bottom: '24px',
+      right: '24px',
+      background: '#ef4444', // Red-500
+      color: 'white',
+      padding: '12px 20px',
+      borderRadius: '8px',
+      zIndex: '9999',
+      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
+      fontFamily: 'var(--font-sans)',
+      fontSize: '14px',
+      fontWeight: '600',
+      transition: 'opacity 0.3s ease-in-out',
+      pointerEvents: 'none',
+    });
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
+    }, 4000);
+    
+    return Promise.reject(error);
+  }
+);
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -132,11 +189,9 @@ export const App: React.FC = () => {
   }, []);
 
   // Configure Axios global headers to lock requests strictly to authenticated tenant
+  // (Headers are now dynamically attached via Axios interceptors above)
   useEffect(() => {
-    if (session?.tenant) {
-      axios.defaults.headers.common['x-tenant-slug'] = session.tenant.slug;
-      axios.defaults.headers.common['x-api-key'] = session.tenant.apiKey;
-    }
+    // Keeping useEffect empty or removing it entirely.
   }, [session]);
 
   const handleLoginSuccess = (newSession: {
@@ -146,15 +201,11 @@ export const App: React.FC = () => {
   }) => {
     setSession(newSession);
     localStorage.setItem('kaizech_tenant_session', JSON.stringify(newSession));
-    axios.defaults.headers.common['x-tenant-slug'] = newSession.tenant.slug;
-    axios.defaults.headers.common['x-api-key'] = newSession.tenant.apiKey;
   };
 
   const handleLogout = () => {
     setSession(null);
     localStorage.removeItem('kaizech_tenant_session');
-    delete axios.defaults.headers.common['x-tenant-slug'];
-    delete axios.defaults.headers.common['x-api-key'];
   };
 
   // Render Login Page if unauthenticated

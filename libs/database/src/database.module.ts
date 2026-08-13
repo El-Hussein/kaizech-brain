@@ -16,6 +16,7 @@ import { IndustryEntity } from './entities/industry.entity';
 import { KnowledgeNodeEntity } from './entities/knowledge-node.entity';
 import { KnowledgeEdgeEntity } from './entities/knowledge-edge.entity';
 import { AgentLearningEntity } from './entities/agent-learning.entity';
+import { ContactRequest } from './entities/contact-request.entity';
 
 const entities = [
   TenantEntity,
@@ -33,6 +34,7 @@ const entities = [
   KnowledgeNodeEntity,
   KnowledgeEdgeEntity,
   AgentLearningEntity,
+  ContactRequest,
 ];
 
 @Global()

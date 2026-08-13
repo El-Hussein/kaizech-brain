@@ -43,6 +43,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       // Display strict API authentication failure error
       const msg =
         err.response?.data?.message ||
+        (err.message === 'Network Error' ? 'Network Error: Unable to connect to server.' : err.message) ||
         'Invalid account email, workspace ID, or password.';
       setErrorMessage(typeof msg === 'string' ? msg : 'Authentication failed.');
     } finally {

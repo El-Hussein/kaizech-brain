@@ -152,7 +152,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         });
       }
     } catch (err) {
-      console.error(`Failed to load details for conversation ${convId}`, err);
+      // Handled by global interceptor
     } finally {
       if (isExplicitSelection) {
         setLoadingDetail(false);
@@ -183,7 +183,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
           loadConversationDetail(currentActiveId, false);
         }
       } catch (err) {
-        console.error('Failed to fetch live conversations from API', err);
+        // Handled by global interceptor
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -252,7 +252,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         );
       }
     } catch (err) {
-      console.error('Error retrying message post to live API', err);
+      // Handled by global interceptor
       setMessages((prev) =>
         prev.map((m) => (m.id === msgToRetry.id ? { ...m, status: 'failed' } : m)),
       );
@@ -319,7 +319,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         setConversations(resList.data.data);
       }
     } catch (err) {
-      console.error('Error posting message to live API', err);
+      // Handled by global interceptor
       // Mark message status as failed so operator can see & retry!
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, status: 'failed' } : m)),
@@ -374,7 +374,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         setConversations(resList.data.data);
       }
     } catch (err) {
-      console.error('Error updating conversation status on live API', err);
+      // Handled by global interceptor
     }
   };
 
@@ -414,7 +414,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
       await loadConversationDetail(selectedConv.id);
     } catch (err) {
-      console.error('Error updating conversation limit on live API', err);
+      // Handled by global interceptor
     }
   };
 

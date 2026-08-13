@@ -1,0 +1,6 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm --filter @kaizech/landing build"
+
+[deploy]
+startCommand = "pnpm --filter @kaizech/landing start"

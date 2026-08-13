@@ -140,13 +140,9 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
   // ── AI Provider & Secret Keys ─────────────────────────────────────────────
   const [aiProvider, setAiProvider] = useState<'openai' | 'groq'>('openai');
-  const [openaiApiKey, setOpenaiApiKey] = useState(() => {
-    return localStorage.getItem('kaizech_openai_api_key') || '';
-  });
+  const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [openaiModel, setOpenaiModel] = useState('gpt-4o-mini');
-  const [groqApiKey, setGroqApiKey] = useState(() => {
-    return localStorage.getItem('kaizech_groq_api_key') || '';
-  });
+  const [groqApiKey, setGroqApiKey] = useState('');
   const [groqModel, setGroqModel] = useState('llama-3.3-70b-versatile');
   const [showOpenAiKey, setShowOpenAiKey] = useState(false);
   const [showGroqKey, setShowGroqKey] = useState(false);
@@ -167,8 +163,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
     setSavingOpenAi(true);
     setOpenaiSaveError(null);
 
-    if (openaiApiKey) localStorage.setItem('kaizech_openai_api_key', openaiApiKey);
-    if (groqApiKey) localStorage.setItem('kaizech_groq_api_key', groqApiKey);
+    // Removed localStorage storage for security
 
     try {
       await axios.put(
@@ -214,24 +209,14 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const defaultApiBase = axios.defaults.baseURL || window.location.origin;
   const computedWebhook = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/whatsapp/webhook`;
 
-  const [verifyToken, setVerifyToken] = useState(() => {
-    return localStorage.getItem('kaizech_verify_token') || '';
-  });
-  const [appSecret, setAppSecret] = useState(() => {
-    return localStorage.getItem('kaizech_app_secret') || '';
-  });
-  const [accessToken, setAccessToken] = useState(() => {
-    return localStorage.getItem('kaizech_access_token') || '';
-  });
-  const [phoneNumberId, setPhoneNumberId] = useState(() => {
-    return localStorage.getItem('kaizech_phone_number_id') || '';
-  });
+  const [verifyToken, setVerifyToken] = useState('');
+  const [appSecret, setAppSecret] = useState('');
+  const [accessToken, setAccessToken] = useState('');
+  const [phoneNumberId, setPhoneNumberId] = useState('');
   const [showAppSecret, setShowAppSecret] = useState(false);
   const [showAccessToken, setShowAccessToken] = useState(false);
   const [whatsappSaved, setWhatsappSaved] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState(() => {
-    return localStorage.getItem('kaizech_webhook_url') || computedWebhook;
-  });
+  const [webhookUrl, setWebhookUrl] = useState(computedWebhook);
   const [testingWhatsApp, setTestingWhatsApp] = useState(false);
   const [testResults, setTestResults] = useState<any | null>(null);
 
@@ -256,11 +241,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const CHAT_ENDPOINT = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/chat`;
 
   const saveWhatsAppConfig = async () => {
-    localStorage.setItem('kaizech_verify_token', verifyToken);
-    localStorage.setItem('kaizech_app_secret', appSecret);
-    localStorage.setItem('kaizech_access_token', accessToken);
-    localStorage.setItem('kaizech_phone_number_id', phoneNumberId);
-    localStorage.setItem('kaizech_webhook_url', webhookUrl);
+    // Removed localStorage storage for security
 
     try {
       await axios.put(
@@ -311,12 +292,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
       }
     }
 
-    try {
-      const saved = localStorage.getItem('kaizech_api_keys');
-      if (saved) {
-        setApiKeys(JSON.parse(saved));
-      }
-    } catch {}
+    // Removed fallback to local storage
     setLoadingKeys(false);
   }, [apiKey]);
 
@@ -485,9 +461,6 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
       setApiKeys((prev) => {
         const updated = [newRecord, ...prev];
-        try {
-          localStorage.setItem('kaizech_api_keys', JSON.stringify(updated));
-        } catch {}
         return updated;
       });
 
@@ -511,9 +484,6 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
 
     setApiKeys((prev) => {
       const updated = prev.map((k) => (k.id === keyId ? { ...k, isActive: false } : k));
-      try {
-        localStorage.setItem('kaizech_api_keys', JSON.stringify(updated));
-      } catch {}
       return updated;
     });
     setRevoking(null);

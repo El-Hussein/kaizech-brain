@@ -2,7 +2,7 @@ import React from 'react';
 import { ShieldCheck, Plus } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'tenants' | 'industries';
+  activeTab: 'tenants' | 'industries' | 'contacts';
   onOnboardClick: () => void;
 }
 

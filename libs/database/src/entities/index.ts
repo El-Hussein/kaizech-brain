@@ -14,3 +14,4 @@ export * from './industry.entity';
 export * from './knowledge-node.entity';
 export * from './knowledge-edge.entity';
 export * from './agent-learning.entity';
+export * from './contact-request.entity';
