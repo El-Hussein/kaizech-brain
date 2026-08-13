@@ -192,12 +192,43 @@ export class OpenAIProvider implements ILLMProvider {
       }
 
       const model = options.model || this.defaultModel;
-      const formattedMessages: any[] = options.messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content || '',
-        ...(msg.name ? { name: msg.name } : {}),
-        ...(msg.toolCallId ? { tool_call_id: msg.toolCallId } : {}),
-      }));
+      const formattedMessages: any[] = [];
+      for (let i = 0; i < options.messages.length; i++) {
+        const msg = options.messages[i];
+        const messageObj: any = {
+          role: msg.role,
+          content: msg.content || '',
+        };
+        if (msg.name) messageObj.name = msg.name;
+        if (msg.toolCallId) messageObj.tool_call_id = msg.toolCallId;
+        
+        if (msg.toolCalls && Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
+          const validToolCalls: any[] = [];
+          for (const tc of msg.toolCalls as any[]) {
+            const tcId = tc.id || `call_${Math.random().toString(36).substring(2, 9)}`;
+            const hasNextToolResponse = options.messages
+              .slice(i + 1)
+              .some((nextMsg) => nextMsg.role === 'tool' && nextMsg.toolCallId === tcId);
+
+            if (hasNextToolResponse) {
+              validToolCalls.push({
+                id: tcId,
+                type: tc.type || 'function',
+                function: {
+                  name: tc.function?.name || tc.name || 'unknown_tool',
+                  arguments: typeof tc.function?.arguments === 'string'
+                    ? tc.function.arguments
+                    : JSON.stringify(tc.function?.arguments || tc.args || {}),
+                },
+              });
+            }
+          }
+          if (validToolCalls.length > 0) {
+            messageObj.tool_calls = validToolCalls;
+          }
+        }
+        formattedMessages.push(messageObj);
+      }
 
       const requestBody: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
         model,
