@@ -229,6 +229,7 @@ export class ChannelsController {
     (res as any).setHeader('Content-Type', 'text/event-stream');
     (res as any).setHeader('Cache-Control', 'no-cache');
     (res as any).setHeader('Connection', 'keep-alive');
+    (res as any).setHeader('X-Accel-Buffering', 'no');
 
     const result = await this.agentOrchestrator.processMessageStream(
       {
@@ -241,10 +242,16 @@ export class ChannelsController {
       },
       (chunk: string) => {
         (res as any).write(`data: ${JSON.stringify({ chunk })}\n\n`);
+        if (typeof (res as any).flush === 'function') {
+          (res as any).flush();
+        }
       },
     );
 
     (res as any).write(`data: ${JSON.stringify({ event: 'DONE', meta: result })}\n\n`);
+    if (typeof (res as any).flush === 'function') {
+      (res as any).flush();
+    }
     (res as any).end();
   }
 
