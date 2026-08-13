@@ -131,6 +131,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
         setTenantName(res.data.tenantName || 'Tenant Workspace');
         setTimezone(res.data.timezone || 'Asia/Riyadh');
         setTenantId(res.data.tenantSlug || 'tenant');
+        if (res.data.apiEndpoint) setApiEndpoint(res.data.apiEndpoint);
       }
     } catch {
       // Fallback
@@ -526,6 +527,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
         {
           name: tenantName,
           timezone: timezone,
+          apiEndpoint: apiEndpoint,
         },
         { headers: { 'x-api-key': apiKey } },
       );
