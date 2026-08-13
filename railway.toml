@@ -2,5 +2,8 @@
 builder = "nixpacks"
 buildCommand = "pnpm --filter @kaizech/landing build"
 
+[phases.setup]
+cmds = ["npm install -g pnpm@9"]
+
 [deploy]
 startCommand = "pnpm --filter @kaizech/landing start"
