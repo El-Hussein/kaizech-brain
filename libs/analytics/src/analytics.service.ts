@@ -126,6 +126,7 @@ export class AnalyticsService {
       status: isOnline ? 'online' : 'offline',
       tenantName: tenant?.name || 'Unknown',
       tenantSlug: tenant?.slug || '',
+      apiEndpoint: tenant?.apiEndpoint || '',
       llmProvider,
       vectorStore,
       channels,

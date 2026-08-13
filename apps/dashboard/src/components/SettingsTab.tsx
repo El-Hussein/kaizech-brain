@@ -605,6 +605,19 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               <input type="text" className="input-field" value={tenantName} onChange={(e) => setTenantName(e.target.value)} />
             </div>
             <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Base API URL (Tool Endpoints)</label>
+              <input 
+                type="url" 
+                placeholder="https://api.yourdomain.com" 
+                className="input-field" 
+                value={apiEndpoint} 
+                onChange={(e) => setApiEndpoint(e.target.value)} 
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Used as the base domain for Tool relative paths (e.g., /api/chatbot/getUserInfo).
+              </div>
+            </div>
+            <div>
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Timezone</label>
               <select
                 className="input-field"
