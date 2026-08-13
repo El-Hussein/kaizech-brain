@@ -295,10 +295,13 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
             </div>
 
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Customer API Endpoint URL</label>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Customer API Endpoint (Relative Path)</label>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                The tenant's Base URL will be automatically prepended. You can still use a full URL if needed.
+              </div>
               <input
-                type="url"
-                placeholder="https://api-stg.markoontest.online/api/chatbot/getUserInfo"
+                type="text"
+                placeholder="/api/chatbot/getUserInfo"
                 className="input-field"
                 value={apiEndpoint}
                 onChange={(e) => setApiEndpoint(e.target.value)}

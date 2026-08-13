@@ -79,9 +79,29 @@ export class ToolExecutorService {
       throw new NotFoundException(`Tool '${toolName}' not registered or active for tenant.`);
     }
 
-    const targetUrl = tool?.apiEndpoint || tenant.apiEndpoint || (toolName === 'getUserInfo' ? 'https://api-stg.markoontest.online/api/chatbot/getUserInfo' : null);
+    // Resolve the full URL: tool stores relative path, tenant has the base URL
+    let targetUrl: string | null = null;
+    const toolEndpoint = tool?.apiEndpoint;
+
+    if (toolEndpoint) {
+      if (toolEndpoint.startsWith('http://') || toolEndpoint.startsWith('https://')) {
+        // Full URL stored on tool (backward compatibility)
+        targetUrl = toolEndpoint;
+      } else if (tenant.apiEndpoint) {
+        // Relative path — prepend tenant's base URL
+        const base = tenant.apiEndpoint.replace(/\/+$/, ''); // strip trailing slashes
+        const path = toolEndpoint.startsWith('/') ? toolEndpoint : `/${toolEndpoint}`;
+        targetUrl = `${base}${path}`;
+      }
+    }
+
+    // Fallback to tenant base URL alone if tool has no endpoint
+    if (!targetUrl && tenant.apiEndpoint) {
+      targetUrl = tenant.apiEndpoint;
+    }
+
     if (!targetUrl) {
-      throw new ToolExecutionException(toolName, `No endpoint configured for tool '${toolName}'.`);
+      throw new ToolExecutionException(toolName, `No endpoint configured for tool '${toolName}'. Set a base URL in tenant settings or a full URL on the tool.`);
     }
 
     this.logger.log(`Executing tool '${toolName}' for tenant '${tenant.name}' -> ${targetUrl}`);
