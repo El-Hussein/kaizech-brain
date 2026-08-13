@@ -1,6 +1,0 @@
-[build]
-builder = "nixpacks"
-buildCommand = "npx pnpm --filter @kaizech/landing build"
-
-[deploy]
-startCommand = "npx pnpm --filter @kaizech/landing start"
