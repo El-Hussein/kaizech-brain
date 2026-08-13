@@ -666,27 +666,85 @@ export class AgentOrchestratorService {
       ...recentMessages,
     ];
 
-    let llmResult: ChatCompletionResult;
+    let llmResult: ChatCompletionResult | undefined = undefined;
+    let finalResponse = '';
+    const toolCallsExecuted: any[] = [];
+    const totalTokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+    const currentMessages = [...llmMessages];
+
     try {
-      if (provider.chatCompletionStream) {
-        llmResult = await provider.chatCompletionStream(
-          {
-            messages: llmMessages,
+      let loopCount = 0;
+      const MAX_LOOPS = 5;
+
+      while (loopCount < MAX_LOOPS) {
+        loopCount++;
+
+        if (provider.chatCompletionStream) {
+          llmResult = await provider.chatCompletionStream(
+            {
+              messages: currentMessages,
+              tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
+              apiKey: customApiKey,
+              model: customModel,
+            },
+            onChunk,
+          );
+        } else {
+          llmResult = await provider.chatCompletion({
+            messages: currentMessages,
             tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
             apiKey: customApiKey,
             model: customModel,
-          },
-          onChunk,
-        );
-      } else {
-        llmResult = await provider.chatCompletion({
-          messages: llmMessages,
-          tools: toolDefinitions.length > 0 ? toolDefinitions : undefined,
-          apiKey: customApiKey,
-          model: customModel,
-        });
+          });
+          if (llmResult.content) {
+            onChunk(llmResult.content);
+          }
+        }
+
+        if (llmResult.usage) {
+          totalTokenUsage.promptTokens += llmResult.usage.promptTokens || 0;
+          totalTokenUsage.completionTokens += llmResult.usage.completionTokens || 0;
+          totalTokenUsage.totalTokens += llmResult.usage.totalTokens || 0;
+        }
+
         if (llmResult.content) {
-          onChunk(llmResult.content);
+          finalResponse += llmResult.content;
+        }
+
+        if (!llmResult.toolCalls || llmResult.toolCalls.length === 0) {
+          break;
+        }
+
+        currentMessages.push({
+          role: 'assistant',
+          content: llmResult.content || '',
+          toolCalls: llmResult.toolCalls,
+        });
+
+        for (const tc of llmResult.toolCalls) {
+          try {
+            const args = typeof tc.function.arguments === 'string'
+              ? JSON.parse(tc.function.arguments || '{}')
+              : tc.function.arguments;
+
+            const result = await this.toolExecutor.executeTool(tenant, tc.function.name, args);
+            toolCallsExecuted.push({ name: tc.function.name, args, result });
+
+            currentMessages.push({
+              role: 'tool',
+              toolCallId: tc.id,
+              name: tc.function.name,
+              content: typeof result === 'object' ? JSON.stringify(result) : String(result),
+            });
+          } catch (e: any) {
+            this.logger.error(`Tool execution error in stream for ${tc.function.name}: ${e.message}`);
+            currentMessages.push({
+              role: 'tool',
+              toolCallId: tc.id,
+              name: tc.function.name,
+              content: `Error: ${e.message}`,
+            });
+          }
         }
       }
     } catch (err: any) {
@@ -708,7 +766,10 @@ export class AgentOrchestratorService {
       };
     }
 
-    const finalResponse = llmResult.content || 'I have completed your request.';
+    if (!finalResponse) {
+      finalResponse = 'I have completed your request.';
+      onChunk(finalResponse);
+    }
     const responseTimeMs = Date.now() - startTime;
 
     await this.memoryService.addMessage(
@@ -717,9 +778,10 @@ export class AgentOrchestratorService {
       finalResponse,
       channelType,
       {
-        tokenUsagePrompt: llmResult.usage.promptTokens,
-        tokenUsageCompletion: llmResult.usage.completionTokens,
+        tokenUsagePrompt: totalTokenUsage.promptTokens,
+        tokenUsageCompletion: totalTokenUsage.completionTokens,
         responseTimeMs,
+        toolCalls: toolCallsExecuted.length > 0 ? toolCallsExecuted : undefined,
       },
     );
 
@@ -727,9 +789,9 @@ export class AgentOrchestratorService {
       response: finalResponse,
       conversationId: conversation.id,
       status: ConversationStatus.ACTIVE,
-      toolCallsExecuted: [],
+      toolCallsExecuted,
       knowledgeSourcesUsed: knowledgeTexts.length,
-      tokenUsage: llmResult.usage,
+      tokenUsage: totalTokenUsage,
       responseTimeMs,
       handedOff: false,
       limit: maxLimit,
