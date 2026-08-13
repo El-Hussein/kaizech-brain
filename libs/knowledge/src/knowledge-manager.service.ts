@@ -38,6 +38,7 @@ export class KnowledgeManagerService {
     rawContent?: string,
     faqData?: Array<{ question: string; answer: string; category?: string }>,
     industryId?: string | null,
+    parseType?: KnowledgeSourceType,
   ): Promise<KnowledgeSourceEntity> {
     const typeVal = String(sourceType || KnowledgeSourceType.TEXT);
     const source = new KnowledgeSourceEntity();
@@ -53,20 +54,23 @@ export class KnowledgeManagerService {
     try {
       let extractedText = '';
 
-      if (sourceType === KnowledgeSourceType.PDF && fileBuffer) {
+      // Use parseType for deciding HOW to parse the file, falling back to sourceType
+      const effectiveParseType = parseType || sourceType;
+
+      if (effectiveParseType === KnowledgeSourceType.PDF && fileBuffer) {
         extractedText = await this.parser.parseFileToMarkdown(fileBuffer, 'application/pdf');
-      } else if (sourceType === KnowledgeSourceType.DOCX && fileBuffer) {
+      } else if (effectiveParseType === KnowledgeSourceType.DOCX && fileBuffer) {
         extractedText = await this.parser.parseFileToMarkdown(fileBuffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      } else if (sourceType === KnowledgeSourceType.XLSX && fileBuffer) {
+      } else if (effectiveParseType === KnowledgeSourceType.XLSX && fileBuffer) {
         extractedText = await this.parser.parseFileToMarkdown(fileBuffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      } else if (sourceType === KnowledgeSourceType.MARKDOWN && fileBuffer) {
+      } else if (effectiveParseType === KnowledgeSourceType.MARKDOWN && fileBuffer) {
         extractedText = this.parser.parseMarkdown(fileBuffer);
-      } else if (sourceType === KnowledgeSourceType.FAQ && faqData) {
+      } else if (effectiveParseType === KnowledgeSourceType.FAQ && faqData) {
         extractedText = this.parser.parseFaqs(faqData);
-      } else if (sourceType === KnowledgeSourceType.WEBSITE && url) {
+      } else if (effectiveParseType === KnowledgeSourceType.WEBSITE && url) {
         const crawled = await this.crawler.crawlUrl(url);
         extractedText = crawled.content;
-      } else if (sourceType === KnowledgeSourceType.TEXT) {
+      } else if (effectiveParseType === KnowledgeSourceType.TEXT) {
         if (rawContent) {
           extractedText = rawContent;
         } else if (fileBuffer) {

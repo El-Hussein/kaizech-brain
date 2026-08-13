@@ -31,13 +31,14 @@ export class KnowledgeController {
   }
 
   @Post('upload')
-  @ApiOperation({ summary: 'Upload document (PDF, DOCX, XLSX)' })
+  @ApiOperation({ summary: 'Upload document (PDF, DOCX, XLSX, MD, TXT). Optionally mark as FAQ.' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
         file: { type: 'string', format: 'binary' },
+        sourceType: { type: 'string', enum: ['pdf', 'docx', 'xlsx', 'markdown', 'text', 'faq'], description: 'Optional override for source type. Use "faq" to mark a document as FAQ.' },
       },
     },
   })
@@ -45,33 +46,43 @@ export class KnowledgeController {
   async uploadDocument(
     @TenantContext() tenant: ITenantContext,
     @UploadedFile() file: Express.Multer.File,
+    @Body('sourceType') sourceTypeOverride?: string,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
-    let sourceType: KnowledgeSourceType;
+    // Determine parsing type from file extension
+    let parseType: KnowledgeSourceType;
     const filename = file.originalname.toLowerCase();
 
     if (filename.endsWith('.pdf')) {
-      sourceType = KnowledgeSourceType.PDF;
+      parseType = KnowledgeSourceType.PDF;
     } else if (filename.endsWith('.docx')) {
-      sourceType = KnowledgeSourceType.DOCX;
+      parseType = KnowledgeSourceType.DOCX;
     } else if (filename.endsWith('.xlsx')) {
-      sourceType = KnowledgeSourceType.XLSX;
+      parseType = KnowledgeSourceType.XLSX;
     } else if (filename.endsWith('.md') || filename.endsWith('.markdown')) {
-      sourceType = KnowledgeSourceType.MARKDOWN;
+      parseType = KnowledgeSourceType.MARKDOWN;
     } else if (filename.endsWith('.txt')) {
-      sourceType = KnowledgeSourceType.TEXT;
+      parseType = KnowledgeSourceType.TEXT;
     } else {
       throw new BadRequestException('Unsupported file format. Please upload PDF, DOCX, XLSX, or Markdown (.md) files.');
     }
 
+    // Allow overriding the stored source type (e.g. mark a DOCX as FAQ)
+    const storedType = sourceTypeOverride === 'faq' ? KnowledgeSourceType.FAQ : parseType;
+
     return this.knowledgeManager.processDocumentUpload(
       tenant.tenantId,
       file.originalname,
-      sourceType,
+      storedType,
       file.buffer,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      parseType,
     );
   }
 

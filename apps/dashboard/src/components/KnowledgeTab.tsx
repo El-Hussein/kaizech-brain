@@ -365,6 +365,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
 
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [markAsFaq, setMarkAsFaq] = useState(false);
 
   const [faqName, setFaqName] = useState('Product FAQ');
   const [faqs, setFaqs] = useState([{ question: '', answer: '' }]);
@@ -403,10 +404,14 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
       setUploading(true);
       const formData = new FormData();
       formData.append('file', uploadFile);
+      if (markAsFaq) {
+        formData.append('sourceType', 'faq');
+      }
       await axios.post('/api/v1/knowledge/upload', formData, {
         headers: { 'x-api-key': apiKey, 'Content-Type': 'multipart/form-data' },
       });
       setUploadFile(null);
+      setMarkAsFaq(false);
       fetchSources();
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Upload failed';
@@ -508,6 +513,53 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
               onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
               className="input-field"
             />
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: markAsFaq ? 'rgba(34, 211, 238, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                border: markAsFaq ? '1px solid rgba(34, 211, 238, 0.3)' : '1px solid var(--border-glass)',
+                transition: 'all 0.2s ease',
+                userSelect: 'none',
+              }}
+            >
+              <div
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '4px',
+                  border: markAsFaq ? '2px solid var(--accent-cyan)' : '2px solid var(--text-muted)',
+                  background: markAsFaq ? 'var(--accent-cyan)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                }}
+              >
+                {markAsFaq && <Check size={12} color="#000" strokeWidth={3} />}
+              </div>
+              <input
+                type="checkbox"
+                checked={markAsFaq}
+                onChange={(e) => setMarkAsFaq(e.target.checked)}
+                style={{ display: 'none' }}
+              />
+              <div>
+                <div style={{ fontWeight: 600, color: markAsFaq ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>
+                  <HelpCircle size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} />
+                  Mark as FAQ Document
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Tags this file as FAQ knowledge for higher-priority matching in conversations.
+                </div>
+              </div>
+            </label>
             <Button type="submit" variant="primary" loading={uploading} loadingText="Processing & Embedding..." disabled={!uploadFile} style={{ alignSelf: 'flex-start' }}>
               <Upload size={16} /> Upload & Train RAG
             </Button>
