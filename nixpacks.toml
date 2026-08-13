@@ -1,0 +1,2 @@
+[setup]
+pkgs = ["pnpm", "nodejs"]
