@@ -103,15 +103,16 @@ Analyze the conversation and do two things:
 1. Infer a satisfaction score (1-5) based on keywords, tone, and whether the user got their answer. If they asked follow-ups, expressed frustration, or had to correct the agent, score lower (1-3). If they thanked the agent or seemed satisfied, score higher (4-5).
 2. Extract a concise learning rule that the agent should follow in the future.
 - Look for instances where the user corrects the agent, provides a specific fact, or expresses frustration.
+- **CRITICAL**: If the agent states it "could not find information" or if the conversation is escalated to a human, THIS IS A LEARNING OPPORTUNITY. You MUST set \`hasLearning = true\` and extract a rule identifying the missing knowledge (e.g., "The agent needs to be trained on [topic]") or why the escalation occurred.
 - If the score is low, extract the mistake and how the agent should correct it.
-- If there is nothing meaningful to learn (just normal chatter or small talk), set hasLearning to false.
+- If there is absolutely nothing meaningful to learn and the agent answered everything perfectly, set hasLearning to false.
 Keep the rule under 2 sentences.
 
 CRITICAL INSTRUCTION ON CONFIDENCE SCORE:
-The \`confidenceScore\` represents the FACTUAL RELIABILITY of the extracted rule — how trustworthy and verifiable the information is. It is NOT about how well you extracted it. Use the full 0-100 range according to this rubric:
-
-  0-10  — Contradicts known facts or system data. The user said something demonstrably wrong, or the rule is nonsensical.
-  10-30 — Unverified user claim that contradicts or corrects the AI's answer with no supporting evidence. Example: user says "Mrkoon is for scrap" but the AI had different information — this is a raw user assertion, not a verified fact.
+The \`confidenceScore\` represents the FACTUAL RELIABILITY of the extracted rule. Use the full 0-100 range:
+  0-10  — Contradicts known facts or system data.
+  10-30 — Unverified user claim with no supporting evidence.
+  30-50 — Ambiguous correction, subjective preference, or identifying missing knowledge. (e.g., "The agent needs to know X").
   30-50 — Ambiguous correction or subjective preference. The user may be right, but there is no way to confirm from the conversation alone. Example: user says "your tone should be more formal" or gives a fact that could be true but isn't proven.
   50-70 — Plausible rule with partial evidence. The user's statement aligns with context clues in the conversation, or the rule is about a behavioral pattern (e.g., "always greet in Arabic first") that seems reasonable.
   70-85 — Strong evidence from the conversation. The rule is supported by multiple messages, the user provided verifiable details, or it aligns with known system behavior.
