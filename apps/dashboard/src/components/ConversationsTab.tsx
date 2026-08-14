@@ -166,7 +166,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       try {
         if (isManual) setRefreshing(true);
 
-        const res = await axios.get('/api/v1/conversations', {
+        const res = await axios.get('/api/v1/conversations?limit=1000', {
           headers: { 'x-api-key': apiKey },
         });
 
@@ -312,7 +312,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       }
 
       // 4. Update conversations thread list silently
-      const resList = await axios.get('/api/v1/conversations', {
+      const resList = await axios.get('/api/v1/conversations?limit=1000', {
         headers: { 'x-api-key': apiKey },
       });
       if (resList.data?.data) {
@@ -367,7 +367,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       );
 
       await loadConversationDetail(selectedConv.id);
-      const resList = await axios.get('/api/v1/conversations', {
+      const resList = await axios.get('/api/v1/conversations?limit=1000', {
         headers: { 'x-api-key': apiKey },
       });
       if (resList.data?.data) {
@@ -629,15 +629,17 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                       boxShadow: isSelected ? 'var(--glow-primary)' : 'none',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px' }}>
-                        {c.channelType === 'whatsapp' ? (
-                          <Phone size={13} color="var(--accent-emerald)" />
-                        ) : (
-                          <Terminal size={13} color="var(--accent-primary)" />
-                        )}
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span>{c.channelUserId}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', overflow: 'hidden' }}>
+                        <div style={{ flexShrink: 0 }}>
+                          {c.channelType === 'whatsapp' ? (
+                            <Phone size={13} color="var(--accent-emerald)" />
+                          ) : (
+                            <Terminal size={13} color="var(--accent-primary)" />
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.channelUserId}</span>
                           <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 400, fontFamily: '"JetBrains Mono", monospace' }}>
                             ID: {c.id.split('-')[0]}
                           </span>
