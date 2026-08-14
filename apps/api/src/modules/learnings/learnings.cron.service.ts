@@ -24,8 +24,8 @@ export class LearningsCronService {
   async handleLearningExtraction(tenantId?: string) {
     this.logger.log(`Starting learning extraction job${tenantId ? ` for tenant ${tenantId}` : ''}...`);
     
-    // Fetch conversations marked for learning in chunks of 50
-    const limit = 50;
+    // Fetch conversations marked for learning in chunks of 500
+    const limit = 500;
     const whereClause: FindOptionsWhere<ConversationEntity> = { isLearned: false };
     if (tenantId) {
       whereClause.tenantId = tenantId;
