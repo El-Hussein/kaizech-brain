@@ -9,6 +9,7 @@ import {
   UseGuards,
   NotFoundException,
   BadRequestException,
+  Delete,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -224,6 +225,27 @@ export class ConversationsController {
       limitExceeded: maxLimit > 0 && (conversation.messageCount || 0) >= maxLimit,
       handedOff: conversation.status === 'handed_off',
     };
+  }
+
+  @Delete('purge')
+  @ApiOperation({ summary: 'Purge all simulated conversations' })
+  async purgeSimulated(@TenantContext() tenant: ITenantContext) {
+    const allConvs = await this.conversationRepo.find({ where: { tenantId: tenant.tenantId } });
+    const simulatedConvs = allConvs.filter(c => c.channelUserId && c.channelUserId.includes('simulated'));
+    
+    if (simulatedConvs.length > 0) {
+      const convIds = simulatedConvs.map(c => c.id);
+      
+      // Delete all messages belonging to these conversations
+      for (const id of convIds) {
+        await this.messageRepo.delete({ conversationId: id });
+      }
+      
+      // Delete the conversations
+      await this.conversationRepo.remove(simulatedConvs);
+    }
+    
+    return { success: true, deletedCount: simulatedConvs.length };
   }
 
   @Get('stats')
