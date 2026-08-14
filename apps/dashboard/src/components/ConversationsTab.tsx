@@ -96,6 +96,9 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
   const [channelFilter, setChannelFilter] = useState<'all' | 'whatsapp' | 'api'>('all');
   const [replyInput, setReplyInput] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLInputElement>(null);
@@ -162,31 +165,42 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
   // Fetch live conversations list (left sidebar)
   const fetchConversations = useCallback(
-    async (isManual = false) => {
+    async (isManual = false, fetchPage = 1) => {
       try {
         if (isManual) setRefreshing(true);
+        if (fetchPage > 1) setLoadingMore(true);
 
-        const res = await axios.get('/api/v1/conversations?limit=1000', {
+        const res = await axios.get(`/api/v1/conversations?limit=20&page=${fetchPage}`, {
           headers: { 'x-api-key': apiKey },
         });
 
         const liveList: ConversationItem[] = res.data?.data || [];
-        setConversations(liveList);
+        
+        if (fetchPage === 1) {
+          setConversations(liveList);
+        } else {
+          setConversations((prev) => [...prev, ...liveList]);
+        }
+        
+        setHasMore(liveList.length === 20);
 
         // Auto select first conversation ONLY on initial page load if none selected
-        if (liveList.length > 0 && !selectedConvIdRef.current) {
-          selectedConvIdRef.current = liveList[0].id;
-          loadConversationDetail(liveList[0].id, true);
-        } else if (selectedConvIdRef.current) {
-          // Silent poll update for current active conversation without clearing UI or showing skeleton
-          const currentActiveId = selectedConvIdRef.current;
-          loadConversationDetail(currentActiveId, false);
+        if (fetchPage === 1) {
+          if (liveList.length > 0 && !selectedConvIdRef.current) {
+            selectedConvIdRef.current = liveList[0].id;
+            loadConversationDetail(liveList[0].id, true);
+          } else if (selectedConvIdRef.current) {
+            // Silent poll update for current active conversation without clearing UI or showing skeleton
+            const currentActiveId = selectedConvIdRef.current;
+            loadConversationDetail(currentActiveId, false);
+          }
         }
       } catch (err) {
         // Handled by global interceptor
       } finally {
-        setLoading(false);
+        if (fetchPage === 1) setLoading(false);
         setRefreshing(false);
+        setLoadingMore(false);
       }
     },
     [apiKey],
@@ -194,12 +208,13 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
   // Initial fetch and 10s background polling
   useEffect(() => {
-    fetchConversations(false);
+    fetchConversations(false, 1);
     const interval = setInterval(() => {
-      fetchConversations(false);
+      // Background poll only fetches the first page to check for new messages
+      fetchConversations(false, 1);
     }, 10000);
     return () => clearInterval(interval);
-  }, [apiKey, fetchConversations]);
+  }, [fetchConversations]);
 
   // Filtered Conversations List
   const filteredConversations = useMemo(() => {
@@ -698,6 +713,21 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                   </div>
                 );
               })
+            )}
+
+            {hasMore && !loading && (
+              <Button
+                variant="secondary"
+                disabled={loadingMore}
+                onClick={() => {
+                  const nextPage = page + 1;
+                  setPage(nextPage);
+                  fetchConversations(false, nextPage);
+                }}
+                style={{ marginTop: '8px', padding: '10px', fontSize: '12px', justifyContent: 'center' }}
+              >
+                {loadingMore ? 'Loading...' : 'Load More'}
+              </Button>
             )}
           </div>
         </div>
