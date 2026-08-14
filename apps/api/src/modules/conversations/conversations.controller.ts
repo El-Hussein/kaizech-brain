@@ -10,10 +10,11 @@ import {
   NotFoundException,
   BadRequestException,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, In } from 'typeorm';
 import { ConversationEntity, MessageEntity, TenantEntity } from '@kaizech/database';
 import { WhatsAppService } from '@kaizech/channels';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
