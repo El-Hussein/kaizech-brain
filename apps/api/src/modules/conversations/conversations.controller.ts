@@ -228,24 +228,51 @@ export class ConversationsController {
   }
 
   @Delete('purge')
-  @ApiOperation({ summary: 'Purge all simulated conversations' })
-  async purgeSimulated(@TenantContext() tenant: ITenantContext) {
-    const allConvs = await this.conversationRepo.find({ where: { tenantId: tenant.tenantId } });
-    const simulatedConvs = allConvs.filter(c => c.channelUserId && c.channelUserId.includes('simulated'));
+  @ApiOperation({ summary: 'Purge simulated test data' })
+  async purgeSimulatedData(@Req() req: any) {
+    const tenantContext = req.tenant;
     
-    if (simulatedConvs.length > 0) {
-      const convIds = simulatedConvs.map(c => c.id);
-      
-      // Delete all messages belonging to these conversations
-      for (const id of convIds) {
-        await this.messageRepo.delete({ conversationId: id });
+    // Find all simulated conversations for this tenant
+    const conversations = await this.conversationRepo.find({
+      where: {
+        tenantId: tenantContext.tenantId,
+        channelUserId: Like('simulated_user_%')
       }
-      
-      // Delete the conversations
-      await this.conversationRepo.remove(simulatedConvs);
+    });
+
+    if (conversations.length === 0) {
+      return { purged: 0, message: 'No simulated data found' };
     }
+
+    const conversationIds = conversations.map(c => c.id);
+
+    // Delete associated messages first
+    await this.messageRepo.delete({
+      conversationId: In(conversationIds)
+    });
+
+    // Delete the conversations
+    await this.conversationRepo.delete({
+      id: In(conversationIds)
+    });
+
+    return { purged: conversations.length, message: 'Successfully purged simulated data' };
+  }
+
+  @Post('reset-learned')
+  @ApiOperation({ summary: 'Reset isLearned for simulated test data' })
+  async resetLearned(@Req() req: any) {
+    const tenantContext = req.tenant;
     
-    return { success: true, deletedCount: simulatedConvs.length };
+    const result = await this.conversationRepo.update(
+      {
+        tenantId: tenantContext.tenantId,
+        channelUserId: Like('simulated_user_%')
+      },
+      { isLearned: false }
+    );
+
+    return { resetCount: result.affected || 0, message: 'Successfully reset isLearned flag' };
   }
 
   @Get('stats')
