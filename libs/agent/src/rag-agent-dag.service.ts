@@ -10,6 +10,7 @@ import { AIProviderFactory } from './providers/ai-provider.factory';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { TenantEntity } from '@kaizech/database';
+import { decryptSecret } from '@kaizech/shared';
 
 @Injectable()
 export class RagAgentDagService {
@@ -26,7 +27,7 @@ export class RagAgentDagService {
     userMessage: string,
     history: { role: string, content: string }[],
   ): Promise<string> {
-    const customApiKey = tenant.settings?.openaiApiKey || process.env.OPENAI_API_KEY;
+    const customApiKey = decryptSecret(tenant.settings?.openaiApiKey || process.env.OPENAI_API_KEY || '');
     if (!customApiKey) {
       throw new Error("API key not found for LangGraph");
     }

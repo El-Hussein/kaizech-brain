@@ -370,7 +370,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
       }
     }
     loadTenantDetails();
-  }, [loadApiKeys, apiKey]);
+  }, [loadApiKeys, apiKey, tenantId]);
 
   const handleSaveFaqSettings = async () => {
     setSavingFaqSettings(true);
