@@ -44,7 +44,7 @@ export class LearningsCronService {
 
     for (const conv of conversations) {
       // Skip if conversation is too short to learn anything
-      if (conv.messageCount < 4) {
+      if (conv.messageCount < 2) {
         conv.isLearned = true;
         await this.conversationRepo.save(conv);
         continue;
