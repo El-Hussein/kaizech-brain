@@ -226,6 +226,19 @@ export class ConversationsController {
     };
   }
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Get global conversation statistics' })
+  async getStats(@TenantContext() tenant: ITenantContext) {
+    const [total, active, handedOff, closed] = await Promise.all([
+      this.conversationRepo.count({ where: { tenantId: tenant.tenantId } }),
+      this.conversationRepo.count({ where: { tenantId: tenant.tenantId, status: 'active' } }),
+      this.conversationRepo.count({ where: { tenantId: tenant.tenantId, status: 'handed_off' } }),
+      this.conversationRepo.count({ where: { tenantId: tenant.tenantId, status: 'closed' } }),
+    ]);
+
+    return { total, active, handedOff, closed };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get conversation details with messages and limit status' })
   async findOne(

@@ -99,6 +99,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [counts, setCounts] = useState({ total: 0, active: 0, handedOff: 0, closed: 0 });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLInputElement>(null);
@@ -170,16 +171,44 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
         if (isManual) setRefreshing(true);
         if (fetchPage > 1) setLoadingMore(true);
 
-        const res = await axios.get(`/api/v1/conversations?limit=20&page=${fetchPage}`, {
-          headers: { 'x-api-key': apiKey },
-        });
+        const [res, statsRes] = await Promise.all([
+          axios.get(`/api/v1/conversations?limit=20&page=${fetchPage}`, {
+            headers: { 'x-api-key': apiKey },
+          }),
+          axios.get(`/api/v1/conversations/stats`, {
+            headers: { 'x-api-key': apiKey },
+          }).catch(() => ({ data: null })), // Fallback if stats fail
+        ]);
+
+        if (statsRes.data) {
+          setCounts(statsRes.data);
+        }
 
         const liveList: ConversationItem[] = res.data?.data || [];
         
         if (fetchPage === 1) {
-          setConversations(liveList);
+          if (isManual) {
+            setConversations(liveList);
+          } else {
+            setConversations((prev) => {
+              if (prev.length === 0) return liveList;
+              
+              // Smart merge for polling: prepend new, update existing
+              const existingIds = new Set(prev.map(c => c.id));
+              const newItems = liveList.filter(c => !existingIds.has(c.id));
+              const updatedPrev = prev.map(p => liveList.find(l => l.id === p.id) || p);
+              
+              const merged = [...newItems, ...updatedPrev];
+              // Sort by date DESC
+              return merged.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+            });
+          }
         } else {
-          setConversations((prev) => [...prev, ...liveList]);
+          setConversations((prev) => {
+            const existingIds = new Set(prev.map(c => c.id));
+            const newItems = liveList.filter(c => !existingIds.has(c.id));
+            return [...prev, ...newItems];
+          });
         }
         
         setHasMore(liveList.length === 20);
@@ -231,15 +260,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
     });
   }, [conversations, searchQuery, statusFilter, channelFilter]);
 
-  // Statistics counters
-  const counts = useMemo(() => {
-    return {
-      total: conversations.length,
-      active: conversations.filter((c) => c.status === 'active').length,
-      handedOff: conversations.filter((c) => c.status === 'handed_off').length,
-      closed: conversations.filter((c) => c.status === 'closed').length,
-    };
-  }, [conversations]);
+  // Removed local counts computation in favor of global API stats
 
   // Handle retrying a failed message dispatch
   const handleRetryMessage = async (msgToRetry: MessageItem) => {
