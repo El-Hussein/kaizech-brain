@@ -1,28 +1,28 @@
 :root {
-  --bg-dark: #090d16;
-  --bg-surface: #111827;
-  --bg-surface-elevated: #1f293d;
-  --bg-glass: rgba(17, 24, 39, 0.75);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-glass-hover: rgba(99, 102, 241, 0.4);
+  --bg-dark: #F4F7FC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FFFFFF;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --border-glass: #E2E8F0;
+  --border-glass-hover: rgba(29, 61, 132, 0.4);
 
-  --accent-primary: #6366f1;
-  --accent-secondary: #8b5cf6;
-  --accent-cyan: #06b6d4;
+  --accent-primary: #1D3D84;
+  --accent-secondary: #00E5FF;
+  --accent-cyan: #00E5FF;
   --accent-emerald: #10b981;
   --accent-amber: #f59e0b;
   --accent-rose: #f43f5e;
 
-  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-  --glow-primary: 0 0 25px rgba(99, 102, 241, 0.25);
+  --gradient-brand: linear-gradient(135deg, #1D3D84 0%, #00E5FF 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
+  --glow-primary: 0 4px 20px -2px rgba(17, 42, 92, 0.15);
 
-  --text-main: #f9fafb;
-  --text-muted: #9ca3af;
-  --text-dim: #6b7280;
+  --text-main: #112A5C;
+  --text-muted: #6b7280;
+  --text-dim: #9ca3af;
 
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 * {
@@ -218,7 +218,7 @@ pre.code-block {
   width: 260px;
   height: 100vh;
   flex-shrink: 0;
-  background: #0b0f19;
+  background: #FFFFFF;
   border-right: 1px solid var(--border-glass);
   padding: 24px 16px;
   display: flex;

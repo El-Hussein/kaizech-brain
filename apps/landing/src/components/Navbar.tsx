@@ -25,7 +25,7 @@ export function Navbar() {
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/logo.jpg" alt="Kaizech Brain" width={32} height={32} className="rounded-lg shadow-sm" />
+            <Image src="/logo.png" alt="Kaizech Brain" width={32} height={32} className="rounded-lg shadow-sm" />
             <span className="font-bold text-xl tracking-tight text-slate-900">Kaizech Brain</span>
           </Link>
           

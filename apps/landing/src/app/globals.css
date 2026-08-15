@@ -3,9 +3,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #6366F1;
-  --color-primary-hover: #4F46E5;
-  --color-accent: #06B6D4;
+  --color-primary: #1D3D84;
+  --color-primary-hover: #152c60;
+  --color-accent: #00E5FF;
   --color-surface: #ffffff;
   --color-surface-hover: #f8fafc;
   --color-border: #e2e8f0;
@@ -14,8 +14,8 @@
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #F4F7FC;
+  --foreground: #112A5C;
 }
 
 body {

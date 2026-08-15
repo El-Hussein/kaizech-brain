@@ -1,15 +1,15 @@
 export const WIDGET_STYLES = `
 :host {
-  --primary:       #5B5FEF;
-  --primary-light: #7C7FF5;
-  --primary-glow:  rgba(91, 95, 239, 0.45);
-  --accent:        #00E5C3;
-  --bg-panel:      #0D0F1C;
-  --bg-msg:        #161828;
+  --primary:       #1D3D84;
+  --primary-light: #1D3D84;
+  --primary-glow:  rgba(0, 229, 255, 0.45);
+  --accent:        #00E5FF;
+  --bg-panel:      #F4F7FC;
+  --bg-msg:        #FFFFFF;
   --bg-user-msg:   var(--primary);
-  --text-main:     #E8EAFF;
-  --text-muted:    #6B6F9A;
-  --border:        rgba(255,255,255,0.07);
+  --text-main:     #112A5C;
+  --text-muted:    #6B7280;
+  --border:        #E2E8F0;
   --radius-panel:  20px;
   --radius-bubble: 18px;
 
