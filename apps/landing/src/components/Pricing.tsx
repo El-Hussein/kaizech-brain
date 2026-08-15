@@ -100,7 +100,7 @@ export function Pricing() {
               </div>
               
               <Link 
-                href={tier.name === 'Enterprise' ? '#contact' : 'https://dashboard.kaizech.com/signup'}
+                href="/#contact"
                 className={`w-full py-3.5 px-4 rounded-xl text-center font-semibold transition-all mb-8 ${
                   tier.popular
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200'

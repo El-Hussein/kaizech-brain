@@ -39,7 +39,7 @@ export function Navbar() {
           
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="http://localhost:5173/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+            <Link href="https://kaizech-dashboard-production.up.railway.app/" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
               Log in
             </Link>
             <Link href="/#pricing" className="text-sm font-medium bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
@@ -66,7 +66,7 @@ export function Navbar() {
           <Link href="/#pricing" className="text-sm font-medium text-slate-600 p-2 hover:bg-slate-50 rounded-md">Pricing</Link>
           <Link href="/integration" className="text-sm font-medium text-slate-600 p-2 hover:bg-slate-50 rounded-md">Integration</Link>
           <hr className="border-slate-100" />
-          <Link href="http://localhost:5173/login" className="text-sm font-medium text-slate-600 p-2 hover:bg-slate-50 rounded-md">Log in</Link>
+          <Link href="https://kaizech-dashboard-production.up.railway.app/" className="text-sm font-medium text-slate-600 p-2 hover:bg-slate-50 rounded-md">Log in</Link>
           <Link href="/#pricing" className="text-sm font-medium text-center bg-indigo-600 text-white p-3 rounded-lg mt-2">Get Started</Link>
         </motion.div>
       )}
