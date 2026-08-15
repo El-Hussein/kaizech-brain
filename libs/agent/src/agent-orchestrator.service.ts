@@ -337,7 +337,11 @@ export class AgentOrchestratorService {
     
     try {
       this.logger.log(`Invoking RagAgentDagService for conversation ${conversation.id}`);
-      finalResponse = await this.ragAgentDag.runAgent(tenant, userMessage, historyForDag);
+      const dagResult = await this.ragAgentDag.runAgent(tenant, userMessage, historyForDag, toolDefinitions);
+      finalResponse = dagResult.response;
+      totalTokenUsage.promptTokens = dagResult.tokenUsage.promptTokens;
+      totalTokenUsage.completionTokens = dagResult.tokenUsage.completionTokens;
+      totalTokenUsage.totalTokens = dagResult.tokenUsage.totalTokens;
     } catch (err: any) {
       this.logger.error(`RagAgentDagService execution error: ${err.message}`);
       const autoHandoffOnError = tenant.settings?.autoHandoffOnError !== false;

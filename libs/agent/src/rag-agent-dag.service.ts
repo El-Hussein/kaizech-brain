@@ -11,6 +11,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { TenantEntity } from '@kaizech/database';
 import { decryptSecret } from '@kaizech/shared';
+import { ToolExecutorService } from '@kaizech/tools';
 
 @Injectable()
 export class RagAgentDagService {
@@ -20,13 +21,15 @@ export class RagAgentDagService {
     private readonly vectorSearchService: VectorSearchService,
     private readonly providerFactory: AIProviderFactory,
     @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly toolExecutor: ToolExecutorService,
   ) {}
 
   async runAgent(
     tenant: TenantEntity,
     userMessage: string,
     history: { role: string, content: string }[],
-  ): Promise<string> {
+    customToolDefs: any[] = [],
+  ): Promise<{ response: string, tokenUsage: { promptTokens: number, completionTokens: number, totalTokens: number } }> {
     const customApiKey = decryptSecret(tenant.settings?.openaiApiKey || process.env.OPENAI_API_KEY || '');
     if (!customApiKey) {
       throw new Error("API key not found for LangGraph");
@@ -35,14 +38,36 @@ export class RagAgentDagService {
     const vectorTool = createVectorSearchTool(tenant.id, this.vectorSearchService, this.providerFactory, customApiKey);
     const graphTool = createGraphSearchTool(tenant.id, this.dataSource);
     
-    const tools = [vectorTool, graphTool] as any[];
-    const toolNode = new (ToolNode as any)(tools);
+    // Create execution wrappers for custom tools
+    const customExecutionTools = customToolDefs.map(def => {
+      const { DynamicStructuredTool } = require('@langchain/core/tools');
+      const { z } = require('zod');
+      return new DynamicStructuredTool({
+        name: def.function.name,
+        description: def.function.description,
+        schema: z.record(z.any()), // accept any structured arguments
+        func: async (args: Record<string, any>) => {
+          try {
+            const res = await this.toolExecutor.executeTool(tenant, def.function.name, args);
+            return typeof res === 'string' ? res : JSON.stringify(res);
+          } catch (e: any) {
+            return `Error executing tool: ${e.message}`;
+          }
+        }
+      });
+    });
 
+    const executionTools = [vectorTool, graphTool, ...customExecutionTools] as any[];
+    const toolNode = new (ToolNode as any)(executionTools);
+
+    // Bind both langchain tools and raw openai schema tools to the model
+    const toolsToBind = [vectorTool, graphTool, ...customToolDefs];
+    
     const model = new ChatOpenAI({
       apiKey: customApiKey,
       modelName: tenant.settings?.openaiModel || 'gpt-4o-mini',
       temperature: 0,
-    }).bindTools(tools);
+    }).bindTools(toolsToBind);
 
     const shouldContinue = (state: typeof MessagesAnnotation.State) => {
       const messages = state.messages;
@@ -93,7 +118,17 @@ export class RagAgentDagService {
     try {
       const result = await app.invoke({ messages: initialMessages });
       const finalMessage = result.messages[result.messages.length - 1];
-      return finalMessage.content as string;
+      
+      let tokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+      if (finalMessage.response_metadata && finalMessage.response_metadata.tokenUsage) {
+        tokenUsage = {
+          promptTokens: finalMessage.response_metadata.tokenUsage.promptTokens || 0,
+          completionTokens: finalMessage.response_metadata.tokenUsage.completionTokens || 0,
+          totalTokens: finalMessage.response_metadata.tokenUsage.totalTokens || 0,
+        };
+      }
+      
+      return { response: finalMessage.content as string, tokenUsage };
     } catch (error: any) {
       this.logger.error(`LangGraph execution failed: ${error.message}`);
       throw error;
