@@ -679,7 +679,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
           <h3 style={{ fontSize: '18px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Database size={18} color="var(--accent-primary)" /> Indexed Knowledge Sources ({sources.length})
           </h3>
-          <Button variant="secondary" style={{ fontSize: '12px', padding: '6px 14px' }} onClick={fetchSources}>
+          <Button variant="secondary" style={{ fontSize: '12px', padding: '6px 14px' }} onClick={() => fetchSources()}>
             ↻ Refresh
           </Button>
         </div>

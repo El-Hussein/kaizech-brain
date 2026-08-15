@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Wrench, Play, Plus, Code, Edit2, RotateCcw, Info, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { Button } from './ui/Button';
@@ -71,10 +71,6 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
   const [testResult, setTestResult] = useState<any>(null);
   const [testing, setTesting] = useState(false);
 
-  useEffect(() => {
-    fetchTools(page);
-  }, [fetchTools, page]);
-
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 20;
@@ -126,6 +122,10 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
       setLoading(false);
     }
   }, [apiKey, page, limit]);
+
+  useEffect(() => {
+    fetchTools(page);
+  }, [fetchTools, page]);
 
   const handleSelectToolForTest = (toolName: string) => {
     setTestToolName(toolName);
