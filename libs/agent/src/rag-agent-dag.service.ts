@@ -99,7 +99,10 @@ export class RagAgentDagService {
       const { OpenAIEmbeddings } = require('@langchain/openai');
       const embeddings = new OpenAIEmbeddings({ apiKey: customApiKey, modelName: 'text-embedding-3-small' });
       const vector = await embeddings.embedQuery(userMessage);
-      const learnings = await this.vectorSearchService.searchLearnings(tenant.id, vector, 5, 0.3);
+      const learnings = await this.dataSource.query(
+        `SELECT learning_rule as content FROM agent_learnings WHERE tenant_id = $1 AND status = 'approved'`, 
+        [tenant.id]
+      );
       if (learnings && learnings.length > 0) {
         finalSystemPrompt += "\n\nCRITICAL - Please adhere to these learned rules from past user feedback:\n";
         learnings.forEach((l, index) => {
