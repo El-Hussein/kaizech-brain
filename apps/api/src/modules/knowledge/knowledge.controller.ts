@@ -10,6 +10,7 @@ import {
   UploadedFile,
   ParseUUIDPipe,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiSecurity, ApiConsumes, ApiBody } from '@nestjs/swagger';
@@ -26,8 +27,14 @@ export class KnowledgeController {
 
   @Get()
   @ApiOperation({ summary: 'List all knowledge sources for tenant' })
-  listSources(@TenantContext() tenant: ITenantContext) {
-    return this.knowledgeManager.listSourcesForTenant(tenant.tenantId);
+  listSources(
+    @TenantContext() tenant: ITenantContext,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    const page = pageStr ? parseInt(pageStr, 10) : 1;
+    const limit = limitStr ? parseInt(limitStr, 10) : 20;
+    return this.knowledgeManager.listSourcesForTenant(tenant.tenantId, page, limit);
   }
 
   @Post('upload')

@@ -72,17 +72,26 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
   const [testing, setTesting] = useState(false);
 
   useEffect(() => {
-    fetchTools();
-  }, [apiKey]);
+    fetchTools(page);
+  }, [fetchTools, page]);
 
-  const fetchTools = async () => {
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
+
+  const fetchTools = useCallback(async (p = page) => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/v1/tools', {
+      const res = await axios.get(`/api/v1/tools?page=${p}&limit=${limit}`, {
         headers: { 'x-api-key': apiKey },
       });
       const toolList = Array.isArray(res.data) ? res.data : (res.data?.data && Array.isArray(res.data.data) ? res.data.data : []);
       setTools(toolList);
+      if (res.data?.total !== undefined) {
+        setTotal(res.data.total);
+      } else {
+        setTotal(toolList.length);
+      }
 
       if (toolList.length > 0) {
         const firstTool = toolList[0];
@@ -502,6 +511,29 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
             </div>
           ))}
         </div>
+
+        {/* Pagination UI */}
+        {total > limit && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '24px' }}>
+            <Button 
+              variant="secondary" 
+              disabled={page === 1 || loading}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </Button>
+            <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+              Page {page} of {Math.ceil(total / limit)}
+            </span>
+            <Button 
+              variant="secondary" 
+              disabled={page >= Math.ceil(total / limit) || loading}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

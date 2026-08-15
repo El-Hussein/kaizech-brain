@@ -8,6 +8,7 @@ import {
   UseGuards,
   BadRequestException,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { ToolExecutorService } from '@kaizech/tools';
@@ -27,8 +28,14 @@ export class ToolsController {
 
   @Get()
   @ApiOperation({ summary: 'List registered tools for tenant' })
-  listTools(@TenantContext() tenant: ITenantContext) {
-    return this.toolExecutor.getActiveToolsForTenant(tenant.tenantId);
+  listTools(
+    @TenantContext() tenant: ITenantContext,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    const page = pageStr ? parseInt(pageStr, 10) : 1;
+    const limit = limitStr ? parseInt(limitStr, 10) : 20;
+    return this.toolExecutor.getActiveToolsForTenant(tenant.tenantId, page, limit);
   }
 
   @Post()

@@ -31,6 +31,10 @@ export const LearningsTab: React.FC = () => {
   const [expandedContexts, setExpandedContexts] = useState<Record<string, boolean>>({});
   const [extracting, setExtracting] = useState(false);
   
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
+
   // Undo snackbar state
   const [undoSnack, setUndoSnack] = useState<{ id: string; timeout: ReturnType<typeof setTimeout> } | null>(null);
 
@@ -44,11 +48,16 @@ export const LearningsTab: React.FC = () => {
     };
   }, [undoSnack]);
 
-  const fetchLearnings = async () => {
+  const fetchLearnings = async (p = page) => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/v1/learnings');
-      setLearnings(res.data);
+      const res = await axios.get(`/api/v1/learnings?page=${p}&limit=${limit}`);
+      if (res.data && res.data.data) {
+        setLearnings(res.data.data);
+        setTotal(res.data.total);
+      } else {
+        setLearnings(res.data || []);
+      }
     } catch (err) {
       // Handled by global interceptor
     } finally {
@@ -57,8 +66,8 @@ export const LearningsTab: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchLearnings();
-  }, []);
+    fetchLearnings(page);
+  }, [page]);
 
   const handleApprove = async (id: string, isEdited: boolean) => {
     try {
@@ -320,6 +329,29 @@ export const LearningsTab: React.FC = () => {
           })
         )}
       </div>
+
+      {/* Pagination UI */}
+      {total > limit && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '24px' }}>
+          <Button 
+            variant="secondary" 
+            disabled={page === 1 || loading}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </Button>
+          <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+            Page {page} of {Math.ceil(total / limit)}
+          </span>
+          <Button 
+            variant="secondary" 
+            disabled={page >= Math.ceil(total / limit) || loading}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Undo Snackbar */}
       {undoSnack && (

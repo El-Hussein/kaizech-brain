@@ -24,19 +24,27 @@ export class LearningsController {
   @ApiOperation({ summary: 'List agent learnings by status' })
   async findLearnings(
     @TenantContext() tenant: ITenantContext,
-    @Query('status') status?: AgentLearningStatus
+    @Query('status') status?: AgentLearningStatus,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
   ) {
+    const page = pageStr ? parseInt(pageStr, 10) : 1;
+    const limit = limitStr ? parseInt(limitStr, 10) : 20;
+    const skip = (page - 1) * limit;
+
     const whereClause: FindOptionsWhere<AgentLearningEntity> = { tenantId: tenant.tenantId };
     if (status) {
       whereClause.status = status;
     }
     
-    const learnings = await this.learningRepo.find({
+    const [learnings, total] = await this.learningRepo.findAndCount({
       where: whereClause,
       order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
     });
 
-    return learnings.map(l => {
+    const data = learnings.map(l => {
       let metadata = { reasoning: 'No reasoning provided by AI.', transcript: '' };
       if (l.originalLLMOutput) {
         try {
@@ -61,6 +69,13 @@ export class LearningsController {
         createdAt: l.createdAt,
       };
     });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   @Post(':id/approve')

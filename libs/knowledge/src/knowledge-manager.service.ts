@@ -204,11 +204,16 @@ Text:\n${extractedText.substring(0, 30000)}`;
     }
   }
 
-  async listSourcesForTenant(tenantId: string): Promise<KnowledgeSourceEntity[]> {
-    return this.sourceRepository.find({
+  async listSourcesForTenant(tenantId: string, page: number = 1, limit: number = 20): Promise<{ data: KnowledgeSourceEntity[], total: number, page: number, limit: number }> {
+    const skip = (page - 1) * limit;
+    const [data, total] = await this.sourceRepository.findAndCount({
       where: { tenantId },
       order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
     });
+    
+    return { data, total, page, limit };
   }
 
   async deleteSource(tenantId: string, sourceId: string): Promise<void> {

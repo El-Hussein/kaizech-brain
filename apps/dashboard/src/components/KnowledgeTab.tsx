@@ -376,26 +376,35 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
   const [error, setError] = useState<string | null>(null);
   const [viewingSource, setViewingSource] = useState<Source | null>(null);
 
-  const fetchSources = useCallback(async () => {
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
+
+  const fetchSources = useCallback(async (p = page) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await axios.get('/api/v1/knowledge', {
+      const res = await axios.get(`/api/v1/knowledge?page=${p}&limit=${limit}`, {
         headers: { 'x-api-key': apiKey },
       });
       const sourceList = Array.isArray(res.data) ? res.data : (res.data?.data && Array.isArray(res.data.data) ? res.data.data : []);
       setSources(sourceList);
+      if (res.data?.total !== undefined) {
+        setTotal(res.data.total);
+      } else {
+        setTotal(sourceList.length);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Could not connect to backend API server.');
       setSources([]);
     } finally {
       setLoading(false);
     }
-  }, [apiKey]);
+  }, [apiKey, page, limit]);
 
   useEffect(() => {
-    fetchSources();
-  }, [fetchSources]);
+    fetchSources(page);
+  }, [fetchSources, page]);
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -779,8 +788,30 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
             })}
           </div>
         )}
-      </div>
 
+        {/* Pagination UI */}
+        {total > limit && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '24px' }}>
+            <Button 
+              variant="secondary" 
+              disabled={page === 1 || loading}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </Button>
+            <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+              Page {page} of {Math.ceil(total / limit)}
+            </span>
+            <Button 
+              variant="secondary" 
+              disabled={page >= Math.ceil(total / limit) || loading}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
       {/* Viewer Modal */}
       {viewingSource && (
         <ViewerModal

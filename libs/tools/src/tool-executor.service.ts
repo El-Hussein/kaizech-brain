@@ -14,11 +14,15 @@ export class ToolExecutorService {
     private readonly toolManifestRepository: Repository<ToolManifestEntity>,
   ) {}
 
-  async getActiveToolsForTenant(tenantId: string): Promise<ToolManifestEntity[]> {
-    return this.toolManifestRepository.find({
+  async getActiveToolsForTenant(tenantId: string, page: number = 1, limit: number = 20): Promise<{ data: ToolManifestEntity[], total: number, page: number, limit: number }> {
+    const skip = (page - 1) * limit;
+    const [data, total] = await this.toolManifestRepository.findAndCount({
       where: { tenantId, isActive: true },
       order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
     });
+    return { data, total, page, limit };
   }
 
   async deleteTool(tenantId: string, idOrName: string): Promise<boolean> {
@@ -38,8 +42,9 @@ export class ToolExecutorService {
   }
 
   async getToolDefinitionsForTenant(tenantId: string): Promise<ToolDefinition[]> {
-    const tools = await this.getActiveToolsForTenant(tenantId);
-    return tools.map((tool) => ({
+    // For LLM usage, we fetch a large limit to get all tools
+    const toolsResult = await this.getActiveToolsForTenant(tenantId, 1, 1000);
+    return toolsResult.data.map((tool) => ({
       type: 'function',
       function: {
         name: tool.name,
