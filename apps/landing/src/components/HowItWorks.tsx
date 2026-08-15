@@ -11,27 +11,8 @@ const steps = [
     color: "from-indigo-500 to-indigo-600",
     bg: "bg-indigo-50",
     visual: (
-      <div className="w-full h-full p-6 flex flex-col gap-3 justify-center">
-        <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-slate-100">
-          <FileText className="text-rose-500" size={24} />
-          <div className="flex-1">
-            <div className="h-2 w-24 bg-slate-200 rounded-full mb-2"></div>
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full w-3/4 bg-emerald-500 rounded-full"></div>
-            </div>
-          </div>
-          <CheckCircle2 className="text-emerald-500" size={20} />
-        </div>
-        <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-slate-100/50">
-          <Database className="text-blue-500" size={24} />
-          <div className="flex-1">
-            <div className="h-2 w-32 bg-slate-200 rounded-full mb-2"></div>
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full w-full bg-emerald-500 rounded-full"></div>
-            </div>
-          </div>
-          <CheckCircle2 className="text-emerald-500" size={20} />
-        </div>
+      <div className="w-full h-full flex items-center justify-center overflow-hidden">
+        <img src="/connect-knowledge.png" alt="Connect Knowledge UI" className="w-full h-full object-cover object-left-top opacity-95" />
       </div>
     )
   },
@@ -41,25 +22,8 @@ const steps = [
     color: "from-cyan-500 to-cyan-600",
     bg: "bg-cyan-50",
     visual: (
-      <div className="w-full h-full p-6 flex flex-col gap-4 justify-center">
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <Bot size={16} className="text-cyan-500" /> Persona Setup
-            </div>
-            <div className="h-4 w-16 bg-cyan-100 rounded-md"></div>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="h-2 w-20 bg-slate-200 rounded-full"></div>
-              <div className="w-8 h-4 bg-emerald-500 rounded-full relative"><div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="h-2 w-24 bg-slate-200 rounded-full"></div>
-              <div className="w-full max-w-[100px] h-2 bg-slate-100 rounded-full relative overflow-hidden"><div className="absolute left-0 top-0 h-full w-2/3 bg-cyan-500 rounded-full"></div></div>
-            </div>
-          </div>
-        </div>
+      <div className="w-full h-full flex items-center justify-center overflow-hidden">
+        <img src="/configure-agent.png" alt="Configure Agent UI" className="w-full h-full object-cover object-left-top opacity-95" />
       </div>
     )
   },
@@ -69,18 +33,8 @@ const steps = [
     color: "from-fuchsia-500 to-fuchsia-600",
     bg: "bg-fuchsia-50",
     visual: (
-      <div className="w-full h-full p-6 flex flex-col gap-3 justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 flex-1 flex flex-col overflow-hidden">
-          <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex items-center gap-2">
-            <Beaker size={14} className="text-fuchsia-600" /> <span className="text-xs font-semibold text-slate-600">Test Environment</span>
-          </div>
-          <div className="p-4 flex-1 flex flex-col gap-3">
-            <div className="self-end bg-fuchsia-600 text-white text-xs px-3 py-2 rounded-2xl rounded-tr-sm shadow-sm">What's your refund policy?</div>
-            <div className="self-start bg-slate-100 text-slate-700 text-xs px-3 py-2 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2">
-              <div className="flex gap-1"><div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div><div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-75"></div><div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-150"></div></div>
-            </div>
-          </div>
-        </div>
+      <div className="w-full h-full flex items-center justify-center overflow-hidden">
+        <img src="/chat-debugger.png" alt="Chat Debugger UI" className="w-full h-full object-cover object-left-top opacity-95" />
       </div>
     )
   },
