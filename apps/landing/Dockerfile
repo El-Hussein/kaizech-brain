@@ -3,7 +3,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.json ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.json tailwind.preset.js ./
 COPY libs ./libs
 COPY apps/landing ./apps/landing
 
