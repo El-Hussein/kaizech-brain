@@ -125,7 +125,7 @@ export const ToolsTab: React.FC<ToolsProps> = ({ apiKey }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiKey, page, limit]);
 
   const handleSelectToolForTest = (toolName: string) => {
     setTestToolName(toolName);
