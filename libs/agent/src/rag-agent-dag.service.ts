@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { StateGraph, MessagesAnnotation } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatOpenAI } from '@langchain/openai';
-import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { BaseMessage, HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages';
 import { createVectorSearchTool } from './tools/vector-search.tool';
 import { createGraphSearchTool } from './tools/graph-search.tool';
 import { VectorSearchService } from '@kaizech/rag';
@@ -99,7 +99,7 @@ export class RagAgentDagService {
       const { OpenAIEmbeddings } = require('@langchain/openai');
       const embeddings = new OpenAIEmbeddings({ apiKey: customApiKey, modelName: 'text-embedding-3-small' });
       const vector = await embeddings.embedQuery(userMessage);
-      const learnings = await this.vectorSearchService.searchLearnings(tenant.id, vector, 3);
+      const learnings = await this.vectorSearchService.searchLearnings(tenant.id, vector, 5, 0.3);
       if (learnings && learnings.length > 0) {
         finalSystemPrompt += "\n\nCRITICAL - Please adhere to these learned rules from past user feedback:\n";
         learnings.forEach((l, index) => {
@@ -112,7 +112,7 @@ export class RagAgentDagService {
     
     const initialMessages: BaseMessage[] = [
       new SystemMessage(finalSystemPrompt),
-      ...history.map(m => new HumanMessage({ content: m.content })),
+      ...history.map(m => m.role === 'assistant' || m.role === 'ai' ? new AIMessage({ content: m.content }) : new HumanMessage({ content: m.content })),
       new HumanMessage(userMessage)
     ];
 
