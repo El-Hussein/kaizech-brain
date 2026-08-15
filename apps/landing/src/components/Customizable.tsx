@@ -71,39 +71,22 @@ export function Customizable() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="relative"
           >
-            <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-100 to-blue-100 rounded-3xl transform rotate-3"></div>
-            <div className="relative bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <div className="font-semibold text-slate-700 text-sm">Agent Settings</div>
-                <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-slate-200"></div><div className="w-3 h-3 rounded-full bg-slate-200"></div></div>
-              </div>
-              <div className="p-6 space-y-6">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium text-slate-700">AI Model</span>
-                    <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs">gpt-4o-mini</span>
-                  </div>
-                  <div className="h-10 bg-slate-50 border border-slate-200 rounded-lg"></div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium text-slate-700">Strict RAG Mode</span>
-                    <div className="w-10 h-5 bg-emerald-500 rounded-full relative">
-                      <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500">Only answer using uploaded documents.</p>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium text-slate-700">Temperature</span>
-                    <span className="text-slate-500">0.2</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full relative">
-                    <div className="absolute left-0 top-0 h-full w-1/5 bg-indigo-500 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-100 to-blue-100 rounded-3xl transform rotate-3 opacity-50"></div>
+            
+            <div className="relative h-[400px] sm:h-[500px] w-full">
+              {/* Back Image (FAQ Settings) */}
+              <img 
+                src="/faq-settings.png" 
+                alt="FAQ Settings Control" 
+                className="absolute top-4 right-0 w-[85%] rounded-xl shadow-2xl border border-slate-700/20 transform rotate-3 hover:rotate-0 hover:scale-105 hover:z-30 transition-all duration-300"
+              />
+
+              {/* Front Image (Handoff Settings) */}
+              <img 
+                src="/handoff-settings.png" 
+                alt="Handoff Settings Control" 
+                className="absolute bottom-12 left-0 w-[85%] rounded-xl shadow-2xl border border-slate-700/20 transform -rotate-3 hover:rotate-0 hover:scale-105 hover:z-30 transition-all duration-300 z-20"
+              />
             </div>
           </motion.div>
 
