@@ -176,7 +176,8 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
                     fontSize: '14px',
                     lineHeight: '1.5',
                     background: msg.role === 'user' ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
-                    color: '#ffffff',
+                    color: msg.role === 'user' ? '#ffffff' : 'var(--text-main)',
+                    border: msg.role === 'user' ? 'none' : '1px solid var(--border-glass)',
                     boxShadow: msg.role === 'user' ? 'var(--glow-primary)' : 'none',
                   }}
                 >
