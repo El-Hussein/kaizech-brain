@@ -348,12 +348,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       }
 
       // 4. Update conversations thread list silently
-      const resList = await axios.get('/api/v1/conversations?limit=1000', {
-        headers: { 'x-api-key': apiKey },
-      });
-      if (resList.data?.data) {
-        setConversations(resList.data.data);
-      }
+      fetchConversations(false, 1);
     } catch (err) {
       // Handled by global interceptor
       // Mark message status as failed so operator can see & retry!
@@ -403,12 +398,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       );
 
       await loadConversationDetail(selectedConv.id);
-      const resList = await axios.get('/api/v1/conversations?limit=1000', {
-        headers: { 'x-api-key': apiKey },
-      });
-      if (resList.data?.data) {
-        setConversations(resList.data.data);
-      }
+      fetchConversations(false, 1);
     } catch (err) {
       // Handled by global interceptor
     }
