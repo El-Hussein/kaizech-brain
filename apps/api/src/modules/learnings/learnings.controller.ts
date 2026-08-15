@@ -32,8 +32,9 @@ export class LearningsController {
     const results = await qb.getRawMany();
     const stats = { PENDING: 0, APPROVED: 0, REJECTED: 0 };
     for (const row of results) {
-      if (row.status in stats) {
-        stats[row.status as keyof typeof stats] = parseInt(row.count, 10);
+      const statusKey = row.status.toUpperCase();
+      if (statusKey in stats) {
+        stats[statusKey as keyof typeof stats] = parseInt(row.count, 10);
       }
     }
     return stats;
@@ -53,7 +54,7 @@ export class LearningsController {
 
     const whereClause: FindOptionsWhere<AgentLearningEntity> = { tenantId: tenant.tenantId };
     if (status) {
-      whereClause.status = status;
+      whereClause.status = status.toLowerCase() as AgentLearningStatus;
     }
     
     const [learnings, total] = await this.learningRepo.findAndCount({
