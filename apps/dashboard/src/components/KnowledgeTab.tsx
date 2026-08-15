@@ -506,13 +506,50 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
       <div className="glass-card" style={{ padding: '24px' }}>
         {activeSubTab === 'upload' && (
           <form onSubmit={handleFileUpload} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <label style={{ fontSize: '14px', fontWeight: 700 }}>Select File (PDF, DOCX, XLSX, Markdown .md)</label>
-            <input
-              type="file"
-              accept=".pdf,.docx,.xlsx,.md,.markdown"
-              onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-              className="input-field"
-            />
+            <div 
+              style={{
+                border: '2px dashed var(--border-glass)',
+                borderRadius: '16px',
+                padding: '48px 20px',
+                textAlign: 'center',
+                background: uploadFile ? 'rgba(16, 185, 129, 0.05)' : 'rgba(248, 250, 252, 0.5)',
+                borderColor: uploadFile ? 'var(--accent-emerald)' : 'var(--border-glass)',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
+                transition: 'all 0.2s ease',
+              }}
+              onClick={() => document.getElementById('file-upload')?.click()}
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.background = 'rgba(29, 61, 132, 0.05)'; }}
+              onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = uploadFile ? 'var(--accent-emerald)' : 'var(--border-glass)'; e.currentTarget.style.background = uploadFile ? 'rgba(16, 185, 129, 0.05)' : 'rgba(248, 250, 252, 0.5)'; }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.currentTarget.style.borderColor = uploadFile ? 'var(--accent-emerald)' : 'var(--border-glass)';
+                e.currentTarget.style.background = uploadFile ? 'rgba(16, 185, 129, 0.05)' : 'rgba(248, 250, 252, 0.5)';
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  setUploadFile(e.dataTransfer.files[0]);
+                }
+              }}
+            >
+              <FileText size={36} color={uploadFile ? 'var(--accent-emerald)' : 'var(--text-muted)'} />
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '16px', color: uploadFile ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
+                  {uploadFile ? uploadFile.name : 'Click to upload or drag and drop a file'}
+                </p>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  Supported formats: PDF, DOCX, XLSX, Markdown .md
+                </p>
+              </div>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".pdf,.docx,.xlsx,.md,.markdown"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                style={{ display: 'none' }}
+              />
+            </div>
             <label
               style={{
                 display: 'flex',
