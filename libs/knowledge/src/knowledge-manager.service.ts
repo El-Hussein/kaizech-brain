@@ -219,6 +219,9 @@ Text:\n${extractedText.substring(0, 30000)}`;
       throw new NotFoundException(`Knowledge source '${sourceId}' not found.`);
     }
 
+    // Delete associated vector chunks
+    await this.chunkRepository.delete({ sourceId, tenantId });
+
     await this.sourceRepository.softRemove(source);
   }
 
