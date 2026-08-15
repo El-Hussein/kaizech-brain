@@ -144,7 +144,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px', height: '650px' }}>
+      <div className="responsive-split-view" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px', height: '650px' }}>
         {/* Chat Window */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '10px' }}>

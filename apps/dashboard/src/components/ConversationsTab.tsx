@@ -562,7 +562,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
       </div>
 
       {/* ── Main Layout: Split view (Threads List + Message Detail) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', height: '660px' }}>
+      <div className="responsive-split-view" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', height: '660px' }}>
         {/* Left Column: Active Threads List */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
           {/* Search & Filters */}

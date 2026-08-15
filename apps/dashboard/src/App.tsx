@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   Code2,
   BrainCircuit,
+  Menu,
+  X,
 } from 'lucide-react';
 import axios from 'axios';
 import { LoginPage } from './components/LoginPage';
@@ -148,6 +150,9 @@ export const App: React.FC = () => {
     'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'embed' | 'conversations' | 'settings' | 'learnings'
   >('overview');
 
+  // Mobile Menu State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Auth Session State
   const [session, setSession] = useState<{
     token: string;
@@ -226,12 +231,38 @@ export const App: React.FC = () => {
     }
   }, [session, activeTab]);
 
+  const handleTabClick = (tab: any) => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="app-container">
-      {/* Sidebar */}
-      <aside className="sidebar">
+      {/* Mobile Header */}
+      <div className="mobile-header">
         <div className="sidebar-logo">
-          <Brain size={28} /> Kaizech Brain
+          <Brain size={24} color="var(--accent-primary)" /> Kaizech Brain
+        </div>
+        <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)}>
+          <Menu size={24} color="var(--text-main)" />
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)}></div>
+      )}
+
+      {/* Sidebar Navigation */}
+      <aside className={`sidebar ${isMobileMenuOpen ? 'sidebar-open' : ''}`}>
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="sidebar-logo">
+            <Brain size={28} color="var(--accent-primary)" /> Kaizech Brain
+          </div>
+          <button className="mobile-close-btn" onClick={() => setIsMobileMenuOpen(false)}>
+            <X size={24} color="var(--text-muted)" />
+          </button>
         </div>
 
         {/* Locked Active Workspace Badge */}
@@ -269,49 +300,49 @@ export const App: React.FC = () => {
         <ul className="nav-menu">
           <li
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            onClick={() => handleTabClick('overview')}
           >
             <LayoutDashboard size={18} /> Overview
           </li>
           <li
             className={`nav-item ${activeTab === 'prompt' ? 'active' : ''}`}
-            onClick={() => setActiveTab('prompt')}
+            onClick={() => handleTabClick('prompt')}
           >
             <Sliders size={18} /> Prompt Builder
           </li>
           <li
             className={`nav-item ${activeTab === 'knowledge' ? 'active' : ''}`}
-            onClick={() => setActiveTab('knowledge')}
+            onClick={() => handleTabClick('knowledge')}
           >
             <Database size={18} /> Knowledge (RAG)
           </li>
           <li
             className={`nav-item ${activeTab === 'tools' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tools')}
+            onClick={() => handleTabClick('tools')}
           >
             <Wrench size={18} /> Tools & API Tester
           </li>
           <li
             className={`nav-item ${activeTab === 'playground' ? 'active' : ''}`}
-            onClick={() => setActiveTab('playground')}
+            onClick={() => handleTabClick('playground')}
           >
             <PlayCircle size={18} /> AI Playground
           </li>
           <li
             className={`nav-item ${activeTab === 'embed' ? 'active' : ''}`}
-            onClick={() => setActiveTab('embed')}
+            onClick={() => handleTabClick('embed')}
           >
             <Code2 size={18} /> Embed & SDKs
           </li>
           <li
             className={`nav-item ${activeTab === 'conversations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('conversations')}
+            onClick={() => handleTabClick('conversations')}
           >
             <MessageSquare size={18} /> Conversations & Support
           </li>
           <li
             className={`nav-item ${activeTab === 'learnings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('learnings')}
+            onClick={() => handleTabClick('learnings')}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -332,7 +363,7 @@ export const App: React.FC = () => {
           </li>
           <li
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
+            onClick={() => handleTabClick('settings')}
           >
             <Settings size={18} /> Settings & API Keys
           </li>

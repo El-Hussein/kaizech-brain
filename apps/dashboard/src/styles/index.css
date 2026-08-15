@@ -212,6 +212,45 @@ pre.code-block {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  position: relative;
+}
+
+/* Mobile Navigation Additions */
+.mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-glass);
+  width: 100%;
+  z-index: 40;
+}
+
+.mobile-menu-btn, .mobile-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-close-btn {
+  display: none;
+}
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 45;
+  display: none;
 }
 
 .sidebar {
@@ -225,6 +264,8 @@ pre.code-block {
   flex-direction: column;
   gap: 24px;
   overflow-y: auto;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
 }
 
 .sidebar-logo {
@@ -312,7 +353,58 @@ pre.code-block {
 
 /* Ensure sticky preview container works correctly */
 @media (max-width: 900px) {
-  .main-content > div > div[style*="grid-template-columns"] {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-overlay {
+    display: block;
+  }
+
+  .mobile-close-btn {
+    display: flex;
+  }
+
+  .main-content {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  /* Responsive generic split view class for complex tabs */
+  .responsive-split-view {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  
+  .responsive-split-view > div {
+    min-height: 400px;
+  }
+
+  div[style*="1fr 2fr"],
+  div[style*="2fr 1fr"],
+  div[style*="3fr 2fr"],
+  div[style*="1fr 1fr"],
+  div[style*="360px 1fr"] {
     grid-template-columns: 1fr !important;
+    height: auto !important;
   }
 }
