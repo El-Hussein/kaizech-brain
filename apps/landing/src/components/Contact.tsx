@@ -68,7 +68,7 @@ export function Contact() {
                 Ready to transform your business?
               </h2>
               <p className="text-slate-300 text-lg mb-8 max-w-md">
-                Join our Early Bird program today and get exclusive onboarding support, custom agent configuration, and 3 months of Enterprise features for free.
+                Join our Early Bird program today and get exclusive onboarding support and custom agent configuration tailored to your business needs.
               </p>
               
               <ul className="space-y-4 mb-8 text-slate-300">
