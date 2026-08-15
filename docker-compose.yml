@@ -83,6 +83,18 @@ services:
     depends_on:
       - api
 
+  # Landing Page
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    container_name: kaizech-landing
+    restart: unless-stopped
+    ports:
+      - '3001:3000'
+    depends_on:
+      - api
+
 volumes:
   pgdata:
     driver: local
