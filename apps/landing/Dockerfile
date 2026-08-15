@@ -9,6 +9,10 @@ COPY apps/landing ./apps/landing
 
 RUN pnpm install
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN pnpm --filter @kaizech/landing build
 
 FROM node:22-alpine AS runner
