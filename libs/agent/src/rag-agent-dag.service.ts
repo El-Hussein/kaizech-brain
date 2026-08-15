@@ -29,6 +29,7 @@ export class RagAgentDagService {
     userMessage: string,
     history: { role: string, content: string }[],
     customToolDefs: any[] = [],
+    systemPrompt?: string,
   ): Promise<{ response: string, tokenUsage: { promptTokens: number, completionTokens: number, totalTokens: number } }> {
     const customApiKey = decryptSecret(tenant.settings?.openaiApiKey || process.env.OPENAI_API_KEY || '');
     if (!customApiKey) {
@@ -92,7 +93,7 @@ export class RagAgentDagService {
 
     const app = workflow.compile();
 
-    let systemPrompt = tenant.settings?.systemPrompt || "You are a helpful AI assistant. Use the provided tools (vector_search, graph_search) to find information and answer the user's questions based on the retrieved context.";
+    let finalSystemPrompt = systemPrompt || tenant.settings?.systemPrompt || "You are a helpful AI assistant. Use the provided tools (vector_search, graph_search) to find information and answer the user's questions based on the retrieved context.";
 
     try {
       const { OpenAIEmbeddings } = require('@langchain/openai');
@@ -100,9 +101,9 @@ export class RagAgentDagService {
       const vector = await embeddings.embedQuery(userMessage);
       const learnings = await this.vectorSearchService.searchLearnings(tenant.id, vector, 3);
       if (learnings && learnings.length > 0) {
-        systemPrompt += "\n\nCRITICAL - Please adhere to these learned rules from past user feedback:\n";
+        finalSystemPrompt += "\n\nCRITICAL - Please adhere to these learned rules from past user feedback:\n";
         learnings.forEach((l, index) => {
-          systemPrompt += `${index + 1}. ${l.content}\n`;
+          finalSystemPrompt += `${index + 1}. ${l.content}\n`;
         });
       }
     } catch (err) {
@@ -110,7 +111,7 @@ export class RagAgentDagService {
     }
     
     const initialMessages: BaseMessage[] = [
-      new SystemMessage(systemPrompt),
+      new SystemMessage(finalSystemPrompt),
       ...history.map(m => new HumanMessage({ content: m.content })),
       new HumanMessage(userMessage)
     ];

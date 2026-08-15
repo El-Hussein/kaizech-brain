@@ -335,9 +335,25 @@ export class AgentOrchestratorService {
     
     const historyForDag = recentMessages.map(m => ({ role: m.role, content: m.content || '' }));
     
+    let knowledgeTexts: string[] = [];
+    try {
+      const chunks = await this.vectorSearch.search(tenant.id, userEmbedding, 3, 0.4);
+      knowledgeTexts = chunks.map((c) => c.content);
+    } catch (err: any) {
+      this.logger.warn(`Knowledge retrieval warning: ${err.message}`);
+    }
+
+    const systemPrompt = await this.promptBuilder.buildSystemPrompt({
+      tenant,
+      userProfile,
+      summary,
+      knowledgeContext: knowledgeTexts,
+      currentLanguage: userProfile.preferredLanguage,
+    });
+
     try {
       this.logger.log(`Invoking RagAgentDagService for conversation ${conversation.id}`);
-      const dagResult = await this.ragAgentDag.runAgent(tenant, userMessage, historyForDag, toolDefinitions);
+      const dagResult = await this.ragAgentDag.runAgent(tenant, userMessage, historyForDag, toolDefinitions, systemPrompt);
       finalResponse = dagResult.response;
       totalTokenUsage.promptTokens = dagResult.tokenUsage.promptTokens;
       totalTokenUsage.completionTokens = dagResult.tokenUsage.completionTokens;
@@ -391,7 +407,6 @@ export class AgentOrchestratorService {
     }
 
     const responseTimeMs = Date.now() - startTime;
-    const knowledgeTexts: string[] = []; // Tracked internally by DAG now
 
     // 9b. Check Fallback / Unanswerable Auto-Handoff Rule
     const autoHandoffOnUncertainty = tenant.settings?.autoHandoffOnUncertainty !== false;
