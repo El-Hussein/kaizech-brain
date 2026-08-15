@@ -1072,18 +1072,18 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                           )}
 
                           <div>
-                            <div
-                              style={{
-                                padding: '12px 16px',
-                                borderRadius: '14px',
-                                fontSize: '14px',
-                                lineHeight: '1.5',
-                                background: isUser ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
-                                color: '#ffffff',
-                                border: isUser ? 'none' : '1px solid var(--border-glass)',
-                                boxShadow: isUser ? 'var(--glow-primary)' : 'none',
-                              }}
-                            >
+                              <div
+                                style={{
+                                  padding: '12px 16px',
+                                  borderRadius: '14px',
+                                  fontSize: '14px',
+                                  lineHeight: '1.5',
+                                  background: isUser ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
+                                  color: isUser ? '#ffffff' : 'var(--text-main)',
+                                  border: isUser ? 'none' : '1px solid var(--border-glass)',
+                                  boxShadow: isUser ? 'var(--glow-primary)' : 'none',
+                                }}
+                              >
                               <FormattedMessage content={msg.content} />
                             </div>
                             <div
