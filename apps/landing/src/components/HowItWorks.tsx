@@ -39,26 +39,13 @@ const steps = [
     )
   },
   {
-    title: "4. Go Live Anywhere",
+    title: "4. Go live and track conversations",
     description: "Embed the widget with a 1-line script tag, activate the WhatsApp integration, or deploy natively via REST API.",
     color: "from-emerald-500 to-emerald-600",
     bg: "bg-emerald-50",
     visual: (
-      <div className="w-full h-full p-6 flex flex-col gap-3 justify-center items-center">
-        <div className="flex gap-4 mb-4">
-          <div className="w-12 h-12 bg-white rounded-2xl shadow-md border border-slate-100 flex items-center justify-center text-slate-700">
-            <Terminal size={20} />
-          </div>
-          <div className="w-12 h-12 bg-white rounded-2xl shadow-md border border-slate-100 flex items-center justify-center text-emerald-500">
-            <Smartphone size={20} />
-          </div>
-        </div>
-        <div className="w-full bg-[#1e1e1e] rounded-xl p-3 shadow-lg">
-          <div className="flex gap-1.5 mb-2"><div className="w-2 h-2 rounded-full bg-rose-500"></div><div className="w-2 h-2 rounded-full bg-amber-500"></div><div className="w-2 h-2 rounded-full bg-emerald-500"></div></div>
-          <div className="h-1.5 w-3/4 bg-blue-400/50 rounded-full mb-1.5"></div>
-          <div className="h-1.5 w-1/2 bg-emerald-400/50 rounded-full mb-1.5"></div>
-          <div className="h-1.5 w-2/3 bg-blue-400/50 rounded-full"></div>
-        </div>
+      <div className="w-full h-full flex items-center justify-center overflow-hidden">
+        <img src="/release-track.png" alt="Release and Track UI" className="w-full h-full object-cover object-left-top opacity-95" />
       </div>
     )
   }
