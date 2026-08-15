@@ -35,6 +35,8 @@ export const LearningsTab: React.FC = () => {
   const [total, setTotal] = useState(0);
   const limit = 20;
 
+  const [stats, setStats] = useState({ PENDING: 0, APPROVED: 0, REJECTED: 0 });
+
   // Undo snackbar state
   const [undoSnack, setUndoSnack] = useState<{ id: string; timeout: ReturnType<typeof setTimeout> } | null>(null);
 
@@ -48,10 +50,19 @@ export const LearningsTab: React.FC = () => {
     };
   }, [undoSnack]);
 
-  const fetchLearnings = async (p = page) => {
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get('/api/v1/learnings/stats');
+      setStats(res.data);
+    } catch (err) {
+      // Ignored
+    }
+  };
+
+  const fetchLearnings = async (p = page, status = subTab) => {
     try {
       setLoading(true);
-      const res = await axios.get(`/api/v1/learnings?page=${p}&limit=${limit}`);
+      const res = await axios.get(`/api/v1/learnings?status=${status}&page=${p}&limit=${limit}`);
       if (res.data && res.data.data && Array.isArray(res.data.data)) {
         setLearnings(res.data.data);
         setTotal(res.data.total);
@@ -70,8 +81,9 @@ export const LearningsTab: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchLearnings(page);
-  }, [page]);
+    fetchStats();
+    fetchLearnings(page, subTab);
+  }, [page, subTab]);
 
   const handleApprove = async (id: string, isEdited: boolean) => {
     try {
@@ -134,7 +146,7 @@ export const LearningsTab: React.FC = () => {
     return { color: 'var(--accent-rose)', shadow: 'rgba(244, 63, 94, 0.4)' };
   };
 
-  const displayedLearnings = learnings.filter(l => l.status === subTab);
+
 
   return (
     <div style={{ padding: '24px', fontFamily: '"Plus Jakarta Sans", sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
@@ -153,7 +165,10 @@ export const LearningsTab: React.FC = () => {
         {(['PENDING', 'APPROVED', 'REJECTED'] as const).map(tab => (
           <button
             key={tab}
-            onClick={() => setSubTab(tab)}
+            onClick={() => {
+              setSubTab(tab);
+              setPage(1);
+            }}
             style={{
               background: subTab === tab ? 'var(--bg-glass)' : 'transparent',
               border: subTab === tab ? '1px solid var(--border-glass)' : '1px solid transparent',
@@ -169,17 +184,15 @@ export const LearningsTab: React.FC = () => {
             }}
           >
             {tab === 'PENDING' ? 'Pending Review' : tab === 'APPROVED' ? 'Active Rules' : 'Archived'}
-            {tab === 'PENDING' && (
-              <span style={{
-                background: 'var(--accent-rose)',
-                color: 'white',
-                fontSize: '10px',
-                padding: '2px 6px',
-                borderRadius: '10px'
-              }}>
-                {learnings.filter(l => l.status === 'PENDING').length}
-              </span>
-            )}
+            <span style={{
+              background: tab === 'PENDING' ? 'var(--accent-rose)' : 'var(--bg-glass-strong)',
+              color: tab === 'PENDING' ? 'white' : 'var(--text-main)',
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '10px'
+            }}>
+              {stats[tab] || 0}
+            </span>
           </button>
         ))}
 
@@ -202,13 +215,13 @@ export const LearningsTab: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {loading ? (
           <div style={{ color: 'var(--text-muted)' }}>Loading rules...</div>
-        ) : displayedLearnings.length === 0 ? (
+        ) : learnings.length === 0 ? (
           <div className="glass-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
             <AlertCircle size={32} style={{ margin: '0 auto 12px auto', opacity: 0.5 }} />
             No {subTab.toLowerCase()} rules found.
           </div>
         ) : (
-          displayedLearnings.map(learning => {
+          learnings.map(learning => {
             const isEdited = editedRules[learning.id] !== undefined && editedRules[learning.id] !== learning.suggestedRule;
             const currentRuleText = editedRules[learning.id] ?? learning.suggestedRule;
             const pillStyle = getConfidencePill(learning.confidenceScore);

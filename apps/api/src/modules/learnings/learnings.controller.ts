@@ -20,6 +20,25 @@ export class LearningsController {
     private readonly learningsCronService: LearningsCronService,
   ) {}
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Get counts of learnings by status' })
+  async getLearningsStats(@TenantContext() tenant: ITenantContext) {
+    const qb = this.learningRepo.createQueryBuilder('learning')
+      .select('learning.status', 'status')
+      .addSelect('COUNT(learning.id)', 'count')
+      .where('learning.tenantId = :tenantId', { tenantId: tenant.tenantId })
+      .groupBy('learning.status');
+    
+    const results = await qb.getRawMany();
+    const stats = { PENDING: 0, APPROVED: 0, REJECTED: 0 };
+    for (const row of results) {
+      if (row.status in stats) {
+        stats[row.status as keyof typeof stats] = parseInt(row.count, 10);
+      }
+    }
+    return stats;
+  }
+
   @Get()
   @ApiOperation({ summary: 'List agent learnings by status' })
   async findLearnings(
