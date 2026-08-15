@@ -52,11 +52,15 @@ export const LearningsTab: React.FC = () => {
     try {
       setLoading(true);
       const res = await axios.get(`/api/v1/learnings?page=${p}&limit=${limit}`);
-      if (res.data && res.data.data) {
+      if (res.data && res.data.data && Array.isArray(res.data.data)) {
         setLearnings(res.data.data);
         setTotal(res.data.total);
+      } else if (Array.isArray(res.data)) {
+        setLearnings(res.data);
+        setTotal(res.data.length);
       } else {
-        setLearnings(res.data || []);
+        setLearnings([]);
+        setTotal(0);
       }
     } catch (err) {
       // Handled by global interceptor
