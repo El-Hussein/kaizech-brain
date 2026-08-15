@@ -26,12 +26,18 @@ export function Hero() {
         response = "Kaizech Brain is an Agentic AI platform. We provide an end-to-end multi-tenant architecture for businesses to build, deploy, and manage AI agents, Knowledge RAG pipelines, and smart widgets!";
       } else if (currentInput.includes("plan") || currentInput.includes("price") || currentInput.includes("cost") || currentInput.includes("package")) {
         response = "We offer 3 straightforward plans: A free Starter plan to build your first agent, a Professional plan ($49/mo) with advanced integrations, and a Custom Enterprise plan for massive scale and SLA guarantees.";
-      } else if (currentInput.includes("integrate") || currentInput.includes("how to") || currentInput.includes("whatsapp") || currentInput.includes("api")) {
-        response = "Integration is a breeze! You can embed our web widget with a single line of JavaScript, connect your WhatsApp Business account, or hit our REST APIs directly. Check out our Integrations page for snippets.";
+      } else if (currentInput.includes("whatsapp")) {
+        response = "Yes, absolutely! Kaizech Brain has native WhatsApp Business integration. You can connect your number in minutes, set up automated routing, and let your AI agent handle customer inquiries directly on WhatsApp 24/7.";
+      } else if (currentInput.includes("integrate") || currentInput.includes("how to") || currentInput.includes("api") || currentInput.includes("system")) {
+        response = "Integration is a breeze! You can embed our web widget with a single line of JavaScript, or hit our REST APIs directly to connect with any existing CRM, ERP, or internal system. We have webhooks and SDKs available.";
+      } else if (currentInput.includes("rag") || currentInput.includes("data") || currentInput.includes("knowledge")) {
+        response = "We support advanced RAG (Retrieval-Augmented Generation). You can upload PDFs, connect SQL databases, or scrape your website. The agent will ground its answers entirely on your proprietary data securely.";
       } else if (currentInput.includes("support") || currentInput.includes("feature")) {
-        response = "We support custom RAG (PDFs, SQL, web scraping), advanced Prompt Building, custom API actions, BYOK (Bring Your Own Key), and multi-tenant security isolation out of the box.";
+        response = "We support custom RAG, advanced Prompt Building, custom API actions, BYOK (Bring Your Own Key), and multi-tenant security isolation out of the box.";
       } else if (currentInput.includes("hello") || currentInput.includes("hi") || currentInput.includes("hey")) {
-        response = "Hello there! Feel free to ask me anything about Kaizech Brain's features, pricing, or how to get started.";
+        response = "Hello there! Feel free to ask me anything about Kaizech Brain's features, integrations, pricing, or how to get started.";
+      } else {
+        response = "That's a great question! Kaizech Brain's architecture is highly flexible. Check out our documentation or sign up for free to explore all the possibilities!";
       }
 
       setMessages((prev) => [
