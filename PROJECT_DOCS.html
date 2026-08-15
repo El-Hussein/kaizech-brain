@@ -1,0 +1,841 @@
+<h1>Kaizech Brain — System Documentation &amp; Operations Guide</h1>
+<p>This document contains the setup, architecture, Docker container workflows, API specifications, and Tool Manifest documentation for <strong>Kaizech Brain (Multi-tenant AI Agent Platform)</strong>.</p>
+<hr>
+<h2>1. System Architecture &amp; Docker Services</h2>
+<p>All services for the platform run within isolated Docker containers defined in <code>docker-compose.yml</code>.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Service Container Name</th>
+<th align="left">Description</th>
+<th align="left">Host Access URL</th>
+<th align="left">Internal Port</th>
+<th align="left">Environment / Driver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><code>kaizech-dashboard</code></strong></td>
+<td align="left">Tenant Customer Dashboard UI</td>
+<td align="left"><a href="http://localhost:5173">http://localhost:5173</a></td>
+<td align="left"><code>80</code></td>
+<td align="left">Nginx + Production Build</td>
+</tr>
+<tr>
+<td align="left"><strong><code>kaizech-admin</code></strong></td>
+<td align="left">Platform Super Admin UI</td>
+<td align="left"><a href="http://localhost:5174">http://localhost:5174</a></td>
+<td align="left"><code>80</code></td>
+<td align="left">Nginx + Production Build</td>
+</tr>
+<tr>
+<td align="left"><strong><code>kaizech-api</code></strong></td>
+<td align="left">NestJS Backend API Server</td>
+<td align="left"><a href="http://localhost:3000">http://localhost:3000</a></td>
+<td align="left"><code>3000</code></td>
+<td align="left">Node.js 20 / NestJS</td>
+</tr>
+<tr>
+<td align="left"><strong><code>kaizech-postgres</code></strong></td>
+<td align="left">Database Server</td>
+<td align="left"><code>localhost:5432</code></td>
+<td align="left"><code>5432</code></td>
+<td align="left">PostgreSQL 16 + pgvector</td>
+</tr>
+<tr>
+<td align="left"><strong><code>kaizech-redis</code></strong></td>
+<td align="left">Cache &amp; Queue Manager</td>
+<td align="left"><code>localhost:6379</code></td>
+<td align="left"><code>6379</code></td>
+<td align="left">Redis 7 Alpine</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Docker Operations &amp; Code Change Workflows</h2>
+<h3>Overview</h3>
+<p>Docker containers run compiled or bundled images. Edits made on your local filesystem do not update inside running containers automatically. Follow the workflows below when modifying code.</p>
+<h3>A. Updating Code After Changes</h3>
+<p>When you modify code in any package or application, rebuild and restart the Docker stack using:</p>
+<pre><code class="language-bash"># Rebuild and start all containers in background
+docker compose up -d --build
+</code></pre>
+<h3>B. Updating Specific Components Only</h3>
+<p>To save time, you can target and rebuild only the modified service:</p>
+<ul>
+<li><strong>Backend API &amp; Shared Libraries (<code>apps/api</code>, <code>libs/*</code>)</strong>:<pre><code class="language-bash">docker compose up -d --build api
+</code></pre>
+</li>
+<li><strong>Tenant Dashboard (<code>apps/dashboard</code>)</strong>:<pre><code class="language-bash">pnpm build:dashboard &amp;&amp; docker compose up -d --build dashboard
+</code></pre>
+</li>
+<li><strong>Super Admin Dashboard (<code>apps/admin</code>)</strong>:<pre><code class="language-bash">pnpm build:admin &amp;&amp; docker compose up -d --build admin
+</code></pre>
+</li>
+</ul>
+<h3>C. Useful Docker Commands</h3>
+<ul>
+<li><strong>Check status of containers</strong>:<pre><code class="language-bash">docker compose ps
+</code></pre>
+</li>
+<li><strong>Stream live logs for all services</strong>:<pre><code class="language-bash">docker compose logs -f
+</code></pre>
+</li>
+<li><strong>Stream live logs for Backend API only</strong>:<pre><code class="language-bash">docker compose logs -f api
+</code></pre>
+</li>
+<li><strong>Restart a container without rebuilding</strong>:<pre><code class="language-bash">docker compose restart api
+</code></pre>
+</li>
+<li><strong>Stop all running Docker services</strong>:<pre><code class="language-bash">docker compose down
+</code></pre>
+</li>
+</ul>
+<hr>
+<h2>3. Registered Tool Specification: <code>getUserInfo</code></h2>
+<p>The <code>getUserInfo</code> tool allows the AI Agent and tenant operators to fetch full user profile details, buyer/seller roles, account classifications, verification status, active user papers, ticket sizes, and primary addresses.</p>
+<h3>Tool Manifest Overview</h3>
+<ul>
+<li><strong>Tool Name</strong>: <code>getUserInfo</code></li>
+<li><strong>HTTP Method</strong>: <code>POST</code></li>
+<li><strong>Target Customer Endpoint</strong>: <code>https://api-stg.markoontest.online/api/chatbot/getUserInfo</code></li>
+<li><strong>Authentication</strong>: Tenant API Key header (<code>x-api-key: kb_demo_tenant_key</code>)</li>
+<li><strong>Timeout</strong>: <code>30000ms</code></li>
+<li><strong>Status</strong>: <code>Active</code></li>
+</ul>
+<h3>Accepted JSON Parameters Schema</h3>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;user_id&quot;: {
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;description&quot;: &quot;The unique ID of the user (e.g. 42)&quot;
+    },
+    &quot;phone&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;User mobile phone number (e.g. 201000000000)&quot;
+    },
+    &quot;email&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;User email address&quot;
+    }
+  }
+}
+</code></pre>
+<h3>Sample Request Payload (Tool Execution)</h3>
+<pre><code class="language-json">{
+  &quot;user_id&quot;: 4594
+}
+</code></pre>
+<hr>
+<h2>4. API Endpoints Reference</h2>
+<h3>A. List Registered Tools</h3>
+<pre><code class="language-http">GET /api/v1/tools
+Header: x-api-key: kb_demo_tenant_key
+</code></pre>
+<h3>B. Register or Update Tool Manifest</h3>
+<pre><code class="language-http">POST /api/v1/tools
+Header: Content-Type: application/json
+Header: x-api-key: kb_demo_tenant_key
+
+{
+  &quot;name&quot;: &quot;getUserInfo&quot;,
+  &quot;description&quot;: &quot;Fetch user profile details...&quot;,
+  &quot;apiEndpoint&quot;: &quot;https://api-stg.markoontest.online/api/chatbot/getUserInfo&quot;,
+  &quot;httpMethod&quot;: &quot;POST&quot;,
+  &quot;parameters&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;user_id&quot;: { &quot;type&quot;: &quot;integer&quot;, &quot;description&quot;: &quot;The unique ID of the user&quot; },
+      &quot;phone&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;User phone number&quot; },
+      &quot;email&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;User email address&quot; }
+    }
+  }
+}
+</code></pre>
+<h3>C. Test Tool Execution (Interactive Tool Tester)</h3>
+<pre><code class="language-http">POST /api/v1/tools/test
+Header: Content-Type: application/json
+Header: x-api-key: kb_demo_tenant_key
+
+{
+  &quot;toolName&quot;: &quot;getUserInfo&quot;,
+  &quot;parameters&quot;: {
+    &quot;user_id&quot;: 4594
+  }
+}
+</code></pre>
+<h3>D. Client-Initiated Human Handoff API</h3>
+<pre><code class="language-http">POST /api/v1/channels/handoff
+Header: Content-Type: application/json
+Header: x-api-key: kb_demo_tenant_key
+
+{
+  &quot;sessionId&quot;: &quot;user_session_98765&quot;,
+  &quot;reason&quot;: &quot;client_button_clicked&quot;,
+  &quot;notice&quot;: &quot;Customer requested live agent support&quot;
+}
+</code></pre>
+<hr>
+<h2>5. Dashboard Features &amp; Enhancements</h2>
+<ol>
+<li><p><strong>Interactive Tool Tester</strong>:</p>
+<ul>
+<li>Selecting a tool in the dropdown displays an <strong>Accepted Tool Parameters</strong> box showing parameter names, data types, and descriptions.</li>
+<li>Automatically pre-fills a valid sample JSON test payload.</li>
+<li>Includes an <strong><code>Auto-fill Sample Body</code></strong> button to re-generate test payloads on demand.</li>
+</ul>
+</li>
+<li><p><strong>Editing Registered Tools</strong>:</p>
+<ul>
+<li>Each card under <strong>Active Registered Tools</strong> includes an <strong><code>Edit</code></strong> button.</li>
+<li>Clicking <strong><code>Edit</code></strong> populates the tool registration form so you can update the URL endpoint, HTTP method, description, or parameter schema seamlessly.</li>
+</ul>
+</li>
+<li><p><strong>AI Memory &amp; Rules</strong>:</p>
+<ul>
+<li>The AI natively learns from chat conversations and auto-infers user satisfaction.</li>
+<li>Displays autonomous rules extracted by the AI in the <strong>AI Memory &amp; Rules</strong> tab.</li>
+<li>Allows human operators to review, edit, approve, or reject these AI-learned rules to enforce long-term memory.</li>
+<li>Includes a &quot;Force AI Learning Now&quot; feature to manually trigger extraction from recent unlearned conversations.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>6. Multi-Platform AI Chatbot SDKs &amp; Embed Options</h2>
+<p>Kaizech Brain provides an SDK ecosystem to embed the trained AI bot on any website or mobile app:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Package</th>
+<th align="left">Target Platform</th>
+<th align="left">Description</th>
+<th align="left">Integration Code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><code>@kaizech/widget</code></strong></td>
+<td align="left">Standalone Web (<code>&lt;script&gt;</code>)</td>
+<td align="left">16.95 KB Shadow DOM bundle (<code>widget.js</code>) for HTML, WordPress, Shopify, Webflow</td>
+<td align="left"><code>&lt;script src=&quot;https://your-domain.com/widget.js&quot;&gt;&lt;/script&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><code>@kaizech/chat-react</code></strong></td>
+<td align="left">React Web App</td>
+<td align="left">React provider <code>&lt;KaizechChatProvider&gt;</code> &amp; <code>&lt;ChatWidget /&gt;</code></td>
+<td align="left"><code>import { ChatWidget } from &#39;@kaizech/chat-react&#39;;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><code>@kaizech/chat-react-native</code></strong></td>
+<td align="left">React Native (iOS / Android)</td>
+<td align="left">Native mobile support component <code>&lt;KaizechChatScreen /&gt;</code></td>
+<td align="left"><code>import { KaizechChatScreen } from &#39;@kaizech/chat-react-native&#39;;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><code>@kaizech/chat-core</code></strong></td>
+<td align="left">Universal TS Engine</td>
+<td align="left">Headless state machine, session storage, SSE token stream parser</td>
+<td align="left"><code>import { KaizechChatEngine } from &#39;@kaizech/chat-core&#39;;</code></td>
+</tr>
+</tbody></table>
+<h1>Kaizech Brain — Tenant Onboarding &amp; Integration Guide</h1>
+<p>Welcome to <strong>Kaizech Brain</strong>, an enterprise multi-tenant AI Agent platform designed to power intelligent, domain-specific AI Assistants across your communication channels (WhatsApp Business API, Web Applications, Mobile Apps, and internal systems).</p>
+<p>This documentation is designed to guide new tenant organizations through setting up, configuring, training, and integrating your AI Assistant to deliver fast, accurate, and context-aware responses to your customers.</p>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-platform-overview--key-features">Platform Overview &amp; Key Features</a></li>
+<li><a href="#2-dashboard-visual-walkthrough">Dashboard Visual Walkthrough</a></li>
+<li><a href="#3-teaching-the-model-knowledge-base--rag">Teaching the Model: Knowledge Base &amp; RAG</a></li>
+<li><a href="#4-configuring-ai-persona--behavior-system-prompt-builder">Configuring AI Persona &amp; Behavior: System Prompt Builder</a></li>
+<li><a href="#5-connecting-business-systems-custom-tools--apis">Connecting Business Systems: Custom Tools &amp; APIs</a></li>
+<li><a href="#6-channel-integration-guide-whatsapp--rest-api">Channel Integration Guide (WhatsApp &amp; REST API)</a></li>
+<li><a href="#7-testing-debugging--analytics">Testing, Debugging &amp; Analytics</a></li>
+<li><a href="#8-best-practices-for-maximum-answer-accuracy">Best Practices for Maximum Answer Accuracy</a></li>
+<li><a href="#9-quick-start-onboarding-checklist">Quick-Start Onboarding Checklist</a></li>
+</ol>
+<hr>
+<h2>1. Platform Overview &amp; Key Features</h2>
+<p>Kaizech Brain combines <strong>Retrieval-Augmented Generation (RAG)</strong>, <strong>Real-Time API Function Calling</strong>, and <strong>Dynamic Persona Building</strong> into a unified customer interaction platform.</p>
+<pre><code class="language-mermaid">flowchart TD
+    subgraph Channels[&quot;📱 Channels &amp; Ingestion&quot;]
+        WA[&quot;WhatsApp Business API&quot;]
+        API[&quot;Direct REST API (Web/Mobile)&quot;]
+        DOC[&quot;Documents / FAQs / Website Crawler&quot;]
+    end
+
+    subgraph Platform[&quot;🧠 Kaizech Brain Core&quot;]
+        KB[&quot;Vector Knowledge Base (pgvector)&quot;]
+        PROMPT[&quot;Dynamic System Prompt Engine&quot;]
+        TOOLS[&quot;API Tool Execution Engine&quot;]
+        ORCH[&quot;AI Agent Orchestrator (GPT-4o)&quot;]
+    end
+
+    subgraph Backend[&quot;🏢 Tenant External Systems&quot;]
+        CRM[&quot;Tenant Backend / CRM / Database&quot;]
+    end
+
+    DOC --&gt;|Ingest &amp; Embed| KB
+    WA --&gt;|Message Payload| ORCH
+    API --&gt;|REST Request| ORCH
+    KB --&gt;|Context Chunks| ORCH
+    PROMPT --&gt;|Persona &amp; Rules| ORCH
+    ORCH &lt;--&gt;|Execute Function Calls| TOOLS
+    TOOLS &lt;--&gt;|Fetch Live Data| CRM
+    ORCH --&gt;|Intelligent Response| WA &amp; API
+</code></pre>
+<h3>Core Features Support Matrix</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Feature</th>
+<th align="left">Description</th>
+<th align="center">Support Level</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Multi-Channel Delivery</strong></td>
+<td align="left">Native support for WhatsApp Business API &amp; REST API</td>
+<td align="center">✅ Full</td>
+</tr>
+<tr>
+<td align="left"><strong>Multi-Format Ingestion</strong></td>
+<td align="left">Upload <code>.pdf</code>, <code>.docx</code>, <code>.xlsx</code>, <code>.md</code>, FAQs, or crawl live websites</td>
+<td align="center">✅ Full</td>
+</tr>
+<tr>
+<td align="left"><strong>pgvector RAG Engine</strong></td>
+<td align="left">1536-dimensional semantic similarity search for exact context matching</td>
+<td align="center">✅ Full</td>
+</tr>
+<tr>
+<td align="left"><strong>Real-time API Tool Calling</strong></td>
+<td align="left">Allow AI to trigger external APIs (e.g. fetch user profile, check inventory)</td>
+<td align="center">✅ Full</td>
+</tr>
+<tr>
+<td align="left"><strong>Structured Prompt Engine</strong></td>
+<td align="left">10-block system prompt builder (Identity, Policies, Tone, Safety Rules)</td>
+<td align="center">✅ Full</td>
+</tr>
+<tr>
+<td align="left"><strong>Human Handoff / Tickets</strong></td>
+<td align="left">Automatic escalation management when queries require human agents</td>
+<td align="center">✅ Full</td>
+</tr>
+<tr>
+<td align="left"><strong>Token &amp; Cost Tracking</strong></td>
+<td align="left">Real-time tracking of prompt/completion tokens and estimated USD costs</td>
+<td align="center">✅ Full</td>
+</tr>
+<tr>
+<td align="left"><strong>Interactive Playground</strong></td>
+<td align="left">Live sandbox with real-time RAG diagnostic logs &amp; latency metrics</td>
+<td align="center">✅ Full</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Dashboard Visual Walkthrough</h2>
+<p>Your tenant customer panel provides a unified control center for your AI Assistant. Below is an overview of each dashboard tab:</p>
+<pre><code>┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  🧠 KAIZECH BRAIN                [Overview] [Knowledge] [Prompt Builder] [Tools] ...   │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>Tab Overview &amp; Functions</h3>
+<pre><code class="language-mermaid">graph LR
+    A[Tenant Dashboard] --&gt; B[📊 Overview]
+    A --&gt; C[📚 Knowledge Base]
+    A --&gt; D[✍️ Prompt Builder]
+    A --&gt; E[🛠️ Tools]
+    A --&gt; F[🔑 Settings]
+    A --&gt; G[🧪 Playground]
+    A --&gt; H[💬 Conversations]
+
+    B --&gt; B1[Total Messages &amp; Cost Tracking]
+    B --&gt; B2[Resolution Rate &amp; Latency]
+    B --&gt; B3[Agent System Health Status]
+
+    C --&gt; C1[Document Upload PDF/DOCX/XLSX/MD]
+    C --&gt; C2[FAQ Key-Value Pair Importer]
+    C --&gt; C3[Website Content Crawler]
+    C --&gt; C4[Chunk Viewer Modal]
+
+    D --&gt; D1[Identity &amp; Role Configuration]
+    D --&gt; D2[Business Policies &amp; Safety Rules]
+    D --&gt; D3[Tone of Voice &amp; Presets]
+    D --&gt; D4[Live compiled Prompt Preview]
+
+    E --&gt; E1[Register Tool Manifests]
+    E --&gt; E2[Interactive API Tool Tester]
+    E --&gt; E3[Active Tools Grid]
+
+    F --&gt; F1[API Key Generator &amp; Revocation]
+    F --&gt; F2[WhatsApp Webhook Config &amp; HMAC Secret]
+    F --&gt; F3[Direct REST API Documentation]
+
+    G --&gt; G1[Live Sandbox Chat Interface]
+    G --&gt; G2[RAG Chunks &amp; Tool Execution Inspector]
+
+    H --&gt; H1[Conversation History Logs]
+    H --&gt; H2[Human Handoff Tickets Tracking]
+</code></pre>
+<hr>
+<h2>3. Teaching the Model: Knowledge Base &amp; RAG</h2>
+<p>To ensure your AI Assistant delivers accurate, business-specific answers without hallucination, you must supply it with your organization&#39;s knowledge base.</p>
+<h3>Supported Knowledge Formats</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Source Type</th>
+<th align="left">Accepted Formats / Inputs</th>
+<th align="left">Best Used For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Documents</strong></td>
+<td align="left"><code>.pdf</code>, <code>.docx</code>, <code>.xlsx</code>, <code>.md</code></td>
+<td align="left">Product manuals, company policies, terms of service, catalogs</td>
+</tr>
+<tr>
+<td align="left"><strong>FAQ Imports</strong></td>
+<td align="left">Question &amp; Answer pairs</td>
+<td align="left">Direct, high-frequency customer queries (e.g. shipping fees, return windows)</td>
+</tr>
+<tr>
+<td align="left"><strong>Website Crawler</strong></td>
+<td align="left">Public Web Page URL (HTML)</td>
+<td align="left">Help center pages, landing pages, documentation sites</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>Step-by-Step: Adding Knowledge</h3>
+<h4>1. Uploading Documents</h4>
+<ol>
+<li>Navigate to the <strong>Knowledge</strong> tab in the dashboard.</li>
+<li>Select <strong>Upload Document</strong>.</li>
+<li>Drag &amp; drop or select your document (<code>.pdf</code>, <code>.docx</code>, <code>.xlsx</code>, or <code>.md</code>).</li>
+<li>Click <strong>Upload &amp; Process</strong>.</li>
+</ol>
+<blockquote>
+<p>ℹ️ <em>The system automatically splits your document into optimized text chunks (1,000 characters) and generates 1536-dimensional vector embeddings for semantic search.</em></p>
+</blockquote>
+<h4>2. Adding FAQ Pairs</h4>
+<ol>
+<li>Go to <strong>Knowledge</strong> &gt; <strong>Add FAQ</strong>.</li>
+<li>Input the exact <strong>Question</strong> (e.g., <em>&quot;What is your return policy?&quot;</em>).</li>
+<li>Input the comprehensive <strong>Answer</strong> (e.g., <em>&quot;We offer a 30-day money-back guarantee on all unused items.&quot;</em>).</li>
+<li>Assign a <strong>Category</strong> tag (e.g., <code>returns</code>, <code>billing</code>) for organization.</li>
+<li>Click <strong>Save FAQ</strong>.</li>
+</ol>
+<h4>3. Crawling Web Pages</h4>
+<ol>
+<li>Go to <strong>Knowledge</strong> &gt; <strong>Crawl Website</strong>.</li>
+<li>Enter the <strong>Source Name</strong> (e.g., <code>Main Help Center</code>).</li>
+<li>Enter the full target <strong>URL</strong> (e.g., <code>https://example.com/help</code>).</li>
+<li>Click <strong>Start Crawling</strong>.</li>
+</ol>
+<blockquote>
+<p>ℹ️ <em>Our crawler automatically strips headers, footers, scripts, and navigation markup to ingest clean body text into the vector index.</em></p>
+</blockquote>
+<hr>
+<h3>Inspecting Indexed Knowledge</h3>
+<p>To verify what the AI model has learned:</p>
+<ol>
+<li>In the <strong>Knowledge</strong> tab, locate your indexed source in the table.</li>
+<li>Click <strong>View Chunks</strong>.</li>
+<li>A modal will display all extracted chunks, their chunk IDs (<code>#1</code>, <code>#2</code>), character length, and raw text.</li>
+<li>Use the search bar inside the modal to test if key facts were properly captured.</li>
+</ol>
+<pre><code>┌────────────────────────────────────────────────────────┐
+│ Chunk #1 (1,000 chars)                                 │
+│ &quot;Mrkoon offers online vehicle auctions across KSA...&quot;  │
+│ [Copy Text]                                            │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2>4. Configuring AI Persona &amp; Behavior: System Prompt Builder</h2>
+<p>The <strong>Prompt Builder</strong> gives you precise control over how your AI communicates, what rules it enforces, and how strictly it adheres to your knowledge base.</p>
+<h3>The 10-Block Prompt System</h3>
+<p>Our platform dynamically compiles your settings into a structured system prompt:</p>
+<ol>
+<li><strong>System Identity</strong>: Define who the AI is (e.g., <em>&quot;You are Mrkoon Assistant, an expert advisor for online auctions.&quot;</em>).</li>
+<li><strong>Business Rules</strong>: Operational policies (e.g., working hours, payment methods, auction bidding rules).</li>
+<li><strong>Safety &amp; Compliance</strong>: Explicit guardrails (e.g., <em>&quot;Never reveal customer OTPs, passwords, or personal banking info.&quot;</em>).</li>
+<li><strong>Tone of Voice</strong>: Personality guidelines (e.g. Professional, friendly, empathetic, concise).</li>
+<li><strong>Special Instructions</strong>: Language guidelines, bullet point rules, or call-to-action formats.</li>
+<li><strong>Retrieved Knowledge (RAG)</strong>: Automatically injected relevant chunks matching the user&#39;s inquiry.</li>
+<li><strong>User Profile</strong>: Injected end-user preferences and conversation history.</li>
+</ol>
+<hr>
+<h3>Quick Templates</h3>
+<p>The Prompt Builder includes pre-configured presets:</p>
+<ul>
+<li><strong>Mrkoon Auction Assistant</strong>: Optimized for auction platforms, bidding rules, and customer support.</li>
+<li><strong>Customer Support Bot</strong>: Focused on ticket resolution, policy explanations, and friendly guidance.</li>
+<li><strong>E-Commerce Sales Advisor</strong>: Tailored for product recommendations, inventory inquiries, and upsells.</li>
+</ul>
+<hr>
+<h2>5. Connecting Business Systems: Custom Tools &amp; APIs</h2>
+<p>Custom Tools allow your AI Agent to execute actions in real time on your existing backend—such as retrieving a user&#39;s account balance, checking auction status, or creating a support ticket.</p>
+<h3>Tool Architecture</h3>
+<pre><code>User Message: &quot;What is the status of my order #12345?&quot;
+  ↓
+AI Agent identifies required Tool: `getOrderStatus(orderId: &quot;12345&quot;)`
+  ↓
+Kaizech Brain sends HTTP POST/GET to Tenant API: `https://api.yourdomain.com/orders/12345`
+  ↓
+Tenant API returns JSON: `{ &quot;status&quot;: &quot;Shipped&quot;, &quot;tracking&quot;: &quot;XYZ987&quot; }`
+  ↓
+AI Agent formulates answer: &quot;Your order #12345 has been shipped. Tracking number is XYZ987.&quot;
+</code></pre>
+<hr>
+<h3>Registering a New Tool Manifest</h3>
+<ol>
+<li>Go to the <strong>Tools</strong> tab in the dashboard.</li>
+<li>Click <strong>Add New Tool</strong>.</li>
+<li>Complete the tool specification:<ul>
+<li><strong>Function Name</strong>: Clean camelCase string without spaces (e.g., <code>getUserInfo</code>, <code>getAuctionDetails</code>).</li>
+<li><strong>Description</strong>: Explain clearly <em>when</em> the LLM should invoke this tool (e.g., <em>&quot;Use this tool to fetch user profile details given their user ID.&quot;</em>).</li>
+<li><strong>Target Endpoint URL</strong>: Full HTTPS endpoint (e.g., <code>https://api.yourcompany.com/v1/users/info</code>).</li>
+<li><strong>HTTP Method</strong>: Select <code>GET</code>, <code>POST</code>, <code>PUT</code>, or <code>DELETE</code>.</li>
+<li><strong>Authentication</strong>: Configure <code>None</code>, <code>API Key</code>, or <code>Bearer Token</code> headers.</li>
+<li><strong>Parameters Schema</strong>: Define accepted JSON arguments:</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;userId&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;Unique identifier of the customer&quot;
+    }
+  },
+  &quot;required&quot;: [&quot;userId&quot;]
+}
+</code></pre>
+<hr>
+<h3>Testing Tools Interactively</h3>
+<p>Before deploying a tool live:</p>
+<ol>
+<li>In the <strong>Tools</strong> tab, locate <strong>Interactive Tool Tester</strong>.</li>
+<li>Select your registered tool from the dropdown.</li>
+<li>Click <strong>Auto-fill Sample Payload</strong> to generate sample arguments based on your schema.</li>
+<li>Click <strong>Execute Tool Call</strong>.</li>
+<li>Inspect the raw execution response JSON to ensure your API returns valid data.</li>
+</ol>
+<hr>
+<h2>6. Channel Integration Guide (WhatsApp, Web Script, React, React Native, REST API)</h2>
+<p>Kaizech Brain supports multi-platform deployment across <strong>Vanilla JS Script</strong>, <strong>React Web</strong>, <strong>React Native Mobile</strong>, <strong>Meta WhatsApp Business</strong>, and <strong>Direct REST API</strong>.</p>
+<hr>
+<h3>Option A: Embed Chatbot SDK Family (Web Script, React, React Native)</h3>
+<p>Kaizech Brain provides an SDK ecosystem so you can drop your AI bot onto any website or mobile app without building custom UI components from scratch:</p>
+<h4>1. Vanilla JS Script Tag (<code>&lt;script&gt;</code>)</h4>
+<p>Best for WordPress, Shopify, Webflow, PHP, or static HTML websites. Uses Web Components &amp; Shadow DOM to isolate styles:</p>
+<pre><code class="language-html">&lt;!-- Kaizech AI Chatbot Script --&gt;
+&lt;script&gt;
+  window.KaizechChatConfig = {
+    apiUrl: &quot;https://your-brain-domain.com&quot;,
+    apiKey: &quot;kb_live_your_api_key&quot;,
+    theme: {
+      primaryColor: &quot;#0066FF&quot;,
+      position: &quot;bottom-right&quot;,
+      botTitle: &quot;AI Support&quot;,
+      welcomeMessage: &quot;Hello! How can I help you today?&quot;
+    }
+  };
+&lt;/script&gt;
+&lt;script src=&quot;https://your-brain-domain.com/widget.js&quot; async defer&gt;&lt;/script&gt;
+</code></pre>
+<h4>2. React Web SDK (<code>@kaizech/chat-react</code>)</h4>
+<p>For Next.js, Vite, Remix, or React single-page applications:</p>
+<pre><code class="language-tsx">import React from &#39;react&#39;;
+import { KaizechChatProvider, ChatWidget } from &#39;@kaizech/chat-react&#39;;
+
+export default function App() {
+  return (
+    &lt;KaizechChatProvider
+      apiUrl=&quot;https://your-brain-domain.com&quot;
+      apiKey=&quot;kb_live_your_api_key&quot;
+      theme={{ primaryColor: &#39;#0066FF&#39;, position: &#39;bottom-right&#39; }}
+    &gt;
+      &lt;YourMainApp /&gt;
+      &lt;ChatWidget /&gt;
+    &lt;/KaizechChatProvider&gt;
+  );
+}
+</code></pre>
+<h4>3. React Native Mobile SDK (<code>@kaizech/chat-react-native</code>)</h4>
+<p>Native components built for iOS &amp; Android apps using React Native primitives (<code>View</code>, <code>FlatList</code>, <code>TextInput</code>):</p>
+<pre><code class="language-tsx">import React from &#39;react&#39;;
+import { SafeAreaView } from &#39;react-native&#39;;
+import { KaizechChatScreen } from &#39;@kaizech/chat-react-native&#39;;
+
+export default function SupportScreen() {
+  return (
+    &lt;SafeAreaView style={{ flex: 1 }}&gt;
+      &lt;KaizechChatScreen
+        apiUrl=&quot;https://your-brain-domain.com&quot;
+        apiKey=&quot;kb_live_your_api_key&quot;
+        theme={{ primaryColor: &#39;#0066FF&#39;, botTitle: &#39;Mobile Support&#39; }}
+      /&gt;
+    &lt;/SafeAreaView&gt;
+  );
+}
+</code></pre>
+<hr>
+<h3>Option B: WhatsApp Business API Integration</h3>
+<p>Connect your AI Agent directly to Meta&#39;s WhatsApp Cloud API.</p>
+<pre><code>WhatsApp User ──► Meta Cloud ──► POST /api/v1/channels/whatsapp/webhook/:tenantId ──► Kaizech Brain Agent
+                                                                                              │
+WhatsApp User ◄── Meta Graph API ◄── Bearer Token Response ──────────────────────────────────┘
+</code></pre>
+<h4>Step-by-Step Setup:</h4>
+<ol>
+<li>Obtain your <strong>Meta WhatsApp Business Account</strong> details from <a href="https://developers.facebook.com/">Meta for Developers</a>.</li>
+<li>In the Kaizech Brain Dashboard, go to <strong>Settings</strong> &gt; <strong>WhatsApp Integration</strong>.</li>
+<li>Copy your unique <strong>Webhook Callback URL</strong>:
+<code>https://your-brain-domain.com/api/v1/channels/whatsapp/webhook/&lt;YOUR_TENANT_ID&gt;</code></li>
+<li>Copy your <strong>Verify Token</strong> from the dashboard.</li>
+<li>In Meta Developer Portal:<ul>
+<li>Paste the Webhook Callback URL and Verify Token.</li>
+<li>Click <strong>Verify and Save</strong>.</li>
+<li>Subscribe to the <code>messages</code> webhook field.</li>
+</ul>
+</li>
+<li>Enter your <strong>Meta App Secret</strong> in Kaizech Brain Settings to enable secure <strong>HMAC SHA-256 (<code>X-Hub-Signature-256</code>) signature validation</strong>.</li>
+</ol>
+<hr>
+<h3>Option B: Direct REST API Integration</h3>
+<p>Integrate your web application, mobile app, or backend service directly using our REST API.</p>
+<h4>Authentication Header</h4>
+<p>All requests must include your tenant&#39;s API key:</p>
+<pre><code class="language-http">x-api-key: kb_live_your_secret_api_key_here
+</code></pre>
+<blockquote>
+<p>⚠️ <em>Keep your API key secure. Never expose it in client-side public code repositories.</em></p>
+</blockquote>
+<h4>Endpoint Specification</h4>
+<ul>
+<li><strong>URL</strong>: <code>POST https://your-brain-domain.com/api/v1/channels/chat</code></li>
+<li><strong>Content-Type</strong>: <code>application/json</code></li>
+</ul>
+<h4>Request Body</h4>
+<pre><code class="language-json">{
+  &quot;message&quot;: &quot;What are your operating hours?&quot;,
+  &quot;sessionId&quot;: &quot;user_session_98765&quot;,
+  &quot;channelUserId&quot;: &quot;+966500000000&quot;,
+  &quot;channelType&quot;: &quot;api&quot;,
+  &quot;metadata&quot;: {
+    &quot;userName&quot;: &quot;John Doe&quot;,
+    &quot;preferredLanguage&quot;: &quot;en&quot;
+  }
+}
+</code></pre>
+<h4>Response Payload (<code>200 OK</code>)</h4>
+<pre><code class="language-json">{
+  &quot;reply&quot;: &quot;Our operating hours are Sunday through Thursday, 9:00 AM to 6:00 PM (AST).&quot;,
+  &quot;sessionId&quot;: &quot;user_session_98765&quot;,
+  &quot;conversationId&quot;: &quot;8f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c&quot;,
+  &quot;tenantId&quot;: &quot;c39e248b-821a-4d7a-8b1e-089a85012345&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;handedOff&quot;: false,
+  &quot;tokens&quot;: 170
+}
+</code></pre>
+<blockquote>
+<p>💡 <strong>Handoff Response Payload</strong>: If an automated handoff rule is triggered (e.g. user asks for human agent, RAG search finds 0 results, AI is uncertain, or message limit reached), <code>status</code> will return <code>&quot;handed_off&quot;</code> and <code>handedOff</code> will be <code>true</code>:</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;reply&quot;: &quot;⚠️ Escalation requested by user. AI chat stopped and handed off to human support.&quot;,
+  &quot;sessionId&quot;: &quot;user_session_98765&quot;,
+  &quot;conversationId&quot;: &quot;8f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c&quot;,
+  &quot;status&quot;: &quot;handed_off&quot;,
+  &quot;handedOff&quot;: true,
+  &quot;limitExceeded&quot;: false
+}
+</code></pre>
+<hr>
+<h4>Client-Initiated Handoff API Endpoint</h4>
+<p>Client applications (web chat widgets, mobile apps, or CRM bridges) can explicitly pause AI and trigger human handoff at any point.</p>
+<ul>
+<li><strong>URL</strong>: <code>POST https://your-brain-domain.com/api/v1/channels/handoff</code></li>
+<li><strong>Headers</strong>: <code>x-api-key: kb_live_your_secret_api_key_here</code>, <code>Content-Type: application/json</code></li>
+</ul>
+<h5>Request Body</h5>
+<pre><code class="language-json">{
+  &quot;sessionId&quot;: &quot;user_session_98765&quot;,
+  &quot;reason&quot;: &quot;client_button_clicked&quot;,
+  &quot;notice&quot;: &quot;Customer requested human support via mobile app.&quot;
+}
+</code></pre>
+<h5>Response Payload (<code>200 OK</code>)</h5>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Conversation paused and handed off to human support.&quot;,
+  &quot;conversationId&quot;: &quot;8f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c&quot;,
+  &quot;sessionId&quot;: &quot;user_session_98765&quot;,
+  &quot;tenantId&quot;: &quot;c39e248b-821a-4d7a-8b1e-089a85012345&quot;,
+  &quot;status&quot;: &quot;handed_off&quot;,
+  &quot;handedOff&quot;: true,
+  &quot;reason&quot;: &quot;client_button_clicked&quot;
+}
+</code></pre>
+<h4>Integration Code Examples</h4>
+<h5>cURL (Send Message)</h5>
+<pre><code class="language-bash">curl -X POST &quot;https://your-brain-domain.com/api/v1/channels/chat&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;x-api-key: kb_live_your_secret_api_key_here&quot; \
+  -d &#39;{
+    &quot;message&quot;: &quot;Hello, how can I place a bid?&quot;,
+    &quot;sessionId&quot;: &quot;session_123&quot;
+  }&#39;
+</code></pre>
+<h5>cURL (Trigger Human Handoff)</h5>
+<pre><code class="language-bash">curl -X POST &quot;https://your-brain-domain.com/api/v1/channels/handoff&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;x-api-key: kb_live_your_secret_api_key_here&quot; \
+  -d &#39;{
+    &quot;sessionId&quot;: &quot;session_123&quot;,
+    &quot;reason&quot;: &quot;user_requested_agent&quot;
+  }&#39;
+</code></pre>
+<h5>JavaScript / Node.js</h5>
+<pre><code class="language-javascript">// Check if response returned handedOff === true
+const response = await fetch(&quot;https://your-brain-domain.com/api/v1/channels/chat&quot;, {
+  method: &quot;POST&quot;,
+  headers: {
+    &quot;Content-Type&quot;: &quot;application/json&quot;,
+    &quot;x-api-key&quot;: &quot;kb_live_your_secret_api_key_here&quot;
+  },
+  body: JSON.stringify({
+    message: &quot;Talk to human agent please&quot;,
+    sessionId: &quot;session_123&quot;
+  })
+});
+
+const data = await response.json();
+if (data.handedOff || data.status === &#39;handed_off&#39;) {
+  console.log(&quot;Conversation is handed off to human support:&quot;, data.reply);
+  // Transfer user to live human chat widget
+}
+</code></pre>
+<h5>Python</h5>
+<pre><code class="language-python">import requests
+
+url = &quot;https://your-brain-domain.com/api/v1/channels/chat&quot;
+headers = {
+    &quot;Content-Type&quot;: &quot;application/json&quot;,
+    &quot;x-api-key&quot;: &quot;kb_live_your_secret_api_key_here&quot;
+}
+payload = {
+    &quot;message&quot;: &quot;Hello, how can I place a bid?&quot;,
+    &quot;sessionId&quot;: &quot;session_123&quot;
+}
+
+response = requests.post(url, json=payload, headers=headers).json()
+if response.get(&quot;handedOff&quot;):
+    print(&quot;AI handed off to human support:&quot;, response[&quot;reply&quot;])
+else:
+    print(&quot;Agent Response:&quot;, response[&quot;reply&quot;])
+</code></pre>
+<hr>
+<h2>7. Testing, Debugging &amp; Analytics</h2>
+<h3>Interactive AI Playground</h3>
+<p>The <strong>Playground</strong> tab allows you to test your bot in real time before going live to customers.</p>
+<pre><code>┌──────────────────────────────────────┬─────────────────────────────────────────┐
+│ Live Chat Sandbox                    │ Execution Diagnostics                   │
+│                                      │                                         │
+│ User: What is the auction deposit?   │ ⏱️ Latency: 640ms                      │
+│                                      │ 📚 Chunks Retrieved: 3                   │
+│ Bot: The deposit requirement is 20%  │ 🛠️ Tools Called: getAuctionRules        │
+│ of the starting bid value.           │ 📊 Prompt Tokens: 310                   │
+│                                      │ 📊 Completion Tokens: 24                │
+└──────────────────────────────────────┴─────────────────────────────────────────┘
+</code></pre>
+<h4>Diagnostic Metrics Displayed:</h4>
+<ul>
+<li><strong>Latency (ms)</strong>: Total round-trip response generation time.</li>
+<li><strong>Retrieved Chunks</strong>: Exact text snippets pulled from vector search to answer the prompt.</li>
+<li><strong>Tool Executions</strong>: Shows API function called, inputs passed, and JSON outputs returned.</li>
+<li><strong>Token Breakdown</strong>: Displays exact token count consumed for cost management.</li>
+</ul>
+<hr>
+<h3>Analytics &amp; Cost Monitoring</h3>
+<p>The <strong>Overview</strong> tab provides real-time operational insights:</p>
+<ul>
+<li><strong>Resolution Rate</strong>: Percentage of customer conversations successfully handled by the AI without requiring human handoff.</li>
+<li><strong>Average Response Time</strong>: Performance latency across all channels.</li>
+<li><strong>Token Consumption</strong>: Detailed breakdown of Input (Prompt) vs Output (Completion) tokens.</li>
+<li><strong>Estimated Cost (USD)</strong>: Calculated based on standard model pricing ($2.50 per 1M prompt tokens, $10.00 per 1M completion tokens).</li>
+</ul>
+<hr>
+<h2>8. Best Practices for Maximum Answer Accuracy</h2>
+<p>To guarantee your AI model provides accurate responses and avoids mistakes:</p>
+<h3>1. Document Preparation Guidelines</h3>
+<ul>
+<li><strong>Keep Documents Structured</strong>: Use clear headings, bullet points, and plain language.</li>
+<li><strong>Avoid Image-Only PDFs</strong>: Ensure PDFs contain selectable text. Scanned images cannot be indexed without OCR.</li>
+<li><strong>Use FAQ Pairs for Critical Facts</strong>: For exact prices, phone numbers, or refund policies, explicitly add them as FAQ pairs—FAQ items have high precision in semantic search.</li>
+</ul>
+<h3>2. Prompt Engineering Guidelines</h3>
+<ul>
+<li><strong>Set Explicit Fallbacks</strong>: Instruct the model what to say when data is missing:<blockquote>
+<p><em>&quot;If the answer is not present in the retrieved knowledge base, respond politely stating that you do not have that specific detail, and offer to transfer the user to a customer service agent.&quot;</em></p>
+</blockquote>
+</li>
+<li><strong>Restrict Speculation</strong>:<blockquote>
+<p><em>&quot;Do not invent or guess prices, dates, or terms that are not explicitly documented in the knowledge base.&quot;</em></p>
+</blockquote>
+</li>
+</ul>
+<h3>3. API Tool Best Practices</h3>
+<ul>
+<li><strong>Provide Detailed Parameter Descriptions</strong>: Explain clearly what format expected fields require (e.g. <code>YYYY-MM-DD</code> for dates, phone number with country code).</li>
+<li><strong>Return Clean JSON Responses</strong>: Keep backend tool API outputs concise. Filter out unnecessary debugging metadata to conserve token context.</li>
+</ul>
+<hr>
+<h2>9. Quick-Start Onboarding Checklist</h2>
+<p>Follow this checklist to get your AI Agent fully operational:</p>
+<ul>
+<li><p><input disabled="" type="checkbox"> <strong>Step 1: Account Setup</strong></p>
+<ul>
+<li>Obtain tenant access credentials.</li>
+<li>Generate your secret <strong>API Key</strong> in the <strong>Settings</strong> tab.</li>
+</ul>
+</li>
+<li><p><input disabled="" type="checkbox"> <strong>Step 2: Knowledge Ingestion</strong></p>
+<ul>
+<li>Upload core company documentation (<code>.pdf</code>, <code>.docx</code>, <code>.md</code>).</li>
+<li>Import high-frequency Q&amp;A pairs via <strong>FAQ Importer</strong>.</li>
+<li>Crawl main support web pages.</li>
+<li>Verify chunk quality in <strong>Knowledge</strong> &gt; <strong>View Chunks</strong>.</li>
+</ul>
+</li>
+<li><p><input disabled="" type="checkbox"> <strong>Step 3: Persona &amp; Prompt Builder</strong></p>
+<ul>
+<li>Configure Identity, Business Rules, Safety Constraints, and Tone of Voice.</li>
+<li>Set fallback rules to prevent hallucinations.</li>
+<li>Save system prompt configuration.</li>
+</ul>
+</li>
+<li><p><input disabled="" type="checkbox"> <strong>Step 4: Custom API Tools (Optional)</strong></p>
+<ul>
+<li>Register API tool manifests for backend system integrations.</li>
+<li>Verify endpoints using the <strong>Interactive Tool Tester</strong>.</li>
+</ul>
+</li>
+<li><p><input disabled="" type="checkbox"> <strong>Step 5: Playground Testing</strong></p>
+<ul>
+<li>Test diverse user queries in the <strong>Playground</strong>.</li>
+<li>Inspect retrieved chunks and execution latency.</li>
+</ul>
+</li>
+<li><p><input disabled="" type="checkbox"> <strong>Step 6: Channel Deployment</strong></p>
+<ul>
+<li>Configure WhatsApp Business Webhook &amp; Meta App Secret (for WhatsApp).</li>
+<li>Integrate REST API (<code>POST /api/v1/channels/chat</code>) into your application.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><em>Kaizech Brain Platform Documentation — Version 1.0</em></p>
+

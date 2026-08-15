@@ -99,18 +99,8 @@ export class RagAgentDagService {
       const { OpenAIEmbeddings } = require('@langchain/openai');
       const embeddings = new OpenAIEmbeddings({ apiKey: customApiKey, modelName: 'text-embedding-3-small' });
       const vector = await embeddings.embedQuery(userMessage);
-      const learnings = await this.dataSource.query(
-        `SELECT learning_rule as content FROM agent_learnings WHERE tenant_id = $1 AND status = 'approved'`, 
-        [tenant.id]
-      );
-      if (learnings && learnings.length > 0) {
-        finalSystemPrompt += "\n\nCRITICAL - Please adhere to these learned rules from past user feedback:\n";
-        learnings.forEach((l, index) => {
-          finalSystemPrompt += `${index + 1}. ${l.content}\n`;
-        });
-      }
     } catch (err) {
-      this.logger.warn(`Failed to fetch learnings: ${err.message}`);
+      this.logger.warn(`Failed to embed query: ${err.message}`);
     }
     
     const initialMessages: BaseMessage[] = [

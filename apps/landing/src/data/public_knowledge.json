@@ -1,0 +1,30 @@
+[
+  {
+    "keywords": ["price", "pricing", "cost", "plan", "package", "tariff", "fee"],
+    "response": "We offer 3 straightforward plans:\n- **Starter**: Free, to build your first agent\n- **Professional**: $49/mo with advanced integrations\n- **Enterprise**: Custom pricing for massive scale and SLA guarantees."
+  },
+  {
+    "keywords": ["whatsapp", "wa", "meta"],
+    "response": "Yes, absolutely! Kaizech Brain has native **WhatsApp Business integration**. You can connect your number in minutes, set up automated routing, and let your AI agent handle customer inquiries directly on WhatsApp 24/7."
+  },
+  {
+    "keywords": ["integrate", "integration", "api", "system", "webhook", "sdk", "crm", "erp", "connect"],
+    "response": "Integration is a breeze! You can embed our web widget with a single line of JavaScript, or hit our REST APIs directly to connect with any existing CRM, ERP, or internal system. We have webhooks and SDKs available."
+  },
+  {
+    "keywords": ["rag", "data", "knowledge", "pdf", "sql", "document", "upload", "secure", "privacy"],
+    "response": "We support advanced **RAG (Retrieval-Augmented Generation)**. You can upload PDFs, connect SQL databases, or scrape your website. The agent will ground its answers entirely on your proprietary data securely. Bank-grade multi-tenant data isolation is built-in."
+  },
+  {
+    "keywords": ["support", "feature", "capabilities", "byok", "prompt", "action"],
+    "response": "We support custom RAG, advanced Prompt Building, custom API actions, BYOK (Bring Your Own Key), and multi-tenant security isolation out of the box."
+  },
+  {
+    "keywords": ["what is", "about", "kaizech", "platform"],
+    "response": "Kaizech Brain is an **Agentic AI platform**. We provide an end-to-end multi-tenant architecture for businesses to build, deploy, and manage AI agents, Knowledge RAG pipelines, and smart widgets!"
+  },
+  {
+    "keywords": ["hello", "hi", "hey", "greetings"],
+    "response": "Hello there! Feel free to ask me anything about Kaizech Brain's features, integrations, pricing, or how to get started."
+  }
+]

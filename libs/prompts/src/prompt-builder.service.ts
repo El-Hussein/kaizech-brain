@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PromptTemplateEntity, TenantEntity, UserProfileEntity } from '@kaizech/database';
+import { PromptTemplateEntity, TenantEntity, UserProfileEntity, AgentLearningEntity } from '@kaizech/database';
 
 export interface PromptBuildOptions {
   tenant: TenantEntity;
@@ -18,6 +18,8 @@ export class PromptBuilderService {
   constructor(
     @InjectRepository(PromptTemplateEntity)
     private readonly promptTemplateRepository: Repository<PromptTemplateEntity>,
+    @InjectRepository(AgentLearningEntity)
+    private readonly agentLearningRepository: Repository<AgentLearningEntity>,
   ) {}
 
   async getActiveTemplate(tenantId: string): Promise<PromptTemplateEntity | null> {
@@ -108,6 +110,15 @@ export class PromptBuilderService {
       parts.push(
         `=== RETRIEVED KNOWLEDGE BASE ===\nUse the following knowledge documents to answer accurately. If information is not in the knowledge base or API, politely state that you do not have that information.\n\n${knowledgeContext.join('\n---\n')}`,
       );
+    }
+
+    // 9.5. Learned Rules
+    const learnings = await this.agentLearningRepository.find({
+      where: { tenantId: tenant.id, status: 'approved' as any },
+    });
+    if (learnings && learnings.length > 0) {
+      const rules = learnings.map((l, index) => `${index + 1}. ${l.learningRule}`).join('\n');
+      parts.push(`=== CRITICAL - LEARNED RULES ===\nPlease adhere to these learned rules from past user feedback:\n${rules}`);
     }
 
     // 10. General Guidelines

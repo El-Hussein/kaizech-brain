@@ -11,33 +11,31 @@ export function Hero() {
   ]);
   const [input, setInput] = useState("");
 
-  const handleSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    setMessages((prev) => [...prev, { role: "user", content: input }]);
-    const currentInput = input.toLowerCase();
+  const handleSend = (e?: React.FormEvent, textOverride?: string) => {
+    e?.preventDefault();
+    const textToProcess = textOverride || input;
+    if (!textToProcess.trim()) return;
+    
+    setMessages((prev) => [...prev, { role: "user", content: textToProcess }]);
+    const currentInput = textToProcess.toLowerCase();
     setInput("");
     
     // Simulate AI typing delay
-    setTimeout(() => {
-      let response = "I can help with that! Kaizech Brain empowers you to automate workflows and deploy intelligent agents in minutes.";
+    setTimeout(async () => {
+      let response = "That's a great question! Kaizech Brain's architecture is highly flexible. Check out our documentation or sign up for free to explore all the possibilities!";
       
-      if (currentInput.includes("what is") || currentInput.includes("about")) {
-        response = "Kaizech Brain is an Agentic AI platform. We provide an end-to-end multi-tenant architecture for businesses to build, deploy, and manage AI agents, Knowledge RAG pipelines, and smart widgets!";
-      } else if (currentInput.includes("plan") || currentInput.includes("price") || currentInput.includes("cost") || currentInput.includes("package")) {
-        response = "We offer 3 straightforward plans: A free Starter plan to build your first agent, a Professional plan ($49/mo) with advanced integrations, and a Custom Enterprise plan for massive scale and SLA guarantees.";
-      } else if (currentInput.includes("whatsapp")) {
-        response = "Yes, absolutely! Kaizech Brain has native WhatsApp Business integration. You can connect your number in minutes, set up automated routing, and let your AI agent handle customer inquiries directly on WhatsApp 24/7.";
-      } else if (currentInput.includes("integrate") || currentInput.includes("how to") || currentInput.includes("api") || currentInput.includes("system")) {
-        response = "Integration is a breeze! You can embed our web widget with a single line of JavaScript, or hit our REST APIs directly to connect with any existing CRM, ERP, or internal system. We have webhooks and SDKs available.";
-      } else if (currentInput.includes("rag") || currentInput.includes("data") || currentInput.includes("knowledge")) {
-        response = "We support advanced RAG (Retrieval-Augmented Generation). You can upload PDFs, connect SQL databases, or scrape your website. The agent will ground its answers entirely on your proprietary data securely.";
-      } else if (currentInput.includes("support") || currentInput.includes("feature")) {
-        response = "We support custom RAG, advanced Prompt Building, custom API actions, BYOK (Bring Your Own Key), and multi-tenant security isolation out of the box.";
-      } else if (currentInput.includes("hello") || currentInput.includes("hi") || currentInput.includes("hey")) {
-        response = "Hello there! Feel free to ask me anything about Kaizech Brain's features, integrations, pricing, or how to get started.";
-      } else {
-        response = "That's a great question! Kaizech Brain's architecture is highly flexible. Check out our documentation or sign up for free to explore all the possibilities!";
+      try {
+        const knowledgeModule = await import("../data/public_knowledge.json");
+        const { findBestResponse } = await import("../utils/rag");
+        const knowledgeBase = knowledgeModule.default || knowledgeModule;
+        
+        const bestResponse = findBestResponse(currentInput, knowledgeBase);
+
+        if (bestResponse) {
+          response = bestResponse;
+        }
+      } catch (err) {
+        console.error("Failed to load knowledge base:", err);
       }
 
       setMessages((prev) => [
@@ -132,8 +130,21 @@ export function Hero() {
                 ))}
               </div>
               
+              {/* Prompt Chips */}
+              <div className="px-4 pb-2 pt-2 bg-white flex gap-2 overflow-x-auto border-t border-slate-100" style={{ scrollbarWidth: 'none' }}>
+                {["WhatsApp Integration?", "Pricing Plans", "Data Privacy"].map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => handleSend(undefined, chip)}
+                    className="whitespace-nowrap px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors border border-indigo-100"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
               {/* Widget Input */}
-              <div className="p-4 bg-white border-t border-slate-100">
+              <div className="p-4 bg-white">
                 <form onSubmit={handleSend} className="relative">
                   <input
                     type="text"
