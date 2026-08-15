@@ -9,6 +9,7 @@ export function Contact() {
     firstName: "",
     lastName: "",
     email: "",
+    website: "",
     companySize: "1-50 employees",
     message: ""
   });
@@ -115,6 +116,11 @@ export function Contact() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Work Email</label>
                     <input name="email" value={formData.email} onChange={handleChange} type="email" required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Website (Optional)</label>
+                    <input name="website" value={formData.website} onChange={handleChange} type="url" placeholder="https://example.com" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
                   </div>
                   
                   <div>

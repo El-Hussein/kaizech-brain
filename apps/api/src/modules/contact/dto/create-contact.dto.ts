@@ -18,6 +18,10 @@ export class CreateContactDto {
   companySize?: string;
 
   @IsString()
+  @IsOptional()
+  website?: string;
+
+  @IsString()
   @IsNotEmpty()
   message: string;
 }

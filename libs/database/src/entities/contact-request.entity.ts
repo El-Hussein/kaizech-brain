@@ -15,6 +15,9 @@ export class ContactRequest extends BaseEntity {
   @Column()
   companySize: string;
 
+  @Column({ nullable: true })
+  website?: string;
+
   @Column('text')
   message: string;
 
