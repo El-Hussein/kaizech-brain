@@ -22,6 +22,7 @@ export enum MessageRole {
 
 export enum MessageChannel {
   WHATSAPP = 'whatsapp',
+  MESSENGER = 'messenger',
   WEB = 'web',
   API = 'api',
   PLAYGROUND = 'playground',

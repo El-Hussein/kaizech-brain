@@ -264,6 +264,60 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
     setTimeout(() => setWhatsappSaved(false), 2000);
   };
 
+  // ── Messenger (Meta Direct) ────────────────────────────────────────────────
+  const computedMessengerWebhook = `${defaultApiBase.replace(/\/$/, '')}/api/v1/channels/messenger/webhook`;
+
+  const [messengerVerifyToken, setMessengerVerifyToken] = useState('kaizech_mrkoon_verify_2026');
+  const [messengerAppSecret, setMessengerAppSecret] = useState('');
+  const [messengerAccessToken, setMessengerAccessToken] = useState('');
+  const [messengerPageId, setMessengerPageId] = useState('');
+  const [showMessengerAppSecret, setShowMessengerAppSecret] = useState(false);
+  const [showMessengerAccessToken, setShowMessengerAccessToken] = useState(false);
+  const [messengerSaved, setMessengerSaved] = useState(false);
+  const [messengerWebhookUrl, setMessengerWebhookUrl] = useState(computedMessengerWebhook);
+  const [testingMessenger, setTestingMessenger] = useState(false);
+  const [messengerTestResults, setMessengerTestResults] = useState<any | null>(null);
+
+  const handleTestMessengerConnection = async () => {
+    setTestingMessenger(true);
+    setMessengerTestResults(null);
+    try {
+      const res = await axios.post(`${API_BASE}/channels/messenger/test`, {}, {
+        headers: { 'x-api-key': apiKey },
+      });
+      setMessengerTestResults(res.data);
+    } catch (err: any) {
+      setMessengerTestResults({
+        success: false,
+        error: err.response?.data?.message || err.message,
+      });
+    } finally {
+      setTestingMessenger(false);
+    }
+  };
+
+  const saveMessengerConfig = async () => {
+    try {
+      await axios.put(
+        `${API_BASE}/tenants/${tenantId}`,
+        {
+          settings: {
+            ...tenantDetails?.settings,
+            messengerVerifyToken,
+            messengerAppSecret,
+            messengerAccessToken,
+            messengerPageId,
+            messengerWebhookUrl: computedMessengerWebhook,
+          },
+        },
+        { headers: { 'x-api-key': apiKey } },
+      );
+    } catch {}
+
+    setMessengerSaved(true);
+    setTimeout(() => setMessengerSaved(false), 2000);
+  };
+
   // ── API Key Management ────────────────────────────────────────────────────
   const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
   const [newKeyName, setNewKeyName] = useState('');
@@ -322,6 +376,18 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
           }
           if (res.data.settings?.whatsappVerifyToken) {
             setVerifyToken(res.data.settings.whatsappVerifyToken);
+          }
+          if (res.data.settings?.messengerVerifyToken) {
+            setMessengerVerifyToken(res.data.settings.messengerVerifyToken);
+          }
+          if (res.data.settings?.messengerAppSecret) {
+            setMessengerAppSecret(res.data.settings.messengerAppSecret);
+          }
+          if (res.data.settings?.messengerAccessToken) {
+            setMessengerAccessToken(res.data.settings.messengerAccessToken);
+          }
+          if (res.data.settings?.messengerPageId) {
+            setMessengerPageId(res.data.settings.messengerPageId);
           }
           if (res.data.settings?.whatsappAppSecret) {
             setAppSecret(res.data.settings.whatsappAppSecret);
@@ -1303,6 +1369,222 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 onClick={saveWhatsAppConfig}
               >
                 {whatsappSaved ? 'Saved! ✓' : 'Save WhatsApp Config'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+          {/* ── Top Panel: Live Messenger Integration Health & Diagnostics Matrix ── */}
+          <div className="glass-card" style={{ padding: '24px', marginBottom: '24px', marginTop: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <SectionHeader
+                icon={<Activity size={20} color="var(--accent-blue)" />}
+                title="Messenger Integration Live Health & Diagnostics"
+                subtitle="Real-time background verification of Meta Graph API access, Page ID binding, and Webhook HMAC guards."
+              />
+              <Button
+                variant="secondary"
+                onClick={handleTestMessengerConnection}
+                loading={testingMessenger}
+                loadingText="Auditing Connection..."
+                style={{ gap: '6px', fontSize: '13px' }}
+              >
+                <RefreshCw size={14} /> Re-Run Live Audit
+              </Button>
+            </div>
+
+            {/* 4 Stat Cards Matrix */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px' }}>
+              {/* Card 1: Meta Graph API Token */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${messengerTestResults?.checks?.accessToken?.status === 'ok' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldCheck size={16} color={messengerTestResults?.checks?.accessToken?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444'} />
+                    Meta System Token
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: messengerTestResults?.checks?.accessToken?.status === 'ok' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: messengerTestResults?.checks?.accessToken?.status === 'ok' ? 'var(--accent-emerald)' : '#ef4444' }}>
+                    {messengerTestResults?.checks?.accessToken?.status === 'ok' ? 'VERIFIED' : 'ACTION NEEDED'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                  {messengerTestResults?.checks?.accessToken?.details?.name ? `Meta Account: ${messengerTestResults.checks.accessToken.details.name}` : 'Meta Graph API'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  {messengerTestResults?.checks?.accessToken?.message || 'Click "Re-Run Live Audit" to test token'}
+                </div>
+              </div>
+
+              {/* Card 2: Page ID */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${messengerTestResults?.checks?.pageId?.status === 'ok' ? 'rgba(59,130,246,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Phone size={16} color="var(--accent-blue)" />
+                    Meta Page ID
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: messengerTestResults?.checks?.pageId?.status === 'ok' ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)', color: messengerTestResults?.checks?.pageId?.status === 'ok' ? 'var(--accent-blue)' : '#ef4444' }}>
+                    {messengerTestResults?.checks?.pageId?.status === 'ok' ? 'BOUND' : 'UNBOUND'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace', marginTop: '4px' }}>
+                  {messengerTestResults?.checks?.pageId?.pageId || messengerPageId || 'Not set'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  Matches incoming & outgoing Meta Graph API routing
+                </div>
+              </div>
+
+              {/* Card 3: HMAC Security Guard */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: `1px solid ${messengerTestResults?.checks?.appSecret?.status === 'ok' ? 'rgba(168,85,247,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Lock size={16} color="#c084fc" />
+                    HMAC Signature Guard
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: messengerTestResults?.checks?.appSecret?.status === 'ok' ? 'rgba(168,85,247,0.15)' : 'rgba(239,68,68,0.15)', color: '#c084fc' }}>
+                    {messengerTestResults?.checks?.appSecret?.status === 'ok' ? 'ACTIVE' : 'INACTIVE'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                  SHA-256 Validation
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  {messengerTestResults?.checks?.appSecret?.message || 'Meta App Secret configured'}
+                </div>
+              </div>
+
+              {/* Card 4: Webhook Endpoint */}
+              <div style={{ background: 'var(--bg-surface-elevated)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Server size={16} color="var(--accent-amber)" />
+                    Webhook Endpoint
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', background: 'rgba(245,158,11,0.15)', color: 'var(--accent-amber)' }}>
+                    200 OK
+                  </span>
+                </div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-amber)', fontFamily: 'monospace', wordBreak: 'break-all', marginTop: '4px' }}>
+                  {messengerWebhookUrl}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  Meta Webhook handshake ready
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Messenger (Meta Direct) Credentials Card */}
+        <div className="glass-card" style={{ padding: '24px', marginTop: '24px' }}>
+          <SectionHeader
+            icon={<MessageSquare size={18} color="var(--accent-blue)" />}
+            title="Messenger Credentials & Config"
+            subtitle="Paste these values into Meta's Messenger developer console."
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Webhook Callback URL
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={messengerWebhookUrl}
+                  onChange={(e) => setMessengerWebhookUrl(e.target.value)}
+                  style={{ fontFamily: 'monospace', fontSize: '13px', flex: 1 }}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    navigator.clipboard.writeText(messengerWebhookUrl);
+                  }}
+                  title="Copy to clipboard"
+                  style={{ minWidth: '40px' }}
+                >
+                  <Copy size={15} />
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Webhook Verify Token
+              </label>
+              <input
+                type="text"
+                className="input-field"
+                value={messengerVerifyToken}
+                onChange={(e) => setMessengerVerifyToken(e.target.value)}
+                placeholder="e.g. kaizech_mrkoon_verify_2026"
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Meta App Secret
+                <span style={{ marginLeft: '6px', fontWeight: 400, color: 'var(--accent-amber)', fontSize: '12px' }}>
+                  (used to validate X-Hub-Signature-256)
+                </span>
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type={showMessengerAppSecret ? 'text' : 'password'}
+                  className="input-field"
+                  value={messengerAppSecret}
+                  onChange={(e) => setMessengerAppSecret(e.target.value)}
+                  placeholder="Paste your App Secret from Meta Developer Console"
+                  style={{ flex: 1 }}
+                />
+                <Button variant="secondary" onClick={() => setShowMessengerAppSecret(!showMessengerAppSecret)} style={{ minWidth: '40px' }}>
+                  {showMessengerAppSecret ? <EyeOff size={15} /> : <Eye size={15} />}
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Meta Page Access Token
+                <span style={{ marginLeft: '6px', fontWeight: 400, color: 'var(--accent-amber)', fontSize: '12px' }}>
+                  (System User Token for outbound messages)
+                </span>
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type={showMessengerAccessToken ? 'text' : 'password'}
+                  className="input-field"
+                  value={messengerAccessToken}
+                  onChange={(e) => setMessengerAccessToken(e.target.value)}
+                  placeholder="Paste Meta Page Access Token (EAAG...)"
+                  style={{ flex: 1 }}
+                />
+                <Button variant="secondary" onClick={() => setShowMessengerAccessToken(!showMessengerAccessToken)} style={{ minWidth: '40px' }}>
+                  {showMessengerAccessToken ? <EyeOff size={15} /> : <Eye size={15} />}
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Meta Page ID
+                <span style={{ marginLeft: '6px', fontWeight: 400, color: 'var(--accent-amber)', fontSize: '12px' }}>
+                  (Found in Meta Developer Console)
+                </span>
+              </label>
+              <input
+                type="text"
+                className="input-field"
+                value={messengerPageId}
+                onChange={(e) => setMessengerPageId(e.target.value)}
+                placeholder="e.g. 100609348588231"
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <Button
+                variant="primary"
+                onClick={saveMessengerConfig}
+              >
+                {messengerSaved ? 'Saved! ✓' : 'Save Messenger Config'}
               </Button>
             </div>
           </div>

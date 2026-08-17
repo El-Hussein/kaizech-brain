@@ -11,15 +11,18 @@ import {
   Res,
   BadRequestException,
   NotFoundException,
+  SetMetadata,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity, ApiBody } from '@nestjs/swagger';
-import { WhatsAppService, MetaSignatureGuard } from '@kaizech/channels';
+import { WhatsAppService, MetaSignatureGuard, MessengerService } from '@kaizech/channels';
 import { AgentOrchestratorService } from '@kaizech/agent';
 import { MemoryService } from '@kaizech/memory';
 import { TenantsService } from '../tenants/tenants.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MessageChannel } from '@kaizech/shared';
 import { Response } from 'express';
+
+export const MetaChannel = (channel: 'whatsapp' | 'messenger') => SetMetadata('metaChannel', channel);
 
 // ─────────────────────────────────────────────────────
 // Channel 1: WhatsApp Direct (Meta Webhook)
@@ -38,6 +41,7 @@ import { Response } from 'express';
 export class ChannelsController {
   constructor(
     private readonly whatsappService: WhatsAppService,
+    private readonly messengerService: MessengerService,
     private readonly tenantsService: TenantsService,
     private readonly agentOrchestrator: AgentOrchestratorService,
     private readonly memoryService: MemoryService,
@@ -65,6 +69,7 @@ export class ChannelsController {
    * to ensure the payload genuinely comes from Meta and not a spoofed source.
    */
   @Post('whatsapp/webhook')
+  @MetaChannel('whatsapp')
   @UseGuards(MetaSignatureGuard)
   @ApiOperation({ summary: 'WhatsApp Incoming Message (secured by Meta HMAC signature)' })
   handleWhatsAppIncomingRoot(@Body() payload: any) {
@@ -90,6 +95,7 @@ export class ChannelsController {
   }
 
   @Post('whatsapp/webhook/:tenantId')
+  @MetaChannel('whatsapp')
   @UseGuards(MetaSignatureGuard)
   @ApiOperation({ summary: 'WhatsApp Incoming Message with Tenant ID' })
   handleWhatsAppIncomingTenant(
@@ -120,6 +126,77 @@ export class ChannelsController {
     const tenantContext = req.tenant;
     const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
     return this.whatsappService.testConnection(tenant);
+  }
+
+  // ─── Channel: Messenger via Meta ─────────────────
+
+  @Get(['messenger/webhook', 'messenger/webhook/:tenantId'])
+  @ApiOperation({ summary: 'Messenger Webhook Verification (Meta handshake)' })
+  verifyMessengerWebhook(
+    @Query('hub.mode') mode: string,
+    @Query('hub.verify_token') token: string,
+    @Query('hub.challenge') challenge: string,
+  ) {
+    return this.messengerService.verifyWebhook(mode, token, challenge);
+  }
+
+  @Post('messenger/webhook')
+  @MetaChannel('messenger')
+  @UseGuards(MetaSignatureGuard)
+  @ApiOperation({ summary: 'Messenger Incoming Message (secured by Meta HMAC signature)' })
+  handleMessengerIncomingRoot(@Body() payload: any) {
+    console.log('📥 [Messenger Webhook POST Received]:', JSON.stringify(payload, null, 2));
+
+    this.tenantsService
+      .findAll()
+      .then((tenants) => {
+        const tenant =
+          tenants.find((t) => t.slug === 'mrkoon' || t.slug === 'mrkoon-auctions') ||
+          tenants.find((t) => t.slug.includes('mrkoon')) ||
+          tenants[0];
+        if (tenant) {
+          this.messengerService.handleIncomingPayload(payload, tenant).catch((err) => {
+            console.error('💥 Background Messenger processing error:', err.message);
+          });
+        }
+      })
+      .catch((err) => console.error('💥 Tenant lookup error in Messenger webhook:', err.message));
+
+    return { status: 'EVENT_RECEIVED' };
+  }
+
+  @Post('messenger/webhook/:tenantId')
+  @MetaChannel('messenger')
+  @UseGuards(MetaSignatureGuard)
+  @ApiOperation({ summary: 'Messenger Incoming Message with Tenant ID' })
+  handleMessengerIncomingTenant(
+    @Param('tenantId') tenantId: string,
+    @Body() payload: any,
+  ) {
+    console.log('📥 [Messenger Webhook POST Received for Tenant]:', tenantId, JSON.stringify(payload, null, 2));
+
+    this.tenantsService
+      .findOne(tenantId)
+      .then((tenant) => {
+        if (tenant) {
+          this.messengerService.handleIncomingPayload(payload, tenant).catch((err) => {
+            console.error('💥 Background Messenger processing error:', err.message);
+          });
+        }
+      })
+      .catch((err) => console.error('💥 Tenant lookup error in Messenger webhook:', err.message));
+
+    return { status: 'EVENT_RECEIVED' };
+  }
+
+  @Post('messenger/test')
+  @UseGuards(ApiKeyGuard)
+  @ApiSecurity('api-key')
+  @ApiOperation({ summary: 'Test live Messenger Meta Graph API connection and credentials' })
+  async testMessengerConnection(@Req() req: any) {
+    const tenantContext = req.tenant;
+    const tenant = await this.tenantsService.findOne(tenantContext.tenantId);
+    return this.messengerService.testConnection(tenant);
   }
 
   // ─── Channel 2: Direct API / Mrkoon-Meta ──────────

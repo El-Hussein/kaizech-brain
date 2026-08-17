@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantEntity } from '@kaizech/database';
+import { Reflector } from '@nestjs/core';
 import * as crypto from 'crypto';
 
 import { decryptSecret } from '@kaizech/shared';
@@ -25,12 +26,21 @@ export class MetaSignatureGuard implements CanActivate {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly reflector: Reflector,
     @InjectRepository(TenantEntity)
     private readonly tenantRepository: Repository<TenantEntity>,
   ) {}
 
-  private getSecretFromSettings(settings: Record<string, any> | undefined): string | undefined {
+  private getSecretFromSettings(settings: Record<string, any> | undefined, channel: string): string | undefined {
     if (!settings) return undefined;
+    if (channel === 'messenger') {
+      return (
+        settings.messengerAppSecret ||
+        settings.MESSENGER_APP_SECRET ||
+        settings.messenger_app_secret ||
+        settings.appSecret
+      );
+    }
     return (
       settings.whatsappAppSecret ||
       settings.WHATSAPP_APP_SECRET ||
@@ -39,7 +49,15 @@ export class MetaSignatureGuard implements CanActivate {
     );
   }
 
-  private getSecretFromEnv(): string | undefined {
+  private getSecretFromEnv(channel: string): string | undefined {
+    if (channel === 'messenger') {
+      return (
+        this.configService.get<string>('MESSENGER_APP_SECRET') ||
+        process.env.MESSENGER_APP_SECRET ||
+        process.env.messenger_app_secret ||
+        process.env.messengerAppSecret
+      );
+    }
     return (
       this.configService.get<string>('WHATSAPP_APP_SECRET') ||
       process.env.WHATSAPP_APP_SECRET ||
@@ -56,6 +74,8 @@ export class MetaSignatureGuard implements CanActivate {
       throw new ForbiddenException('Missing X-Hub-Signature-256 header');
     }
 
+    const channel = this.reflector.get<string>('metaChannel', context.getHandler()) || 'whatsapp';
+
     // Resolve the App Secret: check tenant-level, default tenant, and env vars
     const tenantId = request.params?.tenantId;
     let rawAppSecret: string | undefined;
@@ -63,7 +83,7 @@ export class MetaSignatureGuard implements CanActivate {
 
     if (tenantId) {
       const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
-      rawAppSecret = this.getSecretFromSettings(tenant?.settings);
+      rawAppSecret = this.getSecretFromSettings(tenant?.settings, channel);
       if (rawAppSecret) {
         resolutionSource = `Tenant Settings (${tenant?.name || tenantId})`;
       }
@@ -74,7 +94,7 @@ export class MetaSignatureGuard implements CanActivate {
       if (!defaultTenant) {
         defaultTenant = await this.tenantRepository.findOne({ where: { slug: 'mrkoon-auctions' } });
       }
-      rawAppSecret = this.getSecretFromSettings(defaultTenant?.settings);
+      rawAppSecret = this.getSecretFromSettings(defaultTenant?.settings, channel);
       if (rawAppSecret) {
         resolutionSource = `Default Tenant Settings (${defaultTenant?.name || 'mrkoon'})`;
       }
@@ -84,7 +104,7 @@ export class MetaSignatureGuard implements CanActivate {
       // Fallback: check any active tenant in database
       const tenants = await this.tenantRepository.find({ take: 5 });
       for (const t of tenants) {
-        const sec = this.getSecretFromSettings(t.settings);
+        const sec = this.getSecretFromSettings(t.settings, channel);
         if (sec) {
           rawAppSecret = sec;
           resolutionSource = `Active Tenant Settings (${t.name})`;
@@ -94,9 +114,9 @@ export class MetaSignatureGuard implements CanActivate {
     }
 
     if (!rawAppSecret) {
-      rawAppSecret = this.getSecretFromEnv();
+      rawAppSecret = this.getSecretFromEnv(channel);
       if (rawAppSecret) {
-        resolutionSource = 'Environment Variable (WHATSAPP_APP_SECRET)';
+        resolutionSource = `Environment Variable (${channel.toUpperCase()}_APP_SECRET)`;
       }
     }
 
@@ -104,15 +124,15 @@ export class MetaSignatureGuard implements CanActivate {
 
     if (!appSecret) {
       this.logger.error(
-        'WHATSAPP_APP_SECRET is not configured on any tenant or env — cannot validate Meta signature',
+        `${channel.toUpperCase()}_APP_SECRET is not configured on any tenant or env — cannot validate Meta signature`,
       );
       throw new ForbiddenException(
-        'WhatsApp App Secret is not configured. Please save it under Settings & API Keys in Dashboard or set WHATSAPP_APP_SECRET environment variable.',
+        `Meta App Secret for ${channel} is not configured. Please save it under Settings & API Keys in Dashboard or set the environment variable.`,
       );
     }
 
     this.logger.log(
-      `Meta signature secret resolved [Source: ${resolutionSource}]: ${maskSecret(appSecret)} (${appSecret.length} chars)`,
+      `Meta signature secret resolved for ${channel} [Source: ${resolutionSource}]: ${maskSecret(appSecret)} (${appSecret.length} chars)`,
     );
 
     // rawBody is populated by NestFactory.create({ rawBody: true })
