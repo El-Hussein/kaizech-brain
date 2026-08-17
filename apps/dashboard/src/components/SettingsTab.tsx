@@ -302,12 +302,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
         `${API_BASE}/tenants/${tenantId}`,
         {
           settings: {
-            ...tenantDetails?.settings,
             messengerVerifyToken,
             messengerAppSecret,
             messengerAccessToken,
             messengerPageId,
             messengerWebhookUrl: computedMessengerWebhook,
+            enabledChannels: ['whatsapp', 'messenger', 'api'],
           },
         },
         { headers: { 'x-api-key': apiKey } },
