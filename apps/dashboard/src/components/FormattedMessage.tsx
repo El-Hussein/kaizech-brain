@@ -6,7 +6,7 @@ import React from 'react';
 function parseInlineMarkdown(text: string): React.ReactNode[] {
   if (!text) return [];
 
-  const regex = /(\*\*(.*?)\*\*|__(.*?)__|`([^`]+)`|\*(.*?)\*|_(.*?)_)/g;
+  const regex = /(\*\*(.*?)\*\*|__(.*?)__|`([^`]+)`|\*(.*?)\*|_(.*?)_|\[(.*?)\]\((.*?)\))/g;
   const elements: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -46,6 +46,20 @@ function parseInlineMarkdown(text: string): React.ReactNode[] {
         <em key={match.index} style={{ fontStyle: 'italic' }}>
           {parseInlineMarkdown(content)}
         </em>,
+      );
+    } else if (fullMatch.startsWith('[')) {
+      const linkText = match[7] ?? '';
+      const linkUrl = match[8] ?? '';
+      elements.push(
+        <a
+          key={match.index}
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#38bdf8', textDecoration: 'underline' }}
+        >
+          {parseInlineMarkdown(linkText)}
+        </a>,
       );
     }
 
