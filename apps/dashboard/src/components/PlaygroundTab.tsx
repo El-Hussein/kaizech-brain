@@ -39,8 +39,13 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     // Placeholder for assistant response
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
-    const apiBase = axios.defaults.baseURL || (import.meta as any).env?.VITE_API_URL || 'https://kaizech-brain-production.up.railway.app';
-    const streamUrl = `${apiBase.replace(/\/$/, '')}/api/v1/playground/chat-stream`;
+    let apiBase = axios.defaults.baseURL;
+    if (apiBase === undefined || apiBase === null) {
+      apiBase = (import.meta as any).env?.VITE_API_URL || '';
+    }
+    const streamUrl = apiBase
+      ? `${apiBase.replace(/\/$/, '')}/api/v1/playground/chat-stream`
+      : '/api/v1/playground/chat-stream';
 
     try {
       const response = await fetch(streamUrl, {
