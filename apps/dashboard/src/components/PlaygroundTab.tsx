@@ -47,13 +47,24 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
       ? `${apiBase.replace(/\/$/, '')}/api/v1/playground/chat-stream`
       : '/api/v1/playground/chat-stream';
 
+    let currentTenantSlug = '';
+    try {
+      const saved = localStorage.getItem('kaizech_tenant_session');
+      if (saved) {
+        const session = JSON.parse(saved);
+        if (session?.tenant?.slug) {
+          currentTenantSlug = session.tenant.slug;
+        }
+      }
+    } catch (e) {}
+
     try {
       const response = await fetch(streamUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'x-tenant-slug': (axios.defaults.headers.common['x-tenant-slug'] as string) || '',
+          'x-tenant-slug': currentTenantSlug,
         },
         body: JSON.stringify({ message: userText }),
       });
