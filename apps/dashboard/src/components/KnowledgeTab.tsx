@@ -239,14 +239,14 @@ const ViewerModal: React.FC<{
             return (
               <div
                 key={chunk.id}
-                style={{
-                  flexShrink: 0,
-                  background: 'rgba(255, 255, 255, 0.035)',
-                  border: '1px solid var(--border-glass)',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                  transition: 'border-color 0.2s',
-                }}
+                  style={{
+                    flexShrink: 0,
+                    background: 'rgba(0, 0, 0, 0.02)',
+                    border: '1px solid var(--border-glass)',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    transition: 'border-color 0.2s',
+                  }}
               >
                 {/* Chunk Header */}
                 <div
@@ -255,7 +255,7 @@ const ViewerModal: React.FC<{
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '10px 14px',
-                    background: 'rgba(255, 255, 255, 0.04)',
+                    background: 'rgba(0, 0, 0, 0.04)',
                     borderBottom: isExpanded ? '1px solid var(--border-glass)' : 'none',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -304,7 +304,7 @@ const ViewerModal: React.FC<{
                     style={{
                       fontSize: '13px',
                       lineHeight: 1.65,
-                      color: '#f9fafb',
+                      color: 'var(--text-main)',
                       whiteSpace: 'pre-wrap',
                       fontFamily: 'var(--font-sans)',
                       margin: 0,
@@ -544,7 +544,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
             >
               <FileText size={36} color={uploadFile ? 'var(--accent-emerald)' : 'var(--text-muted)'} />
               <div>
-                <p style={{ fontWeight: 700, fontSize: '16px', color: uploadFile ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
+                <p style={{ fontWeight: 700, fontSize: '16px', color: uploadFile ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
                   {uploadFile ? uploadFile.name : 'Click to upload or drag and drop a file'}
                 </p>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px' }}>
@@ -568,7 +568,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
                 fontSize: '14px',
                 padding: '10px 14px',
                 borderRadius: '10px',
-                background: markAsFaq ? 'rgba(34, 211, 238, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                background: markAsFaq ? 'rgba(34, 211, 238, 0.08)' : 'rgba(0, 0, 0, 0.02)',
                 border: markAsFaq ? '1px solid rgba(34, 211, 238, 0.3)' : '1px solid var(--border-glass)',
                 transition: 'all 0.2s ease',
                 userSelect: 'none',
@@ -597,7 +597,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
                 style={{ display: 'none' }}
               />
               <div>
-                <div style={{ fontWeight: 600, color: markAsFaq ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>
+                <div style={{ fontWeight: 600, color: markAsFaq ? 'var(--accent-cyan)' : 'var(--text-main)' }}>
                   <HelpCircle size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} />
                   Mark as FAQ Document
                 </div>
@@ -619,7 +619,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
               <input type="text" className="input-field" value={faqName} onChange={(e) => setFaqName(e.target.value)} />
             </div>
             {faqs.map((faq, index) => (
-              <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
+              <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0, 0, 0, 0.02)', padding: '12px', borderRadius: '10px' }}>
                 <input
                   type="text"
                   placeholder="Question"
@@ -711,7 +711,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '14px 18px',
-                    background: 'rgba(255,255,255,0.03)',
+                    background: 'rgba(0, 0, 0, 0.02)',
                     border: '1px solid var(--border-glass)',
                     borderRadius: '12px',
                     transition: 'border-color 0.2s, background 0.2s',
