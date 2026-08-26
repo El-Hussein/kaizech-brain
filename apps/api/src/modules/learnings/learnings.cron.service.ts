@@ -62,11 +62,11 @@ export class LearningsCronService {
   }
 
   private async extractLearning(conversation: ConversationEntity) {
-    // Get last 100 messages to cover more of the conversation
+    // Get last 10 messages
     const messages = await this.messageRepo.find({
       where: { conversationId: conversation.id },
       order: { createdAt: 'DESC' },
-      take: 100,
+      take: 10,
     });
     
     // Reverse to chronological order
