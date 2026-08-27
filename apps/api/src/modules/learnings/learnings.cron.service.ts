@@ -204,7 +204,8 @@ FINAL CONSISTENCY RULES
 
     if (result.hasLearning && result.rule) {
       const confidence = result.confidenceScore !== undefined ? result.confidenceScore : 85;
-      const status = confidence >= 50 ? 'approved' : 'pending';
+      // Require high confidence (>= 90) for auto-approval, otherwise pending manual review
+      const status = confidence >= 90 ? 'approved' : 'pending';
 
       const learning = this.agentLearningRepo.create({
         tenantId: conversation.tenantId,
