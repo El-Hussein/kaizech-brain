@@ -53,7 +53,7 @@ export class ConversationsController {
               if (tc.result && typeof tc.result === 'string') {
                 sources.push({ type: tc.name, query: tc.args?.query, content: tc.result });
               } else if (tc.result && Array.isArray(tc.result)) {
-                tc.result.forEach(r => {
+                tc.result.forEach((r: any) => {
                   sources.push({ type: tc.name, query: tc.args?.query, content: r.content || r });
                 });
               }
