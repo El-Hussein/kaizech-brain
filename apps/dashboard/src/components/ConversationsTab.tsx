@@ -88,6 +88,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [selectedConv, setSelectedConv] = useState<ConversationItem | null>(null);
   const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [sources, setSources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -130,6 +131,11 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
       if (res.data?.conversation) {
         setSelectedConv(res.data.conversation);
+      }
+      if (res.data?.sources) {
+        setSources(res.data.sources);
+      } else {
+        setSources([]);
       }
       if (res.data?.messages) {
         const fetchedMsgs: MessageItem[] = res.data.messages;
@@ -1150,6 +1156,21 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                         </div>
                       );
                     })
+                  )}
+                  {sources.length > 0 && (
+                    <div style={{ padding: '12px 16px', background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '12px', marginTop: '10px' }}>
+                      <h5 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Bot size={14} /> AI Knowledge Sources Used
+                      </h5>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {sources.map((src, idx) => (
+                          <div key={idx} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.1)', padding: '8px', borderRadius: '8px' }}>
+                            <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{src.type === 'faq' ? 'FAQ Match' : 'Document Match'}: </span>
+                            {src.content ? (src.content.length > 150 ? src.content.substring(0, 150) + '...' : src.content) : 'Matched internal vector reference.'}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                   <div ref={messagesEndRef} />
                 </div>
