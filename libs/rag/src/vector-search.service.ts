@@ -122,6 +122,16 @@ export class VectorSearchService {
     return entities;
   }
 
+  async deleteChunksByMetadata(tenantId: string, key: string, value: string): Promise<void> {
+    await this.dataSource.query(
+      `
+      DELETE FROM knowledge_chunks
+      WHERE tenant_id = $1 AND metadata->>$2 = $3
+      `,
+      [tenantId, key, value]
+    );
+  }
+
   private faqSourcesCache: Map<string, { hasFaqs: boolean; timestamp: number }> = new Map();
   private faqChunksCache: Map<string, { chunks: any[]; timestamp: number }> = new Map();
   private readonly CACHE_TTL_MS = 60_000; // 1 minute TTL

@@ -260,42 +260,43 @@ export const LearningsTab: React.FC = () => {
                 </div>
 
                 {/* Origin Context */}
-                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ background: 'var(--bg-glass-strong)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-glass)' }}>
                   <button 
                     onClick={() => toggleContext(learning.id)}
                     style={{
                       width: '100%',
-                      background: 'transparent',
+                      background: 'var(--bg-glass)',
                       border: 'none',
-                      color: 'var(--text-muted)',
-                      padding: '8px 12px',
+                      color: 'var(--text-main)',
+                      padding: '12px 16px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      fontSize: '12px',
+                      fontSize: '13px',
+                      fontWeight: 600,
                       cursor: 'pointer',
                       textAlign: 'left'
                     }}
                   >
-                    <MessageSquare size={14} />
+                    <MessageSquare size={16} color="var(--text-muted)" />
                     View Triggering Context Snippet
-                    {expandedContexts[learning.id] ? <ChevronUp size={14} style={{ marginLeft: 'auto' }} /> : <ChevronDown size={14} style={{ marginLeft: 'auto' }} />}
+                    {expandedContexts[learning.id] ? <ChevronUp size={16} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} /> : <ChevronDown size={16} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} />}
                   </button>
                   {expandedContexts[learning.id] && (
-                    <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '13px', color: '#e5e7eb', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ padding: '16px', borderTop: '1px solid var(--border-glass)', fontSize: '13px', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {learning.metadata?.transcript ? (
                         <>
-                          <div style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Conversation Snippet:</div>
-                          <pre style={{ whiteSpace: 'pre-wrap', fontFamily: '"JetBrains Mono", monospace', margin: 0, padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '12px' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>Conversation Snippet:</div>
+                          <pre style={{ whiteSpace: 'pre-wrap', fontFamily: '"JetBrains Mono", monospace', margin: 0, padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-main)', borderRadius: '6px', fontSize: '13px', lineHeight: '1.5' }}>
                             {learning.metadata.transcript}
                           </pre>
-                          <div style={{ fontWeight: 600, color: 'var(--text-muted)', marginTop: '8px' }}>AI Reasoning:</div>
-                          <div style={{ fontStyle: 'italic' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>AI Reasoning:</div>
+                          <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', lineHeight: '1.5' }}>
                             "{learning.metadata?.reasoning}"
                           </div>
                         </>
                       ) : (
-                        <div style={{ fontStyle: 'italic' }}>"{learning.metadata?.reasoning || 'No reasoning provided by AI.'}"</div>
+                        <div style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>"{learning.metadata?.reasoning || 'No reasoning provided by AI.'}"</div>
                       )}
                     </div>
                   )}
@@ -304,12 +305,11 @@ export const LearningsTab: React.FC = () => {
                 {/* Rule Edit Area */}
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>
-                    Proposed Rule
+                    {subTab === 'PENDING' ? 'Proposed Rule' : 'Active Rule'}
                   </div>
                   <textarea
                     value={currentRuleText}
                     onChange={(e) => setEditedRules({ ...editedRules, [learning.id]: e.target.value })}
-                    disabled={subTab !== 'PENDING'}
                     style={{
                       width: '100%',
                       minHeight: '80px',
@@ -326,21 +326,32 @@ export const LearningsTab: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                {subTab === 'PENDING' && (
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '4px' }}>
-                    <Button variant="secondary" onClick={() => handleReject(learning.id)}>
-                      <XCircle size={16} color="var(--accent-rose)" /> Reject & Delete
-                    </Button>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                  {subTab === 'PENDING' && (
+                    <>
+                      <Button variant="secondary" onClick={() => handleReject(learning.id)}>
+                        <XCircle size={16} color="var(--accent-rose)" /> Reject & Delete
+                      </Button>
+                      <Button 
+                        variant="primary" 
+                        onClick={() => handleApprove(learning.id, isEdited)}
+                        style={isEdited ? { background: 'var(--accent-amber)', color: '#000' } : {}}
+                      >
+                        <CheckCircle2 size={16} /> 
+                        {isEdited ? 'Save & Approve Custom Rule' : 'Approve Rule'}
+                      </Button>
+                    </>
+                  )}
+                  {subTab === 'APPROVED' && isEdited && (
                     <Button 
                       variant="primary" 
                       onClick={() => handleApprove(learning.id, isEdited)}
-                      style={isEdited ? { background: 'var(--accent-amber)', color: '#000' } : {}}
+                      style={{ background: 'var(--accent-amber)', color: '#000' }}
                     >
-                      <CheckCircle2 size={16} /> 
-                      {isEdited ? 'Save & Approve Custom Rule' : 'Approve Rule'}
+                      <CheckCircle2 size={16} /> Save Changes
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })

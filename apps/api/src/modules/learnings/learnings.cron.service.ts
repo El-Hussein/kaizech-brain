@@ -43,12 +43,8 @@ export class LearningsCronService {
     }
 
     for (const conv of conversations) {
-      // Skip if conversation is too short to learn anything
-      if (conv.messageCount < 2) {
-        conv.isLearned = true;
-        await this.conversationRepo.save(conv);
-        continue;
-      }
+      // Removed message count check to allow learning from single-interaction conversations
+      // where the user might ask a question, get a bad answer, and leave without correcting it.
 
       try {
         await this.extractLearning(conv);
@@ -96,31 +92,110 @@ export class LearningsCronService {
     }).withStructuredOutput(schema);
 
     const prompt = `
-You are an AI Analyst. Review the following conversation transcript. 
-If the user provided an explicit rating, it is: ${conversation.satisfactionScore || 'N/A'}/5.
+You are an AI conversation quality analyst.
 
-Analyze the conversation and do two things:
-1. Infer a satisfaction score (1-5) based on keywords, tone, and whether the user got their answer. If they asked follow-ups, expressed frustration, or had to correct the agent, score lower (1-3). If they thanked the agent or seemed satisfied, score higher (4-5).
-2. Extract a concise learning rule that the agent should follow in the future.
-- Look for instances where the user corrects the agent, provides a specific fact, or expresses frustration.
-- **CRITICAL**: If the agent states it "could not find information", if the user provides any factual correction or new information, or if the conversation is escalated to a human, THIS IS A LEARNING OPPORTUNITY. You MUST set \`hasLearning = true\` and extract a rule.
-- If the score is low, extract the mistake and how the agent should correct it.
-- If there is absolutely nothing meaningful to learn and the agent answered everything perfectly, set hasLearning to false.
-Keep the rule under 2 sentences.
+Your job is to evaluate a conversation between a USER and an AI AGENT.
 
-CRITICAL INSTRUCTION ON CONFIDENCE SCORE:
-The \`confidenceScore\` represents the FACTUAL RELIABILITY of the extracted rule. Use the full 0-100 range:
-  0-10  — Contradicts known facts or system data.
-  10-30 — Highly subjective claim.
-  30-50 — User correction, assertion, or preference (even if unverified).
-  50-70 — Plausible rule with partial evidence. The user's statement aligns with context clues in the conversation, or the rule is about a behavioral pattern.
-  70-85 — Strong evidence from the conversation. The rule is supported by multiple messages, the user provided verifiable details, or it aligns with known system behavior.
-  85-100 — Definitively verified.
+You must perform TWO independent evaluations:
+A. Determine the user's likely satisfaction (inferredSatisfactionScore).
+B. Determine whether the conversation contains a genuine learning opportunity for improving the AI agent (hasLearning).
 
-REMEMBER: User corrections and facts should generally score between 40-70. Do not overly penalize user-provided facts unless they clearly contradict known reality. We want the system to learn from users.
+Do NOT assume that every follow-up question, correction, or negative sentiment is a learning opportunity.
 
-Transcript:
+==================================================
+INPUT
+==================================================
+The user may have provided an explicit rating:
+Explicit rating: ${conversation.satisfactionScore || 'N/A'}/5
+
+Conversation:
 \${transcript}
+
+==================================================
+PART A — SATISFACTION (inferredSatisfactionScore)
+==================================================
+Infer the user's final satisfaction with the interaction (1-5).
+1 = Very dissatisfied (failed, repeatedly misunderstood, complained)
+2 = Dissatisfied (partially helped, multiple corrections, frustration)
+3 = Neutral / Mixed (some useful info, normal follow-ups, incomplete)
+4 = Satisfied (successfully solved, minor clarification, positive)
+5 = Very satisfied (completely solved, explicit thanks/praise)
+
+IMPORTANT:
+A follow-up question by itself does NOT mean dissatisfaction.
+If an explicit user rating exists, treat it as strong evidence of satisfaction, but still analyze the conversation for contradictions.
+
+==================================================
+PART B — LEARNING OPPORTUNITY (hasLearning)
+==================================================
+A learning opportunity means:
+"There is a specific, reusable change the AI agent should make in the future because something in this conversation provides evidence that its current behavior or knowledge is insufficient."
+
+Do NOT create a learning rule merely because:
+- The user asked a follow-up question.
+- The user changed their mind or the conversation was long.
+- The user expressed a personal preference that is not reusable.
+- The agent gave a reasonable answer and the user simply continued.
+
+CREATE hasLearning = true when at least one of the following occurs:
+1. FACTUAL ERROR (agent stated something incorrect)
+2. USER CORRECTION (user explicitly corrects a fact/requirement)
+3. MISSING INFORMATION (agent doesn't know, user provides info)
+4. WRONG ASSUMPTION (agent assumes incorrectly)
+5. INSTRUCTION FOLLOWING FAILURE (agent fails explicit constraint)
+6. REPEATED FAILURE (user has to explain more than once)
+7. ESCALATION (escalated to human)
+8. SYSTEM / WORKFLOW KNOWLEDGE (concrete workflow/business rule revealed)
+9. REUSABLE USER PREFERENCE
+
+==================================================
+WHEN NOT TO LEARN
+==================================================
+Set hasLearning = false when:
+- The agent was correct.
+- No meaningful correction/mistake/missing knowledge.
+- The user's follow-up is a natural continuation.
+- The conversation contains only subjective disagreement.
+
+==================================================
+LEARNING RULE (rule)
+==================================================
+If hasLearning = true, create ONE concise, reusable rule describing what the AI should do differently.
+- Be actionable and general enough for future conversations.
+- Describe the desired behavior, not merely the mistake.
+- Under 2 sentences. No specific IDs/names.
+
+GOOD: "Before recommending a product, verify availability."
+BAD: "The agent was wrong about the product."
+
+==================================================
+CATEGORY (category)
+==================================================
+Choose exactly ONE category: factual_error, missing_information, wrong_assumption, instruction_following, communication_style, product_knowledge, policy, tool_usage, workflow, user_preference, escalation, other. 
+If hasLearning = false, omit or use "none".
+
+==================================================
+CONFIDENCE SCORE (confidenceScore)
+==================================================
+Represents how strongly the conversation supports the rule (0-100).
+0-20: Unsupported, speculative.
+21-40: Weak evidence, subjective.
+41-60: User explicitly stated/corrected, but cannot be independently verified.
+61-75: Strongly supported by conversation/repeated behavior.
+76-90: Supported by multiple independent pieces of evidence.
+91-100: Directly established by explicit system/business rule.
+
+==================================================
+REASON (inferredFeedback)
+==================================================
+Provide a short explanation of why the conversation was classified this way. Do not repeat the learning rule verbatim.
+
+==================================================
+FINAL CONSISTENCY RULES
+==================================================
+1. hasLearning=false MUST imply rule is empty/omitted.
+2. hasLearning=true MUST imply rule is provided.
+3. Satisfaction and learning are independent.
 `;
 
     const result = await llm.invoke(prompt);

@@ -40,36 +40,36 @@ export interface AgentProcessResult {
 export class AgentOrchestratorService {
   private readonly logger = new Logger(AgentOrchestratorService.name);
 
-  private isEscalationKeyword(userMessage: string, customKeywords?: string): boolean {
-    if (!userMessage) return false;
-    const lower = userMessage.toLowerCase().trim();
-    const defaultKeywords = [
-      'human',
-      'agent',
-      'support',
-      'representative',
-      'real person',
-      'talk to human',
-      'speak to human',
-      'escalate',
-      'إنسان',
-      'موظف',
-      'دعم',
-      'خدمة العملاء',
-      'مساعد بشري',
-      'تحدث مع موظف',
-    ];
-    let keywords = defaultKeywords;
-    if (customKeywords && customKeywords.trim()) {
-      const customList = customKeywords
-        .split(',')
-        .map((k) => k.trim().toLowerCase())
-        .filter(Boolean);
-      if (customList.length > 0) {
-        keywords = [...defaultKeywords, ...customList];
-      }
+  private escalationIntentCache = new Map<string, number[]>();
+
+  private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
     }
-    return keywords.some((kw) => lower.includes(kw));
+    if (normA === 0 || normB === 0) return 0;
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  private async isEscalationIntent(provider: any, userEmbedding: number[], customApiKey?: string): Promise<boolean> {
+    const providerName = provider.constructor.name;
+    const cacheKey = `${providerName}_escalation`;
+    let intentEmbedding = this.escalationIntentCache.get(cacheKey);
+
+    if (!intentEmbedding) {
+      // Representative intent phrase focusing on the desire to speak to a human or agent
+      const intentPhrase = "I want to talk to a human agent, please connect me to customer support representative, اريد التحدث مع الدعم الفني او موظف خدمة العملاء";
+      intentEmbedding = await provider.generateEmbedding(intentPhrase, undefined, customApiKey);
+      this.escalationIntentCache.set(cacheKey, intentEmbedding);
+    }
+
+    const similarity = this.cosineSimilarity(userEmbedding, intentEmbedding);
+    this.logger.debug(`Semantic escalation similarity: ${similarity.toFixed(4)}`);
+    return similarity > 0.84; // Threshold to prevent false positives when users just ask ABOUT support
   }
 
   private isUnanswerableFallback(content: string): boolean {
@@ -200,45 +200,7 @@ export class AgentOrchestratorService {
       };
     }
 
-    // 3d. User Escalation Keyword Check
-    const autoHandoffOnKeywords = tenant.settings?.autoHandoffOnKeywords !== false;
-    if (
-      autoHandoffOnKeywords &&
-      this.isEscalationKeyword(userMessage, tenant.settings?.autoHandoffKeywords)
-    ) {
-      this.logger.log(
-        `User keyword triggered automatic human handoff for conversation ${conversation.id}`,
-      );
-
-      await this.memoryService.handoverConversation(conversation.id);
-
-      const handoffNotice =
-        tenant.settings?.handoffMessage ||
-        '⚠️ Escalation requested by user. AI chat stopped and handed off to human support.';
-
-      await this.memoryService.addMessage(
-        conversation.id,
-        MessageRole.SYSTEM,
-        handoffNotice,
-        channelType,
-      );
-
-      return {
-        response: handoffNotice,
-        conversationId: conversation.id,
-        status: ConversationStatus.HANDED_OFF,
-        toolCallsExecuted: [],
-        knowledgeSourcesUsed: 0,
-        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-        responseTimeMs: Date.now() - startTime,
-        handedOff: true,
-        handoffReason: 'USER_KEYWORD_ESCALATION',
-        limit: maxLimit,
-        messageCount: currentMessageCount,
-        limitExceeded: isLimitExceeded,
-      };
-    }
-
+    // 3d. User Escalation Keyword Check (Moved to Semantic Check at step 4.5)
     // 4 & 6. Parallelize Memory Summary, Recent Messages, FAQ check & Embedding Generation ⚡
     const activeProviderName = tenant.settings?.aiProvider || 'openai';
     const provider = this.providerFactory.getProvider(activeProviderName);
@@ -256,6 +218,42 @@ export class AgentOrchestratorService {
       this.vectorSearch.findDirectFaqMatch(tenant.id, userMessage),
       provider.generateEmbedding(userMessage, undefined, customApiKey),
     ]);
+
+    // 4.5 Semantic Escalation Check
+    const autoHandoffOnKeywords = tenant.settings?.autoHandoffOnKeywords !== false;
+    if (autoHandoffOnKeywords && userEmbedding && userEmbedding.length > 0) {
+      const isEscalation = await this.isEscalationIntent(provider, userEmbedding, customApiKey);
+      if (isEscalation) {
+        this.logger.log(`User semantic intent triggered automatic human handoff for conversation ${conversation.id}`);
+        await this.memoryService.handoverConversation(conversation.id);
+
+        const handoffNotice =
+          tenant.settings?.handoffMessage ||
+          '⚠️ Escalation requested by user. AI chat stopped and handed off to human support.';
+
+        await this.memoryService.addMessage(
+          conversation.id,
+          MessageRole.SYSTEM,
+          handoffNotice,
+          channelType,
+        );
+
+        return {
+          response: handoffNotice,
+          conversationId: conversation.id,
+          status: ConversationStatus.HANDED_OFF,
+          toolCallsExecuted: [],
+          knowledgeSourcesUsed: 0,
+          tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+          responseTimeMs: Date.now() - startTime,
+          handedOff: true,
+          handoffReason: 'USER_SEMANTIC_ESCALATION',
+          limit: maxLimit,
+          messageCount: currentMessageCount,
+          limitExceeded: isLimitExceeded,
+        };
+      }
+    }
 
     // 5. PRE-REPLY FAQ LAYER
     const faqBotMode = tenant.settings?.faqBotMode || 'strict_first';

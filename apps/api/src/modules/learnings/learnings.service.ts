@@ -43,6 +43,11 @@ export class LearningsService {
         // We use a fake source ID for learnings, normally you'd link it to a system knowledge source
         const SOURCE_ID_LEARNING = '00000000-0000-0000-0000-000000000000';
 
+        // Delete old vector chunk for this learning if it exists
+        if (this.vectorSearchService.deleteChunksByMetadata) {
+          await this.vectorSearchService.deleteChunksByMetadata(learning.tenantId, 'learningId', learning.id);
+        }
+
         await this.vectorSearchService.storeChunks(
           learning.tenantId,
           SOURCE_ID_LEARNING,
