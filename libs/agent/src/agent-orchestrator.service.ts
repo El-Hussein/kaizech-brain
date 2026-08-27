@@ -360,6 +360,9 @@ export class AgentOrchestratorService {
       totalTokenUsage.promptTokens = dagResult.tokenUsage.promptTokens;
       totalTokenUsage.completionTokens = dagResult.tokenUsage.completionTokens;
       totalTokenUsage.totalTokens = dagResult.tokenUsage.totalTokens;
+      if (dagResult.toolCallsExecuted) {
+        toolCallsExecuted.push(...dagResult.toolCallsExecuted);
+      }
     } catch (err: any) {
       this.logger.error(`RagAgentDagService execution error: ${err.message}`);
       const autoHandoffOnError = tenant.settings?.autoHandoffOnError !== false;

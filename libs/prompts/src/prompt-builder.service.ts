@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { PromptTemplateEntity, TenantEntity, UserProfileEntity, AgentLearningEntity } from '@kaizech/database';
+import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm';
+import { Repository, EntityManager } from 'typeorm';
+import { PromptTemplateEntity } from '@kaizech/database';
+import { TenantEntity } from '@kaizech/database';
+import { UserProfileEntity } from '@kaizech/database';
+import { AgentLearningEntity } from '@kaizech/database';
 
 export interface PromptBuildOptions {
   tenant: TenantEntity;
@@ -18,8 +21,7 @@ export class PromptBuilderService {
   constructor(
     @InjectRepository(PromptTemplateEntity)
     private readonly promptTemplateRepository: Repository<PromptTemplateEntity>,
-    @InjectRepository(AgentLearningEntity)
-    private readonly agentLearningRepository: Repository<AgentLearningEntity>,
+    @InjectEntityManager() private readonly entityManager: EntityManager,
   ) {}
 
   async getActiveTemplate(tenantId: string): Promise<PromptTemplateEntity | null> {
@@ -113,7 +115,7 @@ export class PromptBuilderService {
     }
 
     // 9.5. Learned Rules
-    const learnings = await this.agentLearningRepository.find({
+    const learnings = await this.entityManager.find(AgentLearningEntity, {
       where: { tenantId: tenant.id, status: 'approved' as any },
     });
     if (learnings && learnings.length > 0) {

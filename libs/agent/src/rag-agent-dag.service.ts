@@ -30,7 +30,7 @@ export class RagAgentDagService {
     history: { role: string, content: string }[],
     customToolDefs: any[] = [],
     systemPrompt?: string,
-  ): Promise<{ response: string, tokenUsage: { promptTokens: number, completionTokens: number, totalTokens: number } }> {
+  ): Promise<{ response: string, tokenUsage: { promptTokens: number, completionTokens: number, totalTokens: number }, toolCallsExecuted?: any[] }> {
     const customApiKey = decryptSecret(tenant.settings?.openaiApiKey || process.env.OPENAI_API_KEY || '');
     if (!customApiKey) {
       throw new Error("API key not found for LangGraph");
@@ -121,8 +121,23 @@ export class RagAgentDagService {
           totalTokens: finalMessage.response_metadata.tokenUsage.totalTokens || 0,
         };
       }
+
+      const toolCallsExecuted: any[] = [];
+      for (const msg of result.messages) {
+        const aiMsg = msg as any;
+        if (aiMsg.tool_calls && Array.isArray(aiMsg.tool_calls)) {
+          for (const tc of aiMsg.tool_calls) {
+            const toolMsg = result.messages.find((m: any) => m.tool_call_id === tc.id || (m.name === tc.name && m._getType() === 'tool'));
+            toolCallsExecuted.push({
+              name: tc.name,
+              args: tc.args,
+              result: toolMsg ? toolMsg.content : undefined
+            });
+          }
+        }
+      }
       
-      return { response: finalMessage.content as string, tokenUsage };
+      return { response: finalMessage.content as string, tokenUsage, toolCallsExecuted };
     } catch (error: any) {
       this.logger.error(`LangGraph execution failed: ${error.message}`);
       throw error;

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PromptTemplateEntity, AgentLearningEntity } from '@kaizech/database';
+import { PromptTemplateEntity } from '@kaizech/database';
 import { PromptBuilderService } from './prompt-builder.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PromptTemplateEntity, AgentLearningEntity])],
+  imports: [TypeOrmModule.forFeature([PromptTemplateEntity])],
   providers: [PromptBuilderService],
   exports: [PromptBuilderService],
 })
