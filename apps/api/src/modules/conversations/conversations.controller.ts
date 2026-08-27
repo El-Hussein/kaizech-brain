@@ -35,6 +35,36 @@ export class ConversationsController {
     private readonly whatsappService: WhatsAppService,
   ) {}
 
+  private extractSourcesFromMessages(messages: MessageEntity[]) {
+    const sources = [];
+    for (const msg of messages) {
+      if (msg.role === 'assistant') {
+        if (msg.metadata?.knowledgeSources && Array.isArray(msg.metadata.knowledgeSources)) {
+          msg.metadata.knowledgeSources.forEach(src => {
+            sources.push({ type: 'knowledge', content: src });
+          });
+        }
+        if (msg.metadata?.faqDirectMatch) {
+          sources.push({ type: 'faq', similarity: msg.metadata.similarity, messageId: msg.id });
+        }
+        if (msg.toolCalls && Array.isArray(msg.toolCalls)) {
+          for (const tc of msg.toolCalls) {
+            if (tc.name === 'vector_search' || tc.name === 'graph_search') {
+              if (tc.result && typeof tc.result === 'string') {
+                sources.push({ type: tc.name, query: tc.args?.query, content: tc.result });
+              } else if (tc.result && Array.isArray(tc.result)) {
+                tc.result.forEach(r => {
+                  sources.push({ type: tc.name, query: tc.args?.query, content: r.content || r });
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+    return sources;
+  }
+
   @Get()
   @ApiOperation({ summary: 'List all tenant conversations' })
   async findAll(
@@ -220,6 +250,7 @@ export class ConversationsController {
     return {
       conversation,
       messages,
+      sources: this.extractSourcesFromMessages(messages),
       status: conversation.status,
       messageCount: conversation.messageCount || 0,
       limit: maxLimit,
@@ -327,6 +358,7 @@ export class ConversationsController {
     return {
       conversation,
       messages,
+      sources: this.extractSourcesFromMessages(messages),
       status: conversation.status,
       messageCount: conversation.messageCount || 0,
       limit: maxLimit,

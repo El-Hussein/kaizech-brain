@@ -453,6 +453,7 @@ export class AgentOrchestratorService {
         tokenUsageCompletion: totalTokenUsage.completionTokens,
         responseTimeMs,
         toolCalls: toolCallsExecuted.length > 0 ? toolCallsExecuted : undefined,
+        metadata: knowledgeTexts.length > 0 ? { knowledgeSources: knowledgeTexts } : undefined,
       },
     );
 
@@ -799,6 +800,7 @@ export class AgentOrchestratorService {
         tokenUsageCompletion: totalTokenUsage.completionTokens,
         responseTimeMs,
         toolCalls: toolCallsExecuted.length > 0 ? toolCallsExecuted : undefined,
+        metadata: knowledgeTexts.length > 0 ? { knowledgeSources: knowledgeTexts } : undefined,
       },
     );
 
