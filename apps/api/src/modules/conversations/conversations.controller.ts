@@ -38,17 +38,27 @@ export class ConversationsController {
   private extractSourcesFromMessages(messages: MessageEntity[]) {
     const sources = [];
     for (const msg of messages) {
-      if (msg.role === 'assistant') {
-        if (msg.metadata?.knowledgeSources && Array.isArray(msg.metadata.knowledgeSources)) {
-          msg.metadata.knowledgeSources.forEach(src => {
+      if (msg.role === 'assistant' || msg.role === 'ASSISTANT') {
+        let metadata = msg.metadata;
+        if (typeof metadata === 'string') {
+          try { metadata = JSON.parse(metadata); } catch (e) {}
+        }
+        
+        let toolCalls = msg.toolCalls;
+        if (typeof toolCalls === 'string') {
+          try { toolCalls = JSON.parse(toolCalls); } catch (e) {}
+        }
+
+        if (metadata?.knowledgeSources && Array.isArray(metadata.knowledgeSources)) {
+          metadata.knowledgeSources.forEach(src => {
             sources.push({ type: 'knowledge', content: src });
           });
         }
-        if (msg.metadata?.faqDirectMatch) {
-          sources.push({ type: 'faq', similarity: msg.metadata.similarity, messageId: msg.id });
+        if (metadata?.faqDirectMatch) {
+          sources.push({ type: 'faq', similarity: metadata.similarity, messageId: msg.id });
         }
-        if (msg.toolCalls && Array.isArray(msg.toolCalls)) {
-          for (const tc of msg.toolCalls) {
+        if (toolCalls && Array.isArray(toolCalls)) {
+          for (const tc of toolCalls) {
             if (tc.name === 'vector_search' || tc.name === 'graph_search') {
               if (tc.result && typeof tc.result === 'string') {
                 sources.push({ type: tc.name, query: tc.args?.query, content: tc.result });
