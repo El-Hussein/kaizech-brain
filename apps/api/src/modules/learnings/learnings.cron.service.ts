@@ -109,7 +109,7 @@ The user may have provided an explicit rating:
 Explicit rating: ${conversation.satisfactionScore || 'N/A'}/5
 
 Conversation:
-\${transcript}
+${transcript}
 
 ==================================================
 PART A — SATISFACTION (inferredSatisfactionScore)
