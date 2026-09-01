@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { useSpeechToText } from '../../hooks/useSpeechToText';
+import { Button } from '../ui/Button';
 
 interface SpeechTextInputProps {
   value: string;
@@ -34,11 +35,12 @@ export function SpeechTextInput({ value, onChange, placeholder = 'Speak or type 
 
   return (
     <div className={`relative ${className}`}>
-      <div className="flex justify-between items-center mb-2">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <select 
           value={lang} 
           onChange={(e) => setLang(e.target.value)}
-          className="bg-gray-800 text-white text-sm rounded-md px-2 py-1 border border-gray-700"
+          className="input-field"
+          style={{ width: 'auto', padding: '6px 12px', fontSize: '13px', background: 'transparent' }}
           disabled={isListening}
         >
           <option value="ar-EG">Arabic (Egypt)</option>
@@ -46,42 +48,51 @@ export function SpeechTextInput({ value, onChange, placeholder = 'Speak or type 
         </select>
         
         {isSupported ? (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={handleToggleListening}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              isListening ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
-            }`}
+            style={{ 
+              borderRadius: '100px', 
+              padding: '6px 16px', 
+              fontSize: '13px',
+              background: isListening ? 'rgba(244, 63, 94, 0.1)' : 'rgba(34, 211, 238, 0.1)',
+              borderColor: isListening ? 'rgba(244, 63, 94, 0.3)' : 'rgba(34, 211, 238, 0.3)',
+              color: isListening ? 'var(--accent-rose)' : 'var(--accent-cyan)'
+            }}
           >
             {isListening ? (
               <>
-                <MicOff className="w-4 h-4" />
-                Stop
+                <MicOff size={14} style={{ marginRight: '6px' }} />
+                Stop Listening
               </>
             ) : (
               <>
-                <Mic className="w-4 h-4" />
-                Speak
+                <Mic size={14} style={{ marginRight: '6px' }} />
+                Start Speaking
               </>
             )}
-          </button>
+          </Button>
         ) : (
-          <span className="text-xs text-gray-500">Speech not supported.</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Speech not supported.</span>
         )}
       </div>
       
-      <textarea
-        dir="auto"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full min-h-[120px] bg-gray-900/50 border border-gray-800 rounded-lg p-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-      />
-      {isListening && (
-        <div className="absolute bottom-4 right-4 flex gap-1">
-          <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-        </div>
-      )}
+      <div style={{ position: 'relative' }}>
+        <textarea
+          dir="auto"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="input-field"
+          style={{ minHeight: '160px', padding: '16px', fontSize: '15px', lineHeight: 1.6, resize: 'vertical' }}
+        />
+        {isListening && (
+          <div style={{ position: 'absolute', bottom: '16px', right: '16px', display: 'flex', gap: '4px' }}>
+            <span style={{ width: '8px', height: '8px', background: 'var(--accent-rose)', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

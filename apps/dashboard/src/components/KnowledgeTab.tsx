@@ -362,7 +362,7 @@ const ViewerModal: React.FC<{
 export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<'upload' | 'faq' | 'crawl' | 'voice'>('upload');
+  const [activeSubTab, setActiveSubTab] = useState<'voice' | 'upload' | 'faq' | 'crawl'>('voice');
 
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -501,6 +501,9 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
 
       {/* Sub tabs */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <Button variant={activeSubTab === 'voice' as any ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('voice' as any)}>
+          🎙️ Voice Interview
+        </Button>
         <Button variant={activeSubTab === 'upload' ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('upload')}>
           <FileText size={16} /> Document Upload (PDF / DOCX / XLSX / MD)
         </Button>
@@ -509,9 +512,6 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
         </Button>
         <Button variant={activeSubTab === 'crawl' ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('crawl')}>
           <Globe size={16} /> Website Crawler
-        </Button>
-        <Button variant={activeSubTab === 'voice' as any ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('voice' as any)}>
-          🎙️ Voice Interview
         </Button>
       </div>
 

@@ -9,20 +9,43 @@ interface QuestionCardProps {
 
 export function QuestionCard({ question, rationale, suggestedPoints }: QuestionCardProps) {
   return (
-    <div className="glass-card p-6 mb-6">
-      <h3 className="text-xl font-semibold text-white mb-3" dir="auto">{question}</h3>
+    <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+      <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '16px' }} dir="auto">
+        {question}
+      </h3>
       
-      <div className="flex items-start gap-2 text-blue-400 mb-4 bg-blue-500/10 p-3 rounded-lg">
-        <HelpCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-        <p className="text-sm" dir="auto">{rationale}</p>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'flex-start', 
+        gap: '12px', 
+        background: 'rgba(34, 211, 238, 0.08)', 
+        padding: '16px', 
+        borderRadius: '12px',
+        marginBottom: '20px',
+        border: '1px solid rgba(34, 211, 238, 0.2)'
+      }}>
+        <HelpCircle size={20} color="var(--accent-cyan)" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <p style={{ fontSize: '14px', color: 'var(--text-main)', margin: 0, lineHeight: 1.6 }} dir="auto">
+          {rationale}
+        </p>
       </div>
 
       {suggestedPoints && suggestedPoints.length > 0 && (
-        <div className="mt-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-2">Suggested points to cover:</h4>
-          <ul className="list-disc list-inside text-sm text-gray-300 space-y-1" dir="auto">
+        <div style={{ marginTop: '16px' }}>
+          <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Suggested points to cover:
+          </h4>
+          <ul style={{ 
+            listStyleType: 'disc', 
+            listStylePosition: 'inside', 
+            fontSize: '14px', 
+            color: 'var(--text-main)', 
+            lineHeight: 1.8,
+            margin: 0,
+            padding: 0
+          }} dir="auto">
             {suggestedPoints.map((point, index) => (
-              <li key={index}>{point}</li>
+              <li key={index} style={{ color: 'var(--text-main)' }}>{point}</li>
             ))}
           </ul>
         </div>
