@@ -112,7 +112,7 @@ export class QuestionEngineService {
   async getNextQuestion(sessionId: string): Promise<{ question: InterviewQuestionEntity; currentNumber: number; totalCount: number } | null> {
     const session = await this.sessionRepository.findOne({
       where: { id: sessionId },
-      relations: ['responses', 'responses.question'],
+      relations: ['responses'],
     });
 
     if (!session) {
