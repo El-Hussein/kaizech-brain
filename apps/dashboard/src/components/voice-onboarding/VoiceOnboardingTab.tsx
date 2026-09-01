@@ -137,9 +137,6 @@ export function VoiceOnboardingTab() {
           />
 
           <div style={{ marginBottom: '32px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px' }}>
-              Your Answer
-            </label>
             <SpeechTextInput 
               value={currentAnswer}
               onChange={(val) => setAnswers(prev => ({ ...prev, [currentQuestion.id]: val }))}
