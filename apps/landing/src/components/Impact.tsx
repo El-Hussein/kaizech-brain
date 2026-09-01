@@ -25,6 +25,7 @@ export function Impact() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
+            className="min-w-0 w-full"
           >
             <h2 className="text-cyan-400 font-semibold tracking-wide uppercase text-sm mb-3">Measurable Impact</h2>
             <h3 className="text-3xl md:text-5xl font-bold mb-6">Cut costs, not quality</h3>
@@ -51,7 +52,7 @@ export function Impact() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="p-8 rounded-3xl bg-white shadow-2xl text-slate-900"
+            className="p-8 rounded-3xl bg-white shadow-2xl text-slate-900 min-w-0 w-full"
           >
             <h4 className="text-xl font-bold mb-6 flex items-center gap-2">
               <TrendingUp className="text-indigo-600" /> ROI Calculator

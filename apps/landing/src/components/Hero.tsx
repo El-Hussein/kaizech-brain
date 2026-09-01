@@ -57,7 +57,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="max-w-2xl"
+            className="max-w-2xl min-w-0 w-full"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-6">
               <span>⚡</span>
@@ -97,7 +97,7 @@ export function Hero() {
                 </span>
               </div>
             </div>
-            <div className="mt-10 flex items-center gap-4 text-sm text-slate-500 font-medium">
+            <div className="mt-10 flex flex-wrap items-center gap-4 text-sm text-slate-500 font-medium">
               <div className="flex -space-x-2">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs overflow-hidden">
@@ -114,7 +114,7 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative"
+            className="relative min-w-0 w-full"
           >
             <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 opacity-20 blur-2xl"></div>
             <div className="relative glass-card rounded-2xl overflow-hidden flex flex-col h-[500px]">

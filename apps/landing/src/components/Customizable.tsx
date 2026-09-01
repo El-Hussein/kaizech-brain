@@ -41,6 +41,7 @@ export function Customizable() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
+            className="min-w-0 w-full"
           >
             <h2 className="text-fuchsia-600 font-semibold tracking-wide uppercase text-sm mb-3">Total Control</h2>
             <h3 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">Everything is <br/>100% Customizable</h3>
@@ -69,7 +70,7 @@ export function Customizable() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative"
+            className="relative min-w-0 w-full"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-100 to-blue-100 rounded-3xl transform rotate-3 opacity-50"></div>
             
