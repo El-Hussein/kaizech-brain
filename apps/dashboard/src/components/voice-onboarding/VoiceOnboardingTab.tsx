@@ -37,8 +37,9 @@ export function VoiceOnboardingTab({ apiKey, onComplete }: VoiceOnboardingTabPro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const apiBase = (import.meta as any).env?.VITE_API_URL || '';
   const api = axios.create({
-    baseURL: '/api/v1/voice-onboarding',
+    baseURL: `${apiBase}/api/v1/voice-onboarding`,
     headers: { 'x-api-key': apiKey }
   });
 
