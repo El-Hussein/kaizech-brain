@@ -97,6 +97,7 @@ export function Hero() {
                 </span>
               </div>
             </div>
+            <div className="mt-10 flex items-center gap-4 text-sm text-slate-500 font-medium">
               <div className="flex -space-x-2">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs overflow-hidden">
