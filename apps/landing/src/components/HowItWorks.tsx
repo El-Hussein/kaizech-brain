@@ -83,58 +83,62 @@ export function HowItWorks() {
 
             {/* Cards */}
             {steps.map((step, index) => {
-              // Calculate specific scroll windows for each of the 4 cards (0.25 duration each)
-              const duration = 0.25;
-              const start = index * duration;
-              const end = start + duration;
-              
-              const isFirst = index === 0;
-              const isLast = index === steps.length - 1;
-              
-              const opacity = useTransform(
-                scrollYProgress, 
-                [start, start + 0.08, end - 0.08, end], 
-                [isFirst ? 1 : 0, 1, 1, isLast ? 1 : 0]
-              );
-              const y = useTransform(
-                scrollYProgress, 
-                [start, start + 0.08, end - 0.08, end], 
-                [isFirst ? 0 : 50, 0, 0, isLast ? 0 : -50]
-              );
-              const scale = useTransform(
-                scrollYProgress, 
-                [start, start + 0.08, end - 0.08, end], 
-                [isFirst ? 1 : 0.95, 1, 1, isLast ? 1 : 0.95]
-              );
-
-              return (
-                <motion.div
-                  key={index}
-                  style={{ opacity, y, scale }}
-                  className="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 w-full max-w-4xl mx-auto pointer-events-none"
-                >
-                  {/* Visual side */}
-                  <div className={`w-full md:w-1/2 h-52 md:h-[320px] rounded-3xl ${step.bg} border-2 border-white shadow-xl flex flex-col relative overflow-hidden pointer-events-auto shrink-0`}>
-                    <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-[0.03]`}></div>
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-50 ${step.color}"></div>
-                    {step.visual}
-                  </div>
-                  
-                  {/* Text side */}
-                  <div className="w-full md:w-1/2 text-center md:text-left pointer-events-auto">
-                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r ${step.color} text-white font-bold text-xl mb-6 shadow-md shadow-slate-200`}>
-                      {index + 1}
-                    </div>
-                    <h4 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">{step.title.split('. ')[1]}</h4>
-                    <p className="text-lg md:text-xl text-slate-600 leading-relaxed">{step.description}</p>
-                  </div>
-                </motion.div>
-              );
+              return <StepCard key={index} step={step} index={index} totalSteps={steps.length} scrollYProgress={scrollYProgress} />;
             })}
-
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function StepCard({ step, index, totalSteps, scrollYProgress }: any) {
+  const duration = 0.25;
+  const start = index * duration;
+  const end = start + duration;
+  
+  const isFirst = index === 0;
+  const isLast = index === totalSteps - 1;
+  
+  const opacity = useTransform(
+    scrollYProgress, 
+    [start, start + 0.08, end - 0.08, end], 
+    [isFirst ? 1 : 0, 1, 1, isLast ? 1 : 0],
+    { clamp: true }
+  );
+  const y = useTransform(
+    scrollYProgress, 
+    [start, start + 0.08, end - 0.08, end], 
+    [isFirst ? 0 : 50, 0, 0, isLast ? 0 : -50],
+    { clamp: true }
+  );
+  const scale = useTransform(
+    scrollYProgress, 
+    [start, start + 0.08, end - 0.08, end], 
+    [isFirst ? 1 : 0.95, 1, 1, isLast ? 1 : 0.95],
+    { clamp: true }
+  );
+
+  return (
+    <motion.div
+      style={{ opacity, y, scale }}
+      className="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 w-full max-w-4xl mx-auto pointer-events-none"
+    >
+      {/* Visual side */}
+      <div className={`w-full md:w-1/2 h-52 md:h-[320px] rounded-3xl ${step.bg} border-2 border-white shadow-xl flex flex-col relative overflow-hidden pointer-events-auto shrink-0`}>
+        <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-[0.03]`}></div>
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-50 ${step.color}"></div>
+        {step.visual}
+      </div>
+      
+      {/* Text side */}
+      <div className="w-full md:w-1/2 text-center md:text-left pointer-events-auto">
+        <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r ${step.color} text-white font-bold text-xl mb-6 shadow-md shadow-slate-200`}>
+          {index + 1}
+        </div>
+        <h4 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">{step.title.split('. ')[1]}</h4>
+        <p className="text-lg md:text-xl text-slate-600 leading-relaxed">{step.description}</p>
+      </div>
+    </motion.div>
   );
 }
