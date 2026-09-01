@@ -24,6 +24,7 @@
     "@kaizech/rag": "workspace:*",
     "@kaizech/shared": "workspace:*",
     "@kaizech/tickets": "workspace:*",
+    "@kaizech/voice-onboarding": "workspace:*",
     "@kaizech/tools": "workspace:*",
     "@kreuzberg/node": "^4.10.2",
     "@nestjs/bull": "^10.2.0",

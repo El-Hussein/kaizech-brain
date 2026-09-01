@@ -2,7 +2,12 @@
   "name": "@kaizech/voice-onboarding",
   "version": "1.0.0",
   "private": true,
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "lint": "eslint src --ext .ts"
+  },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
     "@nestjs/typeorm": "^10.0.2",
