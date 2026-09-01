@@ -21,6 +21,7 @@ import {
 import axios from 'axios';
 import { Button } from './ui/Button';
 import { VoiceOnboardingTab } from './voice-onboarding/VoiceOnboardingTab';
+import { VoiceNoteTab } from './voice-note/VoiceNoteTab';
 
 interface KnowledgeProps {
   apiKey: string;
@@ -362,7 +363,7 @@ const ViewerModal: React.FC<{
 export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<'voice' | 'upload' | 'faq' | 'crawl'>('voice');
+  const [activeSubTab, setActiveSubTab] = useState<'voice' | 'voice_note' | 'upload' | 'faq' | 'crawl'>('voice');
 
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -502,7 +503,10 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
       {/* Sub tabs */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         <Button variant={activeSubTab === 'voice' as any ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('voice' as any)}>
-          🎙️ Voice Interview
+          🎙️ Guided Interview
+        </Button>
+        <Button variant={activeSubTab === 'voice_note' as any ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('voice_note' as any)}>
+          🎤 Quick Voice Note
         </Button>
         <Button variant={activeSubTab === 'upload' ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('upload')}>
           <FileText size={16} /> Document Upload (PDF / DOCX / XLSX / MD)
@@ -681,6 +685,16 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
             apiKey={apiKey} 
             onComplete={() => fetchSources()} 
             hasPreviousInterview={sources.some(s => s.name.startsWith('Business Interview'))}
+          />
+        )}
+
+        {activeSubTab === 'voice_note' && (
+          <VoiceNoteTab 
+            apiKey={apiKey} 
+            onComplete={() => {
+              fetchSources();
+              setActiveSubTab('upload'); // switch away to indicate success or we can just stay and show a toast
+            }} 
           />
         )}
       </div>
