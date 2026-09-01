@@ -677,7 +677,7 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
         )}
 
         {activeSubTab === 'voice' && (
-          <VoiceOnboardingTab />
+          <VoiceOnboardingTab apiKey={apiKey} onComplete={() => fetchSources()} />
         )}
       </div>
 
