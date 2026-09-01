@@ -93,6 +93,34 @@ export class AgentOrchestratorService {
     ];
     return fallbackPhrases.some((phrase) => lower.includes(phrase));
   }
+  private async isBotResponse(tenant: TenantEntity, userMessage: string): Promise<boolean> {
+    try {
+      const activeProviderName = tenant.settings?.aiProvider || 'openai';
+      const provider = this.providerFactory.getProvider(activeProviderName);
+      const customApiKey = activeProviderName === 'groq'
+        ? (tenant.settings?.groqApiKey || tenant.settings?.openaiApiKey)
+        : tenant.settings?.openaiApiKey;
+      const customModel = activeProviderName === 'groq'
+        ? tenant.settings?.groqModel
+        : tenant.settings?.openaiModel;
+
+      const classificationResult = await provider.chatCompletion({
+        messages: [
+          { role: 'system', content: 'Analyze the following message. If it is an automated out-of-office reply, an auto-responder, or a bot-generated automated message, reply strictly with "YES". Otherwise, reply strictly with "NO".' },
+          { role: 'user', content: userMessage }
+        ],
+        model: customModel,
+        temperature: 0.1,
+        apiKey: customApiKey,
+        maxTokens: 5
+      });
+
+      return classificationResult.content?.trim().toUpperCase().includes('YES') || false;
+    } catch (error) {
+      this.logger.warn('Failed to classify message for bot detection', error);
+      return false;
+    }
+  }
 
   constructor(
     private readonly providerFactory: AIProviderFactory,
@@ -109,6 +137,20 @@ export class AgentOrchestratorService {
     const { tenant, channelType, channelUserId, userMessage, displayName, metadata } = input;
 
     this.logger.log(`Processing message for tenant '${tenant.name}' user '${channelUserId}' via '${channelType}'`);
+
+    const isBot = await this.isBotResponse(tenant, userMessage);
+    if (isBot) {
+      this.logger.log(`Message classified as bot/auto-reply for user '${channelUserId}'. Ignoring.`);
+      return {
+        response: '',
+        conversationId: 'ignored',
+        status: ConversationStatus.ACTIVE,
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+      };
+    }
 
     // 1 & 2 & Tool definitions: Execute initial DB operations in parallel ⚡
     const [userProfile, conversation, toolDefinitions] = await Promise.all([
