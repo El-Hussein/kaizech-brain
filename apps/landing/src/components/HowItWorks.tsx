@@ -88,9 +88,24 @@ export function HowItWorks() {
               const start = index * duration;
               const end = start + duration;
               
-              const opacity = useTransform(scrollYProgress, [start, start + 0.08, end - 0.08, end], [0, 1, 1, 0]);
-              const y = useTransform(scrollYProgress, [start, start + 0.08, end - 0.08, end], [50, 0, 0, -50]);
-              const scale = useTransform(scrollYProgress, [start, start + 0.08, end - 0.08, end], [0.95, 1, 1, 0.95]);
+              const isFirst = index === 0;
+              const isLast = index === steps.length - 1;
+              
+              const opacity = useTransform(
+                scrollYProgress, 
+                [start, start + 0.08, end - 0.08, end], 
+                [isFirst ? 1 : 0, 1, 1, isLast ? 1 : 0]
+              );
+              const y = useTransform(
+                scrollYProgress, 
+                [start, start + 0.08, end - 0.08, end], 
+                [isFirst ? 0 : 50, 0, 0, isLast ? 0 : -50]
+              );
+              const scale = useTransform(
+                scrollYProgress, 
+                [start, start + 0.08, end - 0.08, end], 
+                [isFirst ? 1 : 0.95, 1, 1, isLast ? 1 : 0.95]
+              );
 
               return (
                 <motion.div
