@@ -63,7 +63,7 @@ export function HowItWorks() {
       <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-8 lg:mb-16">
             <h2 className="text-indigo-600 font-semibold tracking-wide uppercase text-sm mb-3">How it Works</h2>
             <h3 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">From zero to AI in minutes</h3>
             <p className="text-lg text-slate-600">
@@ -71,7 +71,7 @@ export function HowItWorks() {
             </p>
           </div>
 
-          <div className="relative h-[650px] md:h-[450px] flex items-center justify-center">
+          <div className="relative h-[480px] md:h-[450px] flex items-center justify-center">
             
             {/* Progress Line */}
             <div className="absolute left-12 md:left-1/2 top-0 bottom-0 w-1 bg-slate-200 md:-translate-x-1/2 hidden md:block rounded-full overflow-hidden">
@@ -96,10 +96,10 @@ export function HowItWorks() {
                 <motion.div
                   key={index}
                   style={{ opacity, y, scale }}
-                  className="absolute inset-0 flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full max-w-4xl mx-auto pointer-events-none"
+                  className="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 w-full max-w-4xl mx-auto pointer-events-none"
                 >
                   {/* Visual side */}
-                  <div className={`w-full md:w-1/2 h-64 md:h-[320px] rounded-3xl ${step.bg} border-2 border-white shadow-xl flex flex-col relative overflow-hidden pointer-events-auto`}>
+                  <div className={`w-full md:w-1/2 h-52 md:h-[320px] rounded-3xl ${step.bg} border-2 border-white shadow-xl flex flex-col relative overflow-hidden pointer-events-auto shrink-0`}>
                     <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-[0.03]`}></div>
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-50 ${step.color}"></div>
                     {step.visual}
