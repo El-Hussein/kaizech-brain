@@ -1,11 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-export function useSpeechToText(lang: string = 'en-US') {
+export function useSpeechToText(lang: string = 'en-US', onFinalResult?: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [interimResult, setInterimResult] = useState('');
   const [isSupported, setIsSupported] = useState(true);
 
   const recognitionRef = useRef<any>(null);
+  const onFinalResultRef = useRef(onFinalResult);
+
+  // Keep callback ref updated without triggering effect dependencies
+  useEffect(() => {
+    onFinalResultRef.current = onFinalResult;
+  }, [onFinalResult]);
 
   useEffect(() => {
     // @ts-ignore
@@ -17,24 +23,40 @@ export function useSpeechToText(lang: string = 'en-US') {
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true; // Enabled for real-time feedback
     recognition.lang = lang;
 
     recognition.onresult = (event: any) => {
-      let currentTranscript = '';
+      let interimTranscript = '';
+      let finalTranscript = '';
+
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        currentTranscript += event.results[i][0].transcript + ' ';
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
       }
-      setTranscript((prev) => prev + currentTranscript);
+
+      setInterimResult(interimTranscript);
+      
+      if (finalTranscript && onFinalResultRef.current) {
+        onFinalResultRef.current(finalTranscript.trim());
+      }
     };
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
-      setIsListening(false);
+      if (event.error !== 'no-speech') {
+        setIsListening(false);
+      }
     };
 
     recognition.onend = () => {
+      // Browsers often stop recognition after a pause even in continuous mode.
       setIsListening(false);
+      setInterimResult('');
     };
 
     recognitionRef.current = recognition;
@@ -49,6 +71,7 @@ export function useSpeechToText(lang: string = 'en-US') {
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
       try {
+        setInterimResult('');
         recognitionRef.current.start();
         setIsListening(true);
       } catch (err) {
@@ -61,19 +84,15 @@ export function useSpeechToText(lang: string = 'en-US') {
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
+      setInterimResult('');
     }
   }, [isListening]);
-
-  const resetTranscript = useCallback(() => {
-    setTranscript('');
-  }, []);
 
   return {
     isSupported,
     isListening,
-    transcript,
+    interimResult,
     startListening,
     stopListening,
-    resetTranscript,
   };
 }

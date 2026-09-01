@@ -11,28 +11,24 @@ interface SpeechTextInputProps {
 
 export function SpeechTextInput({ value, onChange, placeholder = 'Speak or type here...', className = '' }: SpeechTextInputProps) {
   const [lang, setLang] = useState('ar-EG');
-  const { isSupported, isListening, transcript, startListening, stopListening } = useSpeechToText(lang);
-  const [lastTranscriptLength, setLastTranscriptLength] = useState(0);
+  
+  const handleFinalResult = (finalText: string) => {
+    // Append the new finalized text to the existing value.
+    const separator = value && !value.endsWith(' ') ? ' ' : '';
+    onChange(value + separator + finalText);
+  };
+
+  const { isSupported, isListening, interimResult, startListening, stopListening } = useSpeechToText(lang, handleFinalResult);
   
   // Auto-scroll to transcript area if it gets very long while listening
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (transcript.length > lastTranscriptLength) {
-      const newText = transcript.slice(lastTranscriptLength);
-      onChange(value + (value && newText ? ' ' : '') + newText);
-      setLastTranscriptLength(transcript.length);
-    } else if (transcript.length < lastTranscriptLength) {
-      setLastTranscriptLength(0);
-    }
-  }, [transcript, value, onChange, lastTranscriptLength]);
 
   // Scroll effect to keep user attention on the new text
   useEffect(() => {
     if (isListening && textareaRef.current) {
       textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
     }
-  }, [value, isListening]);
+  }, [value, interimResult, isListening]);
 
   const handleToggleListening = () => {
     if (isListening) {
@@ -41,6 +37,11 @@ export function SpeechTextInput({ value, onChange, placeholder = 'Speak or type 
       startListening();
     }
   };
+
+  // The text shown in the box combines the confirmed value + the real-time interim words
+  const displayValue = interimResult 
+    ? value + (value && !value.endsWith(' ') ? ' ' : '') + interimResult
+    : value;
 
   return (
     <div className={`relative ${className}`} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -111,8 +112,14 @@ export function SpeechTextInput({ value, onChange, placeholder = 'Speak or type 
         <textarea
           ref={textareaRef}
           dir="auto"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={displayValue}
+          onChange={(e) => {
+            // If they type manually, they are overriding the value directly
+            // We ignore interim changes while they type
+            if (!isListening) {
+              onChange(e.target.value);
+            }
+          }}
           placeholder={placeholder}
           className="input-field"
           style={{ 
