@@ -81,7 +81,8 @@ export function VoiceOnboardingTab({ apiKey, onComplete }: VoiceOnboardingTabPro
       setError(null);
       const res = await axios.post(`${apiBase}/api/v1/voice-onboarding/sessions/${sessionId}/answer`, {
         questionId: currentQuestion.id,
-        answerText: currentAnswer
+        answerText: currentAnswer,
+        inputMethod: 'voice'
       }, { headers: { 'x-api-key': apiKey } });
       
       setEvaluation({
