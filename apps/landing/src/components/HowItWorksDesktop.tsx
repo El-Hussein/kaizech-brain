@@ -41,16 +41,16 @@ export function HowItWorksDesktop() {
               const start = index * duration;
               const end = start + duration;
               
-              const inputOpacity = index === 0 ? [0, end - 0.08, end] : index === 3 ? [start, start + 0.08, 1] : [start, start + 0.08, end - 0.08, end];
-              const outputOpacity = index === 0 ? [1, 1, 0] : index === 3 ? [0, 1, 1] : [0, 1, 1, 0];
+              const inputOpacity = index === 0 ? [0, end - 0.08, end, 1] : index === 3 ? [0, start, start + 0.08, 1] : [0, start, start + 0.08, end - 0.08, end, 1];
+              const outputOpacity = index === 0 ? [1, 1, 0, 0] : index === 3 ? [0, 0, 1, 1] : [0, 0, 1, 1, 0, 0];
               const opacity = useTransform(scrollYProgress, inputOpacity, outputOpacity);
               
-              const inputY = index === 0 ? [0, end - 0.08, end] : index === 3 ? [start, start + 0.08, 1] : [start, start + 0.08, end - 0.08, end];
-              const outputY = index === 0 ? [0, 0, -50] : index === 3 ? [50, 0, 0] : [50, 0, 0, -50];
+              const inputY = index === 0 ? [0, end - 0.08, end, 1] : index === 3 ? [0, start, start + 0.08, 1] : [0, start, start + 0.08, end - 0.08, end, 1];
+              const outputY = index === 0 ? [0, 0, -50, -50] : index === 3 ? [50, 50, 0, 0] : [50, 50, 0, 0, -50, -50];
               const y = useTransform(scrollYProgress, inputY, outputY);
               
-              const inputScale = index === 0 ? [0, end - 0.08, end] : index === 3 ? [start, start + 0.08, 1] : [start, start + 0.08, end - 0.08, end];
-              const outputScale = index === 0 ? [1, 1, 0.95] : index === 3 ? [0.95, 1, 1] : [0.95, 1, 1, 0.95];
+              const inputScale = index === 0 ? [0, end - 0.08, end, 1] : index === 3 ? [0, start, start + 0.08, 1] : [0, start, start + 0.08, end - 0.08, end, 1];
+              const outputScale = index === 0 ? [1, 1, 0.95, 0.95] : index === 3 ? [0.95, 0.95, 1, 1] : [0.95, 0.95, 1, 1, 0.95, 0.95];
               const scale = useTransform(scrollYProgress, inputScale, outputScale);
 
               return (
