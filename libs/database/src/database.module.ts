@@ -17,6 +17,9 @@ import { KnowledgeNodeEntity } from './entities/knowledge-node.entity';
 import { KnowledgeEdgeEntity } from './entities/knowledge-edge.entity';
 import { AgentLearningEntity } from './entities/agent-learning.entity';
 import { ContactRequest } from './entities/contact-request.entity';
+import { InterviewQuestionEntity } from './entities/interview-question.entity';
+import { BusinessInterviewEntity } from './entities/business-interview.entity';
+import { InterviewResponseEntity } from './entities/interview-response.entity';
 
 const entities = [
   TenantEntity,
@@ -35,6 +38,9 @@ const entities = [
   KnowledgeEdgeEntity,
   AgentLearningEntity,
   ContactRequest,
+  InterviewQuestionEntity,
+  BusinessInterviewEntity,
+  InterviewResponseEntity,
 ];
 
 @Global()

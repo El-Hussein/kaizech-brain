@@ -62,4 +62,9 @@ export class CreateTenantDto {
   @IsArray()
   @IsString({ each: true })
   relatedIndustryIds?: string[];
+
+  @ApiPropertyOptional({ description: 'Business description for voice onboarding' })
+  @IsOptional()
+  @IsString()
+  businessDescription?: string;
 }

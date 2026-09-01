@@ -42,6 +42,8 @@
       "@kaizech/knowledge/*": ["libs/knowledge/src/*"],
       "@kaizech/tickets": ["libs/tickets/src"],
       "@kaizech/tickets/*": ["libs/tickets/src/*"],
+      "@kaizech/voice-onboarding": ["libs/voice-onboarding/src"],
+      "@kaizech/voice-onboarding/*": ["libs/voice-onboarding/src/*"],
       "@kaizech/chat-core": ["libs/chat-core/src"],
       "@kaizech/chat-core/*": ["libs/chat-core/src/*"],
       "@kaizech/chat-react": ["libs/chat-react/src"],

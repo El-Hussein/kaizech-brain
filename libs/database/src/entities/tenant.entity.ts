@@ -46,6 +46,9 @@ export class TenantEntity extends BaseEntity {
     workingHours?: string;
   };
 
+  @Column({ type: 'text', nullable: true, name: 'business_description' })
+  businessDescription: string;
+
   @OneToMany(() => ApiKeyEntity, (apiKey) => apiKey.tenant)
   apiKeys: ApiKeyEntity[];
 

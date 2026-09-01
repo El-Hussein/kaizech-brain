@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaseModal } from './BaseModal';
 import { COMMON_TIMEZONES } from './OnboardModal';
+import { InterviewQuestionsManager } from '../tenants/InterviewQuestionsManager';
 
 interface EditTenantModalProps {
   tenant: any;
@@ -15,6 +16,7 @@ interface EditTenantModalProps {
   languages: string; setLanguages: (v: string) => void;
   timezone: string; setTimezone: (v: string) => void;
   greetingMessage: string; setGreetingMessage: (v: string) => void;
+  businessDescription?: string; setBusinessDescription?: (v: string) => void;
   industries: any[];
   mainIndustryId: string; setMainIndustryId: (v: string) => void;
   relatedIndustryIds: string[]; setRelatedIndustryIds: (v: string[]) => void;
@@ -25,6 +27,7 @@ export const EditTenantModal: React.FC<EditTenantModalProps> = ({
   name, setName, slug, setSlug, ownerEmail, setOwnerEmail,
   password, setPassword, languages, setLanguages,
   timezone, setTimezone, greetingMessage, setGreetingMessage,
+  businessDescription = '', setBusinessDescription,
   industries, mainIndustryId, setMainIndustryId,
   relatedIndustryIds, setRelatedIndustryIds
 }) => {
@@ -118,6 +121,18 @@ export const EditTenantModal: React.FC<EditTenantModalProps> = ({
           />
         </div>
 
+        {setBusinessDescription && (
+          <div>
+            <label className="text-[13px] font-semibold text-slate-400 block mb-1.5">Business Description (For Voice AI)</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              value={businessDescription}
+              onChange={(e) => setBusinessDescription(e.target.value)}
+              placeholder="Describe what the business does, to generate default interview questions..."
+            />
+          </div>
+        )}
+
         <div>
           <label className="text-[13px] font-semibold text-slate-400 block mb-1.5">Main Industry</label>
           <select
@@ -152,6 +167,13 @@ export const EditTenantModal: React.FC<EditTenantModalProps> = ({
             ))}
           </select>
         </div>
+
+        {tenant && (
+          <InterviewQuestionsManager 
+            tenantId={tenant.id} 
+            businessDescription={businessDescription}
+          />
+        )}
 
         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-white/10">
           <button type="button" className="btn btn-secondary" onClick={onClose}>

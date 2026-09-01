@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { Button } from './ui/Button';
+import { VoiceOnboardingTab } from './voice-onboarding/VoiceOnboardingTab';
 
 interface KnowledgeProps {
   apiKey: string;
@@ -361,7 +362,7 @@ const ViewerModal: React.FC<{
 export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<'upload' | 'faq' | 'crawl'>('upload');
+  const [activeSubTab, setActiveSubTab] = useState<'upload' | 'faq' | 'crawl' | 'voice'>('upload');
 
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -508,6 +509,9 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
         </Button>
         <Button variant={activeSubTab === 'crawl' ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('crawl')}>
           <Globe size={16} /> Website Crawler
+        </Button>
+        <Button variant={activeSubTab === 'voice' as any ? 'primary' : 'secondary'} onClick={() => setActiveSubTab('voice' as any)}>
+          🎙️ Voice Interview
         </Button>
       </div>
 
@@ -670,6 +674,10 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
               <Globe size={16} /> Crawl Page
             </Button>
           </form>
+        )}
+
+        {activeSubTab === 'voice' && (
+          <VoiceOnboardingTab />
         )}
       </div>
 
