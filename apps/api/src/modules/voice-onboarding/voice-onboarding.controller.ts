@@ -10,7 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { VoiceOnboardingService } from './voice-onboarding.service';
-import { ApiKeyGuard, TenantContext } from '@kaizech/shared';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { TenantContext, ITenantContext } from '@kaizech/shared';
 import { SubmitAnswerDto, CreateQuestionDto, UpdateQuestionDto } from '@kaizech/voice-onboarding';
 
 @ApiTags('Voice Onboarding')
@@ -22,8 +23,8 @@ export class VoiceOnboardingController {
   @UseGuards(ApiKeyGuard)
   @ApiSecurity('api_key')
   @ApiOperation({ summary: 'Start a voice onboarding session' })
-  startSession(@TenantContext('id') tenantId: string) {
-    return this.voiceOnboardingService.startSession(tenantId);
+  startSession(@TenantContext() tenant: ITenantContext) {
+    return this.voiceOnboardingService.startSession(tenant.tenantId);
   }
 
   @Get('sessions/:id')
@@ -31,10 +32,10 @@ export class VoiceOnboardingController {
   @ApiSecurity('api_key')
   @ApiOperation({ summary: 'Get a session' })
   getSession(
-    @TenantContext('id') tenantId: string, 
+    @TenantContext() tenant: ITenantContext, 
     @Param('id') sessionId: string
   ) {
-    return this.voiceOnboardingService.getSession(tenantId, sessionId);
+    return this.voiceOnboardingService.getSession(tenant.tenantId, sessionId);
   }
 
   @Get('sessions/:id/next-question')
@@ -42,10 +43,10 @@ export class VoiceOnboardingController {
   @ApiSecurity('api_key')
   @ApiOperation({ summary: 'Get next question for session' })
   getNextQuestion(
-    @TenantContext('id') tenantId: string,
+    @TenantContext() tenant: ITenantContext,
     @Param('id') sessionId: string
   ) {
-    return this.voiceOnboardingService.getNextQuestion(tenantId, sessionId);
+    return this.voiceOnboardingService.getNextQuestion(tenant.tenantId, sessionId);
   }
 
   @Post('sessions/:id/answer')
@@ -53,11 +54,11 @@ export class VoiceOnboardingController {
   @ApiSecurity('api_key')
   @ApiOperation({ summary: 'Submit an answer' })
   submitAnswer(
-    @TenantContext('id') tenantId: string,
+    @TenantContext() tenant: ITenantContext,
     @Param('id') sessionId: string,
     @Body() dto: SubmitAnswerDto
   ) {
-    return this.voiceOnboardingService.submitAnswer(tenantId, sessionId, dto);
+    return this.voiceOnboardingService.submitAnswer(tenant.tenantId, sessionId, dto);
   }
 
   @Post('sessions/:id/complete')
@@ -65,10 +66,10 @@ export class VoiceOnboardingController {
   @ApiSecurity('api_key')
   @ApiOperation({ summary: 'Complete a session' })
   completeSession(
-    @TenantContext('id') tenantId: string,
+    @TenantContext() tenant: ITenantContext,
     @Param('id') sessionId: string
   ) {
-    return this.voiceOnboardingService.completeSession(tenantId, sessionId);
+    return this.voiceOnboardingService.completeSession(tenant.tenantId, sessionId);
   }
 }
 

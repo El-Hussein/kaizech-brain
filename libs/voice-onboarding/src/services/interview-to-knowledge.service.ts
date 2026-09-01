@@ -40,8 +40,8 @@ export class InterviewToKnowledgeService {
     }
 
     const qaText = session.responses
-      ?.filter(r => r.questionText) // Note: fixed from r.question to r.questionText since relation might not load or we want the snapshot
-      .map(r => `Q: ${r.questionText}\\nA: ${r.answerText}`)
+      ?.filter((r: any) => r.questionText) // Note: fixed from r.question to r.questionText since relation might not load or we want the snapshot
+      .map((r: any) => `Q: ${r.questionText}\\nA: ${r.answerText}`)
       .join('\\n\\n') || '';
 
     const prompt = DOCUMENT_GENERATION_PROMPT.replace('{questionsAndAnswers}', qaText);

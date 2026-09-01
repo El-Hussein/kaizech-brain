@@ -125,7 +125,7 @@ export class QuestionEngineService {
       return null;
     }
 
-    const answeredQuestionIds = new Set(session.responses?.map(r => r.questionId) || []);
+    const answeredQuestionIds = new Set(session.responses?.map((r: any) => r.questionId) || []);
 
     const nextQuestion = allQuestions.find(q => !answeredQuestionIds.has(q.id));
 

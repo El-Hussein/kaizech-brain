@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BusinessInterviewEntity, InterviewResponseEntity } from '@kaizech/database';
+import { BusinessInterviewEntity, InterviewResponseEntity, InterviewQuestionEntity } from '@kaizech/database';
 import { 
   QuestionEngineService, 
   ResponseEvaluatorService, 
@@ -16,6 +16,8 @@ export class VoiceOnboardingService {
     private readonly sessionRepository: Repository<BusinessInterviewEntity>,
     @InjectRepository(InterviewResponseEntity)
     private readonly responseRepository: Repository<InterviewResponseEntity>,
+    @InjectRepository(InterviewQuestionEntity)
+    private readonly questionRepository: Repository<InterviewQuestionEntity>,
     private readonly questionEngineService: QuestionEngineService,
     private readonly evaluatorService: ResponseEvaluatorService,
     private readonly interviewToKnowledgeService: InterviewToKnowledgeService,
@@ -53,19 +55,24 @@ export class VoiceOnboardingService {
 
   async submitAnswer(tenantId: string, sessionId: string, dto: SubmitAnswerDto) {
     const session = await this.getSession(tenantId, sessionId);
+    
+    const question = await this.questionRepository.findOne({ where: { id: dto.questionId } });
+    if (!question) {
+        throw new NotFoundException('Question not found');
+    }
 
     // Call evaluateAnswer synchronously
     const evaluation = await this.evaluatorService.evaluateAnswer(
-      dto.questionText, 
+      question.questionText, 
       dto.answerText, 
-      dto.suggestedPoints || []
+      question.suggestedPoints || []
     );
 
     const response = this.responseRepository.create({
       interviewId: session.id,
       questionId: dto.questionId,
-      questionText: dto.questionText,
-      category: dto.category || 'General',
+      questionText: question.questionText,
+      category: question.category || 'General',
       answerText: dto.answerText,
       inputMethod: dto.inputMethod || 'voice',
       completenessScore: evaluation.completenessScore,
