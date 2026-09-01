@@ -38,16 +38,12 @@ export function VoiceOnboardingTab({ apiKey, onComplete }: VoiceOnboardingTabPro
   const [error, setError] = useState<string | null>(null);
 
   const apiBase = (import.meta as any).env?.VITE_API_URL || '';
-  const api = axios.create({
-    baseURL: `${apiBase}/api/v1/voice-onboarding`,
-    headers: { 'x-api-key': apiKey }
-  });
 
   const startSession = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.post('/sessions');
+      const res = await axios.post(`${apiBase}/api/v1/voice-onboarding/sessions`, {}, { headers: { 'x-api-key': apiKey } });
       setSessionId(res.data.id);
       await fetchNextQuestion(res.data.id);
     } catch (err: any) {
@@ -60,7 +56,7 @@ export function VoiceOnboardingTab({ apiKey, onComplete }: VoiceOnboardingTabPro
   const fetchNextQuestion = async (sId: string = sessionId!) => {
     try {
       setLoading(true);
-      const res = await api.get(`/sessions/${sId}/next-question`);
+      const res = await axios.get(`${apiBase}/api/v1/voice-onboarding/sessions/${sId}/next-question`, { headers: { 'x-api-key': apiKey } });
       if (!res.data) {
         await finishSession(sId);
       } else {
@@ -78,36 +74,38 @@ export function VoiceOnboardingTab({ apiKey, onComplete }: VoiceOnboardingTabPro
   };
 
   const submitAnswer = async () => {
-    if (!currentAnswer.trim() || !currentQuestion || !sessionId) return;
+    if (!currentAnswer.trim() || !sessionId || !currentQuestion) return;
     try {
       setStep('evaluating');
+      setLoading(true);
       setError(null);
-      const res = await api.post(`/sessions/${sessionId}/answer`, {
+      const res = await axios.post(`${apiBase}/api/v1/voice-onboarding/sessions/${sessionId}/answer`, {
         questionId: currentQuestion.id,
-        answerText: currentAnswer,
-        inputMethod: 'mixed'
-      });
+        answerText: currentAnswer
+      }, { headers: { 'x-api-key': apiKey } });
+      
       setEvaluation({
         completenessScore: res.data.completenessScore,
         evaluationFeedback: res.data.evaluationFeedback,
         followUpQuestions: res.data.followUpQuestions || []
       });
-      setAnsweredCount(prev => prev + 1);
       setStep('feedback');
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to evaluate answer');
-      setStep('interview'); // go back so they can try again
+      setError(err.response?.data?.message || err.message || 'Failed to submit answer');
+      setStep('interview');
+    } finally {
+      setLoading(false);
     }
   };
 
   const finishSession = async (sId: string = sessionId!) => {
     try {
-      setStep('complete');
       setLoading(true);
-      await api.post(`/sessions/${sId}/complete`);
+      await axios.post(`${apiBase}/api/v1/voice-onboarding/sessions/${sId}/complete`, {}, { headers: { 'x-api-key': apiKey } });
+      setStep('complete');
       if (onComplete) onComplete();
     } catch (err: any) {
-      console.error('Failed to complete session:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to complete session');
     } finally {
       setLoading(false);
     }
