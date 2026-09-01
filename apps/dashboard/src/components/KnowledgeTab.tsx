@@ -677,7 +677,11 @@ export const KnowledgeTab: React.FC<KnowledgeProps> = ({ apiKey }) => {
         )}
 
         {activeSubTab === 'voice' && (
-          <VoiceOnboardingTab apiKey={apiKey} onComplete={() => fetchSources()} />
+          <VoiceOnboardingTab 
+            apiKey={apiKey} 
+            onComplete={() => fetchSources()} 
+            hasPreviousInterview={sources.some(s => s.name.startsWith('Business Interview'))}
+          />
         )}
       </div>
 

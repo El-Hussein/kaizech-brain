@@ -8,6 +8,7 @@ import { Button } from '../ui/Button';
 interface VoiceOnboardingTabProps {
   apiKey: string;
   onComplete?: () => void;
+  hasPreviousInterview?: boolean;
 }
 
 interface Question {
@@ -23,7 +24,7 @@ interface Evaluation {
   followUpQuestions: string[];
 }
 
-export function VoiceOnboardingTab({ apiKey, onComplete }: VoiceOnboardingTabProps) {
+export function VoiceOnboardingTab({ apiKey, onComplete, hasPreviousInterview }: VoiceOnboardingTabProps) {
   const [step, setStep] = useState<'intro' | 'interview' | 'evaluating' | 'feedback' | 'complete'>('intro');
   const [sessionId, setSessionId] = useState<string | null>(null);
   
@@ -129,21 +130,30 @@ export function VoiceOnboardingTab({ apiKey, onComplete }: VoiceOnboardingTabPro
           <Mic size={32} color="var(--accent-cyan)" />
         </div>
         <h2 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '16px' }}>
-          Welcome to Voice Onboarding
+          {hasPreviousInterview ? 'Update Your Business Profile' : 'Welcome to Voice Onboarding'}
         </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '16px', lineHeight: 1.6, marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
-          Train your AI assistant simply by talking. We'll guide you through a series of personalized questions about your business and give you real-time feedback on your answers.
+          {hasPreviousInterview 
+            ? "Your AI already knows a bit about your business, but things change! Retake the interview to refresh its knowledge with your latest updates."
+            : "Train your AI assistant simply by talking. We'll guide you through a series of personalized questions about your business and give you real-time feedback on your answers."}
         </p>
-        
-        {error && <div style={{ color: 'var(--accent-rose)', marginBottom: '16px' }}>{error}</div>}
-        
+
+        {error && (
+          <div style={{ marginBottom: '24px', color: 'var(--accent-amber)', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <AlertCircle size={16} /> {error}
+          </div>
+        )}
+
         <Button 
-          variant="primary" 
-          onClick={startSession} 
-          loading={loading}
-          style={{ fontSize: '16px', padding: '12px 32px', borderRadius: '100px', margin: '0 auto' }}
+          onClick={startSession}
+          disabled={loading}
+          style={{ padding: '12px 32px', fontSize: '16px', borderRadius: '100px' }}
         >
-          Start Interview <ChevronRight size={18} style={{ marginLeft: '6px' }} />
+          {loading ? (
+            <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> Initializing...</>
+          ) : (
+            <>{hasPreviousInterview ? 'Update Answers' : 'Start Interview'} <ChevronRight size={18} style={{ marginLeft: '8px' }} /></>
+          )}
         </Button>
       </div>
     );
