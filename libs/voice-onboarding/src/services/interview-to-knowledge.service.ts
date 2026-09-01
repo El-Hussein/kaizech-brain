@@ -21,7 +21,7 @@ export class InterviewToKnowledgeService {
   async processCompletedInterview(sessionId: string): Promise<void> {
     const session = await this.sessionRepository.findOne({
       where: { id: sessionId },
-      relations: ['responses', 'responses.question'],
+      relations: ['responses'],
     });
 
     if (!session) {

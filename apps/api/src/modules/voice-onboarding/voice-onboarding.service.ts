@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BusinessInterviewEntity, InterviewResponseEntity, InterviewQuestionEntity } from '@kaizech/database';
@@ -11,6 +11,8 @@ import { SubmitAnswerDto } from '@kaizech/voice-onboarding';
 
 @Injectable()
 export class VoiceOnboardingService {
+  private readonly logger = new Logger(VoiceOnboardingService.name);
+
   constructor(
     @InjectRepository(BusinessInterviewEntity)
     private readonly sessionRepository: Repository<BusinessInterviewEntity>,
@@ -24,6 +26,13 @@ export class VoiceOnboardingService {
   ) {}
 
   async startSession(tenantId: string) {
+    // Generate default questions if none exist for this tenant
+    const existingQuestions = await this.questionEngineService.getQuestions(tenantId);
+    if (existingQuestions.length === 0) {
+      this.logger.log(`No questions found for tenant ${tenantId}, generating defaults...`);
+      await this.questionEngineService.generateDefaultQuestions(tenantId);
+    }
+
     let session = await this.sessionRepository.findOne({
       where: { tenantId, status: 'in_progress' },
       relations: ['responses'],
