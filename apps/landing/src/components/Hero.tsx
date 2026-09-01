@@ -63,7 +63,7 @@ export function Hero() {
               <span>⚡</span>
               <span>The Omnichannel Agentic AI Platform</span>
             </div>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 mb-6 leading-[1.1]">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 mb-6 leading-[1.1]">
               Deploy Self-Learning AI Agents Across <span className="gradient-text">WhatsApp & Web</span> in Minutes
             </h1>
             <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-xl">

@@ -71,7 +71,7 @@ export function HowItWorks() {
             </p>
           </div>
 
-          <div className="relative h-[450px] flex items-center justify-center">
+          <div className="relative h-[650px] md:h-[450px] flex items-center justify-center">
             
             {/* Progress Line */}
             <div className="absolute left-12 md:left-1/2 top-0 bottom-0 w-1 bg-slate-200 md:-translate-x-1/2 hidden md:block rounded-full overflow-hidden">

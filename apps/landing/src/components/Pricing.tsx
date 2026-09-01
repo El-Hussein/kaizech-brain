@@ -79,7 +79,7 @@ export function Pricing() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className={`relative rounded-3xl bg-white border flex flex-col p-8 ${
                 tier.popular 
-                  ? 'border-indigo-500 shadow-2xl shadow-indigo-100 scale-105 z-10' 
+                  ? 'border-indigo-500 shadow-2xl shadow-indigo-100 scale-100 md:scale-105 z-10' 
                   : 'border-slate-200 shadow-xl shadow-slate-100/50'
               }`}
             >
