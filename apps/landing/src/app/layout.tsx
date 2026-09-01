@@ -8,9 +8,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Kaizech Brain | Multi-tenant AI Agent Platform",
-  description: "Empower your business with Agentic AI. Deploy custom agents, RAG pipelines, and intelligent widgets in minutes.",
-  keywords: ["AI Agent Platform", "Multi-tenant AI", "Enterprise Knowledge RAG", "Custom AI Widgets", "Automated Customer Support"],
+  title: "Kaizech Brain | Self-Learning AI Agents for WhatsApp, Web & Enterprise",
+  description: "Deploy omnichannel AI agents on WhatsApp, Web, and mobile in minutes. Features self-learning RAG pipelines, concierge WhatsApp setup, and multi-tenant isolation.",
+  keywords: ["WhatsApp AI Chatbot", "Self-Learning AI Agent", "Omnichannel Customer Support AI", "WhatsApp Business API Automation", "Enterprise RAG Agent"],
 };
 
 export default function RootLayout({

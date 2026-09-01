@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MessageCircle, BrainCircuit, Code, Search, Settings, ShieldCheck } from "lucide-react";
+import { MessageCircle, BrainCircuit, Code, Search, Settings, ShieldCheck, Smartphone } from "lucide-react";
 
 const services = [
   {
@@ -15,9 +15,9 @@ const services = [
     description: "Connect your internal docs, databases, and websites. Our agents retrieve precise answers instantly."
   },
   {
-    icon: <Code size={24} />,
-    title: "Agentic Media Replies",
-    description: "Automatically engage with social media mentions and comments using brand-aligned, intelligent responses."
+    icon: <Smartphone size={24} />,
+    title: "Omnichannel & WhatsApp Native",
+    description: "Meet your customers where they are. Native integrations for WhatsApp Business, Web Chat, and mobile apps with automated human handoff and turnkey concierge setup."
   },
   {
     icon: <Settings size={24} />,

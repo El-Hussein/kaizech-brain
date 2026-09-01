@@ -60,26 +60,43 @@ export function Hero() {
             className="max-w-2xl"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-6">
-              <Zap size={16} />
-              <span>The Next Evolution of AI Agents</span>
+              <span>⚡</span>
+              <span>The Omnichannel Agentic AI Platform</span>
             </div>
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 mb-6 leading-[1.1]">
-              Empower your business with <span className="gradient-text">Agentic AI</span>
+              Deploy Self-Learning AI Agents Across <span className="gradient-text">WhatsApp & Web</span> in Minutes
             </h1>
             <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-xl">
-              Deploy intelligent, context-aware agents in minutes. Connect your knowledge base, automate customer support, and seamlessly embed AI anywhere.
+              Unify your customer experience across WhatsApp, your website, mobile apps, and APIs. Connect your company knowledge and let autonomous, self-improving agents resolve inquiries 24/7.
             </p>
             
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 mb-6">
               <Link href="#pricing" className="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
                 Start for Free <ArrowRight size={18} className="ml-2" />
               </Link>
               <Link href="/integration" className="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">
-                View Documentation
+                Explore Integrations
               </Link>
             </div>
-            
-            <div className="mt-10 flex items-center gap-4 text-sm text-slate-500 font-medium">
+
+            {/* Omnichannel Integration Bar */}
+            <div className="flex flex-wrap items-center gap-2 mb-10">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-2">Available On:</span>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-100">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> WhatsApp
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> Web Widget
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-medium border border-purple-100">
+                  <span className="w-2 h-2 rounded-full bg-purple-500"></span> Messenger
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200">
+                  <span className="w-2 h-2 rounded-full bg-slate-500"></span> Mobile & API
+                </span>
+              </div>
+            </div>
               <div className="flex -space-x-2">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs overflow-hidden">

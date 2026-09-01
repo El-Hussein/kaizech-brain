@@ -5,19 +5,19 @@ import { KeyRound, Sparkles, SlidersHorizontal, Settings2 } from "lucide-react";
 
 const features = [
   {
-    icon: <KeyRound className="text-amber-500" size={24} />,
-    title: "Bring Your Own Key (BYOK)",
-    description: "Connect your own OpenAI, Anthropic, or HuggingFace API keys. Keep full control over your billing and data privacy."
-  },
-  {
     icon: <Sparkles className="text-fuchsia-500" size={24} />,
-    title: "Model Selection",
-    description: "Switch seamlessly between GPT-4o, Claude 3.5 Sonnet, or open-source models depending on your cost and intelligence requirements."
+    title: "Self-Learning Intelligence",
+    description: "Continuously discovers unanswered questions and refines its responses over time with built-in guardrails and human verification."
   },
   {
     icon: <Settings2 className="text-blue-500" size={24} />,
-    title: "Custom RAG Rules",
-    description: "Define strict hallucination thresholds. Tell your agent to exclusively use uploaded PDFs, or allow it to fall back to general knowledge."
+    title: "Enterprise Guardrails & Personas",
+    description: "Define strict tone, hallucination thresholds, and custom prompt guardrails. Keep your AI 100% aligned with your brand guidelines."
+  },
+  {
+    icon: <KeyRound className="text-amber-500" size={24} />,
+    title: "Bring Your Own Key (BYOK)",
+    description: "Connect your own OpenAI, Anthropic, or HuggingFace API keys. Keep full control over your billing and data privacy."
   },
   {
     icon: <SlidersHorizontal className="text-emerald-500" size={24} />,

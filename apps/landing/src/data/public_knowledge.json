@@ -5,7 +5,7 @@
   },
   {
     "keywords": ["whatsapp", "wa", "meta"],
-    "response": "Yes, absolutely! Kaizech Brain has native **WhatsApp Business integration**. You can connect your number in minutes, set up automated routing, and let your AI agent handle customer inquiries directly on WhatsApp 24/7."
+    "response": "Yes! Kaizech Brain offers native **WhatsApp Business integration**. Our team also provides a concierge onboarding service to help you bypass Meta verification hurdles and webhook setup so your AI agent can start answering 24/7 immediately."
   },
   {
     "keywords": ["integrate", "integration", "api", "system", "webhook", "sdk", "crm", "erp", "connect"],
@@ -22,6 +22,10 @@
   {
     "keywords": ["what is", "about", "kaizech", "platform"],
     "response": "Kaizech Brain is an **Agentic AI platform**. We provide an end-to-end multi-tenant architecture for businesses to build, deploy, and manage AI agents, Knowledge RAG pipelines, and smart widgets!"
+  },
+  {
+    "keywords": ["learn", "self-learning", "hallucination", "guardrail", "safe", "training"],
+    "response": "Kaizech Brain features **Guardrailed Self-Learning**. It discovers knowledge gaps and unanswered intents from conversations, surfacing verified knowledge updates to you. You maintain strict hallucination thresholds and exact tone control."
   },
   {
     "keywords": ["hello", "hi", "hey", "greetings"],
