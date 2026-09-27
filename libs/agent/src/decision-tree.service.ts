@@ -103,32 +103,29 @@ export class DecisionTreeService {
       // Execute HTTP Fetch
       const data = await this.fetchExternalData(tenant, url, `wf_${workflow.id}_node_${node.id}_${userSelection || 'default'}`);
       
-      if (!data || (Array.isArray(data) && data.length === 0)) {
-        return { reply: "No data found for this selection." };
-      }
-
       // Format Message
       let replyMessage = node.message || '';
+      const safeData = data || []; // fallback to empty if fetch fails
       
       // Basic {{data.field}} template replacement for object responses
-      if (!Array.isArray(data) && typeof data === 'object') {
+      if (!Array.isArray(safeData) && typeof safeData === 'object') {
         replyMessage = replyMessage.replace(/{{data\.([^}]+)}}/g, (match: string, p1: string) => {
-          return data[p1] !== undefined ? data[p1] : match;
+          return safeData[p1] !== undefined ? safeData[p1] : match;
         });
       }
 
       const response: any = { reply: replyMessage };
 
       // Formatting Interactive Elements
-      if (node.displayType === 'list' && Array.isArray(data)) {
+      if (node.displayType === 'list') {
         response.interactiveType = 'list';
-        response.buttons = data.slice(0, 10).map((item: any) => ({
+        response.buttons = Array.isArray(safeData) ? safeData.slice(0, 10).map((item: any) => ({
           title: item.name || item.title || 'Option',
           // Payload links to the NEXT node defined in the current node
           payload: node.onSelectNextNode 
             ? `WF_${workflow.id}_NODE_${node.onSelectNextNode}_PAYLOAD_${item.id}` 
             : `UNKNOWN`
-        }));
+        })) : [];
       } else if (node.displayType === 'button' && node.buttons) {
         response.interactiveType = 'button';
         response.buttons = node.buttons.map((btn: any) => ({
