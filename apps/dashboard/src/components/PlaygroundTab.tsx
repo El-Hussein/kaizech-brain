@@ -44,13 +44,29 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     }
     const streamUrl = `${apiBase}/api/v1/playground/chat-stream`;
 
+    let currentTenantSlug = '';
     try {
+      const saved = localStorage.getItem('kaizech_tenant_session');
+      if (saved) {
+        const session = JSON.parse(saved);
+        if (session?.tenant?.slug) {
+          currentTenantSlug = session.tenant.slug;
+        }
+      }
+    } catch (e) {}
+
+    try {
+      const headersToUse: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      };
+      if (currentTenantSlug) {
+        headersToUse['x-tenant-slug'] = currentTenantSlug;
+      }
+
       const response = await fetch(streamUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-        },
+        headers: headersToUse,
         body: JSON.stringify({
           message: userText,
           sessionId: 'dashboard-preview',
