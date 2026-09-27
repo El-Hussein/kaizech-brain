@@ -52,12 +52,20 @@ export function WorkflowsTab({ tenantId, apiKey }: Props) {
 
   const handleToggleActive = async (workflow: Workflow) => {
     try {
+      const payload = {
+        name: workflow.name,
+        triggerKeywords: workflow.triggerKeywords,
+        nodes: workflow.nodes,
+        isActive: !workflow.isActive,
+        isDraft: workflow.isDraft
+      };
       await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/workflows/${workflow.id}`, 
-      { isActive: !workflow.isActive },
+      payload,
       { headers: { 'x-tenant-slug': tenantId, 'x-api-key': apiKey } });
       fetchWorkflows();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error(err.response?.data || err);
+      alert(`Error updating workflow: ${err.response?.data?.message || err.message}`);
     }
   };
 
