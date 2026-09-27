@@ -32,7 +32,9 @@ export class WorkflowsController {
   createWorkflow(
     @TenantContext() tenant: ITenantContext,
     @Body() dto: CreateWorkflowDto,
+    @Body('nodes') rawNodes: any[]
   ) {
+    if (rawNodes) dto.nodes = rawNodes;
     return this.workflowsService.createWorkflow(tenant.tenantId, dto);
   }
 
@@ -42,7 +44,9 @@ export class WorkflowsController {
     @TenantContext() tenant: ITenantContext,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateWorkflowDto,
+    @Body('nodes') rawNodes: any[]
   ) {
+    if (rawNodes) dto.nodes = rawNodes;
     return this.workflowsService.updateWorkflow(tenant.tenantId, id, dto);
   }
 
