@@ -48,13 +48,12 @@ export class DecisionTreeService {
       }
     }
 
+    // Ensure we handle both proper interactive payloads AND raw text fallbacks (e.g. from the dashboard playground)
+    const payloadStr = message.payload || text;
+
     // Handle Workflow Node Payload continuation (WF_{workflowId}_NODE_{nodeId}_PAYLOAD_{extra})
-    if (message.payload?.startsWith('WF_')) {
-      const parts = message.payload.split('_');
-      // Format: WF_123_NODE_node_2_products_PAYLOAD_user-selection
-      // Actually, payload splitting might be tricky if the node ID contains underscores.
-      // Let's use a regex or known structure.
-      const match = message.payload.match(/^WF_([a-zA-Z0-9-]+)_NODE_([a-zA-Z0-9_]+)_PAYLOAD_(.*)$/);
+    if (payloadStr?.startsWith('WF_')) {
+      const match = payloadStr.match(/^WF_([a-zA-Z0-9-]+)_NODE_([a-zA-Z0-9_]+)_PAYLOAD_(.*)$/);
       if (match) {
         const [, workflowId, nodeId, userSelection] = match;
         const workflow = await this.workflowRepo.findOne({ where: { id: workflowId, tenant_id: tenant.id } });
@@ -75,15 +74,15 @@ export class DecisionTreeService {
       return null; // Bypass to AI
     }
     
-    if (text === 'menu' || text === 'start' || message.payload === 'MENU_START') {
+    if (text === 'menu' || text === 'start' || payloadStr === 'MENU_START') {
       return this.getCategories(tenant);
     }
-    if (message.payload?.startsWith('CAT_')) {
-      const categoryId = message.payload.replace('CAT_', '');
+    if (payloadStr?.startsWith('CAT_')) {
+      const categoryId = payloadStr.replace('CAT_', '');
       return this.getProducts(tenant, categoryId);
     }
-    if (message.payload?.startsWith('PROD_')) {
-      const productId = message.payload.replace('PROD_', '');
+    if (payloadStr?.startsWith('PROD_')) {
+      const productId = payloadStr.replace('PROD_', '');
       return this.getProductDetails(tenant, productId);
     }
     
