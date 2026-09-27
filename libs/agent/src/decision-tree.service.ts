@@ -101,16 +101,24 @@ export class DecisionTreeService {
       }
 
       // Execute HTTP Fetch
-      const data = await this.fetchExternalData(tenant, url, `wf_${workflow.id}_node_${node.id}_${userSelection || 'default'}`);
+      let rawData = await this.fetchExternalData(tenant, url, `wf_${workflow.id}_node_${node.id}_${userSelection || 'default'}`, node.headers);
       
+      // Resolve data path if the API wraps it (e.g. data.tags or data.data)
+      let data = rawData;
+      if (node.dataPath && rawData) {
+        data = node.dataPath.split('.').reduce((acc: any, part: string) => acc && acc[part], rawData);
+      }
+
       // Format Message
       let replyMessage = node.message || '';
       const safeData = data || []; // fallback to empty if fetch fails
       
-      // Basic {{data.field}} template replacement for object responses
+      // Basic {{data.field.subfield}} template replacement for object responses
       if (!Array.isArray(safeData) && typeof safeData === 'object') {
         replyMessage = replyMessage.replace(/{{data\.([^}]+)}}/g, (match: string, p1: string) => {
-          return safeData[p1] !== undefined ? safeData[p1] : match;
+          // Resolve deep properties (e.g. name.en or name.ar-SA)
+          const value = p1.split('.').reduce((acc: any, part: string) => acc && acc[part], safeData);
+          return value !== undefined ? value : match;
         });
       }
 
@@ -120,7 +128,8 @@ export class DecisionTreeService {
       if (node.displayType === 'list') {
         response.interactiveType = 'list';
         response.buttons = Array.isArray(safeData) ? safeData.slice(0, 10).map((item: any) => ({
-          title: item.name || item.title || 'Option',
+          // Using title from nested objects like name.en or name.ar-SA if needed
+          title: item.name?.en || item.name?.['ar-SA'] || item.name || item.title || 'Option',
           // Payload links to the NEXT node defined in the current node
           payload: node.onSelectNextNode 
             ? `WF_${workflow.id}_NODE_${node.onSelectNextNode}_PAYLOAD_${item.id}` 
@@ -172,25 +181,28 @@ export class DecisionTreeService {
     };
   }
 
-  private async fetchExternalData(tenant: TenantEntity, endpoint: string, cacheKey: string) {
+  private async fetchExternalData(tenant: TenantEntity, endpoint: string, cacheKey: string, customHeaders?: Record<string, string>) {
     try {
       const cachedData = await this.cacheManager.get(cacheKey);
       if (cachedData) return cachedData;
 
-      const headers: Record<string, string> = {};
-      if (tenant.menuConfig?.apiKey) headers['Authorization'] = `Bearer ${tenant.menuConfig.apiKey}`;
+      const headers: Record<string, string> = { ...customHeaders };
+      if (tenant.menuConfig?.apiKey && !headers['Authorization']) {
+        headers['Authorization'] = `Bearer ${tenant.menuConfig.apiKey}`;
+      }
+
+      const isAbsoluteUrl = endpoint.startsWith('http://') || endpoint.startsWith('https://');
+      const url = isAbsoluteUrl ? endpoint : `${tenant.menuConfig?.apiBaseUrl || 'http://localhost:3000'}${endpoint}`;
 
       const response = await firstValueFrom(
-        this.httpService.get(`${tenant.menuConfig?.apiBaseUrl || 'http://localhost:3000'}${endpoint}`, {
-          headers, timeout: 3000
-        })
+        this.httpService.get(url, { headers, timeout: 5000 })
       );
       
       const ttl = (tenant.menuConfig?.cacheTtlMinutes || 60) * 60 * 1000;
       await this.cacheManager.set(cacheKey, response.data, ttl);
       return response.data;
     } catch (error: any) {
-      this.logger.error(`Failed to fetch dynamic data for tenant ${tenant.id}: ${error.message}`);
+      this.logger.error(`Failed to fetch dynamic data for tenant ${tenant.id} from ${endpoint}: ${error.message}`);
       return null;
     }
   }
