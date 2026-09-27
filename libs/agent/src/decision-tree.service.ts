@@ -66,26 +66,6 @@ export class DecisionTreeService {
       }
     }
 
-    // ==========================================
-    // 2. Legacy Hardcoded Menu (Backwards Compatibility)
-    // ==========================================
-    const config = tenant.menuConfig;
-    if (!config?.isMenuEnabled || !config?.apiBaseUrl) {
-      return null; // Bypass to AI
-    }
-    
-    if (text === 'menu' || text === 'start' || payloadStr === 'MENU_START') {
-      return this.getCategories(tenant);
-    }
-    if (payloadStr?.startsWith('CAT_')) {
-      const categoryId = payloadStr.replace('CAT_', '');
-      return this.getProducts(tenant, categoryId);
-    }
-    if (payloadStr?.startsWith('PROD_')) {
-      const productId = payloadStr.replace('PROD_', '');
-      return this.getProductDetails(tenant, productId);
-    }
-    
     return null; // Fallback to AI
   }
 
@@ -146,38 +126,6 @@ export class DecisionTreeService {
     }
     
     return { reply: node.message || "Action completed." };
-  }
-
-  // ... (Legacy hardcoded fetching methods below) ...
-  private async getCategories(tenant: TenantEntity) {
-    const categories = await this.fetchExternalData(tenant, '/categories', `categories_${tenant.id}`);
-    if (!categories || categories.length === 0) return { reply: "Our catalog is currently being updated." };
-    return {
-      reply: tenant.menuConfig.welcomeMessage || "Please choose a category:",
-      interactiveType: 'list',
-      buttons: categories.slice(0, 10).map((cat: any) => ({ title: cat.name, payload: `CAT_${cat.id}` }))
-    };
-  }
-
-  private async getProducts(tenant: TenantEntity, categoryId: string) {
-    const products = await this.fetchExternalData(tenant, `/products?categoryId=${categoryId}`, `products_${tenant.id}_${categoryId}`);
-    if (!products || products.length === 0) return { reply: "No products found." };
-    return {
-      reply: "Here are the top products:",
-      interactiveType: 'list',
-      buttons: products.slice(0, 10).map((prod: any) => ({ title: prod.name, payload: `PROD_${prod.id}` }))
-    };
-  }
-
-  private async getProductDetails(tenant: TenantEntity, productId: string) {
-    const product = await this.fetchExternalData(tenant, `/products/${productId}`, `product_${tenant.id}_${productId}`);
-    if (!product) return { reply: "Product details not found." };
-    return {
-      reply: `*${product.name}*\nPrice: $${product.price}\n\n${product.description}`,
-      imageUrl: product.imageUrl || null,
-      interactiveType: 'button',
-      buttons: [{ title: 'Talk to Agent to Buy', payload: 'TALK_TO_AGENT' }]
-    };
   }
 
   private async fetchExternalData(tenant: TenantEntity, endpoint: string, cacheKey: string, customHeaders?: Record<string, string>) {
