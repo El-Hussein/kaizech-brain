@@ -54,16 +54,38 @@ export class DecisionTreeService {
     // Handle Workflow Node Payload continuation (WF_{workflowId}_NODE_{nodeId}_PAYLOAD_{extra})
     if (payloadStr?.startsWith('WF_')) {
       const match = payloadStr.match(/^WF_([a-zA-Z0-9-]+)_NODE_([a-zA-Z0-9_]+)_PAYLOAD_(.*)$/);
-      if (match) {
-        const [, workflowId, nodeId, userSelection] = match;
-        const workflow = await this.workflowRepo.findOne({ where: { id: workflowId, tenant_id: tenant.id } });
-        if (workflow && workflow.nodes) {
-          const nextNode = workflow.nodes.find(n => n.id === nodeId);
-          if (nextNode) {
-            return this.executeWorkflowNode(tenant, workflow, nextNode, userSelection);
-          }
-        }
+      
+      if (!match) {
+        this.logger.warn(`Malformed workflow payload received: ${payloadStr}`);
+        return { reply: "Invalid selection payload format." };
       }
+
+      const [, workflowId, nodeId, userSelection] = match;
+      this.logger.log(`Executing Workflow: ${workflowId}, Node: ${nodeId}, Selection: ${userSelection}`);
+
+      const workflow = await this.workflowRepo.findOne({ 
+        where: { id: workflowId, tenant_id: tenant.id } 
+      });
+
+      if (!workflow) {
+        this.logger.error(`Workflow ${workflowId} not found for tenant ${tenant.id}. Cannot process node ${nodeId}.`);
+        return { reply: "This workflow session has expired or is invalid." };
+      }
+
+      if (!workflow.nodes || !Array.isArray(workflow.nodes)) {
+        this.logger.error(`Workflow ${workflowId} has malformed or missing nodes array.`);
+        return { reply: "Workflow configuration is invalid." };
+      }
+
+      const nextNode = workflow.nodes.find(n => n.id === nodeId);
+      
+      if (!nextNode) {
+        this.logger.error(`Node '${nodeId}' not found in workflow ${workflowId}. Available nodes: ${workflow.nodes.map(n => n.id).join(', ')}`);
+        return { reply: "The requested step does not exist in this workflow." };
+      }
+
+      // If all checks pass, execute safely!
+      return this.executeWorkflowNode(tenant, workflow, nextNode, userSelection);
     }
 
     return null; // Fallback to AI
