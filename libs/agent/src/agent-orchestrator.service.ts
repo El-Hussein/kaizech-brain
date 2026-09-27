@@ -144,16 +144,16 @@ export class AgentOrchestratorService {
       payload: metadata?.payload
     });
 
-    if (treeResponse.handled) {
+    if (treeResponse) {
       return {
-        response: treeResponse.response,
+        response: treeResponse.reply,
         conversationId: 'menu-flow',
         status: 'completed',
         toolCallsExecuted: [],
         knowledgeSourcesUsed: 0,
         tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
         responseTimeMs: Date.now() - startTime,
-        metadata: { interactive: treeResponse.interactive }
+        metadata: { interactive: treeResponse }
       };
     }
 
@@ -554,17 +554,17 @@ export class AgentOrchestratorService {
       payload: metadata?.payload
     });
 
-    if (treeResponse.handled) {
-      if (typeof onChunk === 'function') onChunk(treeResponse.response);
+    if (treeResponse) {
+      if (typeof onChunk === 'function') onChunk(treeResponse.reply);
       return {
-        response: treeResponse.response,
+        response: treeResponse.reply,
         conversationId: 'menu-flow',
         status: 'completed',
         toolCallsExecuted: [],
         knowledgeSourcesUsed: 0,
         tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
         responseTimeMs: Date.now() - startTime,
-        metadata: { interactive: treeResponse.interactive }
+        metadata: { interactive: treeResponse }
       };
     }
 
