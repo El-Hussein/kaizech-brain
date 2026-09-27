@@ -42,7 +42,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     if (apiBase === undefined || apiBase === null) {
       apiBase = (import.meta as any).env?.VITE_API_URL || '';
     }
-    const streamUrl = `${apiBase}/api/v1/channels/chat-stream`;
+    const streamUrl = `${apiBase}/api/v1/playground/chat-stream`;
 
     try {
       const response = await fetch(streamUrl, {

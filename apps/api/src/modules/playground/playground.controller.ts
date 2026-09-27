@@ -67,6 +67,7 @@ export class PlaygroundController {
       knowledgeSourcesUsed: result.knowledgeSourcesUsed,
       tokenUsage: result.tokenUsage,
       responseTimeMs: result.responseTimeMs,
+      metadata: result.metadata,
     };
   }
 
