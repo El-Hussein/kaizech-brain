@@ -26,7 +26,8 @@ export class DecisionTreeService {
   ) {}
 
   public async handleMessage(tenant: TenantEntity, message: WebhookIncomingMessage): Promise<any> {
-    const text = message.text?.toLowerCase().trim();
+    const originalText = message.text?.trim();
+    const text = originalText?.toLowerCase();
     
     // ==========================================
     // 1. Dynamic Workflow Engine (FlowStudio)
@@ -49,7 +50,7 @@ export class DecisionTreeService {
     }
 
     // Ensure we handle both proper interactive payloads AND raw text fallbacks (e.g. from the dashboard playground)
-    const payloadStr = message.payload || text;
+    const payloadStr = message.payload || originalText;
 
     // Handle Workflow Node Payload continuation (WF_{workflowId}_NODE_{nodeId}_PAYLOAD_{extra})
     if (payloadStr?.startsWith('WF_')) {
