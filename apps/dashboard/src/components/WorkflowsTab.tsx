@@ -75,20 +75,28 @@ export function WorkflowsTab({ tenantId, apiKey }: Props) {
   const handleSave = async () => {
     if (!editingWorkflow) return;
     try {
+      const payload = {
+        name: editingWorkflow.name,
+        triggerKeywords: editingWorkflow.triggerKeywords,
+        nodes: editingWorkflow.nodes,
+        isActive: editingWorkflow.isActive,
+        isDraft: editingWorkflow.isDraft
+      };
+
       if (editingWorkflow.id) {
         await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/workflows/${editingWorkflow.id}`, 
-        editingWorkflow,
+        payload,
         { headers: { 'x-tenant-slug': tenantId, 'x-api-key': apiKey } });
       } else {
         await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/workflows`, 
-        editingWorkflow,
+        payload,
         { headers: { 'x-tenant-slug': tenantId, 'x-api-key': apiKey } });
       }
       setEditingWorkflow(null);
       fetchWorkflows();
-    } catch (err) {
-      console.error(err);
-      alert('Error saving workflow');
+    } catch (err: any) {
+      console.error(err.response?.data || err);
+      alert(`Error saving workflow: ${err.response?.data?.message || err.message}`);
     }
   };
 
