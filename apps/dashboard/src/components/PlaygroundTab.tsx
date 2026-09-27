@@ -26,13 +26,14 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     scrollToBottom();
   }, [messages, sending]);
 
-  const handleSend = async (e?: React.FormEvent, overrideText?: string) => {
+  const handleSend = async (e?: React.FormEvent, overrideText?: string, displayTitle?: string) => {
     if (e) e.preventDefault();
-    const userText = overrideText || inputMessage;
-    if (!userText.trim() || sending) return;
+    const userTextToSend = overrideText || inputMessage;
+    const userTextToDisplay = displayTitle || userTextToSend;
+    if (!userTextToSend.trim() || sending) return;
 
     setInputMessage('');
-    setMessages((prev) => [...prev, { role: 'user', content: userText }]);
+    setMessages((prev) => [...prev, { role: 'user', content: userTextToDisplay }]);
     setSending(true);
 
     // Placeholder for assistant response
@@ -68,7 +69,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         method: 'POST',
         headers: headersToUse,
         body: JSON.stringify({
-          message: userText,
+          message: userTextToSend,
           sessionId: 'dashboard-preview',
           channel: 'web',
         }),
@@ -78,7 +79,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         // Fallback to standard POST endpoint if streaming fails
         const res = await axios.post(
           '/api/v1/playground/chat',
-          { message: userText },
+          { message: userTextToSend },
           { headers: { 'x-api-key': apiKey } },
         );
         const data = res.data;
@@ -136,7 +137,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
       try {
         const res = await axios.post(
           '/api/v1/playground/chat',
-          { message: userText },
+          { message: userTextToSend },
           { headers: { 'x-api-key': apiKey } },
         );
         const data = res.data;
@@ -216,7 +217,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
                       {msg.interactive.buttons.map((btn: any, i: number) => (
                         <button
                           key={i}
-                          onClick={() => handleSend(undefined, btn.payload)}
+                          onClick={() => handleSend(undefined, btn.payload, btn.title)}
                           style={{
                             padding: '10px 16px',
                             background: 'var(--bg-surface-elevated)',
