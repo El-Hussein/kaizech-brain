@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ToggleLeft, ToggleRight, Trash2, Edit2, Play, Save, X } from 'lucide-react';
+import { Plus, ToggleLeft, ToggleRight, Trash2, Edit2, Play, Save, X, GitMerge } from 'lucide-react';
 import axios from 'axios';
+import { Button } from './ui/Button';
 
 interface WorkflowNode {
   id: string;
@@ -61,7 +62,7 @@ export function WorkflowsTab({ tenantId, apiKey }: Props) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure?')) return;
+    if (!confirm('Are you sure you want to delete this workflow?')) return;
     try {
       await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/workflows/${id}`, 
       { headers: { 'x-tenant-slug': tenantId, 'x-api-key': apiKey } });
@@ -91,85 +92,134 @@ export function WorkflowsTab({ tenantId, apiKey }: Props) {
     }
   };
 
-  if (loading) return <div className="p-8">Loading Workflows...</div>;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+        Loading Workflows...
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* ── Header ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Kaizech FlowStudio™</h1>
-          <p className="text-gray-500 mt-1">Design deterministic conversational journeys.</p>
+          <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Kaizech FlowStudio™</h2>
+          <p style={{ color: 'var(--text-muted)', marginTop: '4px', fontSize: '14px' }}>
+            Design deterministic conversational journeys and connect API steps natively.
+          </p>
         </div>
-        <button 
-          onClick={() => setEditingWorkflow({ id: '', name: 'New Workflow', triggerKeywords: ['menu'], nodes: [], isActive: true, isDraft: true, executionCount: 0, completionCount: 0 })}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Workflow
-        </button>
+        {!editingWorkflow && (
+          <Button
+            variant="primary"
+            onClick={() => setEditingWorkflow({ id: '', name: 'New Workflow', triggerKeywords: ['menu'], nodes: [], isActive: true, isDraft: true, executionCount: 0, completionCount: 0 })}
+            style={{ gap: '8px' }}
+          >
+            <Plus size={16} /> Create Workflow
+          </Button>
+        )}
       </div>
 
       {editingWorkflow ? (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between mb-4">
-            <h2 className="text-xl font-semibold">Editing: {editingWorkflow.name}</h2>
-            <button onClick={() => setEditingWorkflow(null)}><X className="w-5 h-5 text-gray-400 hover:text-gray-700" /></button>
+        <div className="glass-card" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600 }}>
+              {editingWorkflow.id ? 'Edit Workflow' : 'New Workflow'}
+            </h3>
+            <button onClick={() => setEditingWorkflow(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <X size={20} />
+            </button>
           </div>
-          <div className="space-y-4">
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Workflow Name</label>
-              <input type="text" className="w-full p-2 border rounded-lg" value={editingWorkflow.name} onChange={e => setEditingWorkflow({...editingWorkflow, name: e.target.value})} />
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Workflow Name</label>
+              <input
+                className="input-field"
+                type="text"
+                placeholder="e.g. Lead Qualification"
+                value={editingWorkflow.name}
+                onChange={e => setEditingWorkflow({...editingWorkflow, name: e.target.value})}
+              />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Trigger Keywords (comma separated)</label>
-              <input type="text" className="w-full p-2 border rounded-lg" value={editingWorkflow.triggerKeywords.join(', ')} onChange={e => setEditingWorkflow({...editingWorkflow, triggerKeywords: e.target.value.split(',').map(s => s.trim())})} />
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Trigger Keywords (comma separated)</label>
+              <input
+                className="input-field"
+                type="text"
+                placeholder="e.g. menu, start, pricing"
+                value={editingWorkflow.triggerKeywords.join(', ')}
+                onChange={e => setEditingWorkflow({...editingWorkflow, triggerKeywords: e.target.value.split(',').map(s => s.trim())})}
+              />
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Users triggering these exact keywords will enter this flow.</p>
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nodes (JSON Format for MVP)</label>
-              <textarea className="w-full p-4 border rounded-lg font-mono text-sm" rows={8} value={JSON.stringify(editingWorkflow.nodes, null, 2)} onChange={e => {
-                try {
-                  setEditingWorkflow({...editingWorkflow, nodes: JSON.parse(e.target.value)});
-                } catch(err) {
-                  // ignoring parse error while typing
-                }
-              }} />
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Nodes (JSON Format for MVP)</label>
+              <textarea
+                className="input-field"
+                style={{ fontFamily: 'var(--font-mono)', minHeight: '300px', fontSize: '13px' }}
+                value={JSON.stringify(editingWorkflow.nodes, null, 2)}
+                onChange={e => {
+                  try {
+                    setEditingWorkflow({...editingWorkflow, nodes: JSON.parse(e.target.value)});
+                  } catch(err) {
+                    // ignore parse errors while typing
+                  }
+                }}
+              />
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <button onClick={() => setEditingWorkflow(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-              <button onClick={handleSave} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                <Save className="w-4 h-4 mr-2" /> Save Workflow
-              </button>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+              <Button variant="ghost" onClick={() => setEditingWorkflow(null)}>Cancel</Button>
+              <Button variant="primary" onClick={handleSave} style={{ gap: '8px' }}>
+                <Save size={16} /> Save Workflow
+              </Button>
             </div>
           </div>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {workflows.map(workflow => (
-            <div key={workflow.id} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-              <div>
-                <h3 className="font-medium text-gray-900">{workflow.name}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">{workflow.triggerKeywords.join(', ')}</span>
-                  <span className="text-xs text-gray-400">{workflow.executionCount} Executions</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {workflows.length === 0 ? (
+            <div className="glass-card" style={{ padding: '40px', textAlign: 'center', borderStyle: 'dashed' }}>
+              <GitMerge size={32} style={{ margin: '0 auto 16px', color: 'var(--text-muted)' }} />
+              <h3 style={{ fontSize: '16px', fontWeight: 600 }}>No workflows created yet</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>Create your first automated journey to guide your users.</p>
+            </div>
+          ) : (
+            workflows.map(workflow => (
+              <div key={workflow.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px' }}>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)' }}>{workflow.name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                    <span style={{ fontSize: '12px', background: 'rgba(29, 61, 132, 0.1)', color: 'var(--accent-primary)', padding: '2px 8px', borderRadius: '12px', fontWeight: 500 }}>
+                      {workflow.triggerKeywords.join(', ')}
+                    </span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      • {workflow.executionCount} Executions
+                    </span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button 
+                    onClick={() => handleToggleActive(workflow)}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                    title={workflow.isActive ? "Deactivate" : "Activate"}
+                  >
+                    {workflow.isActive ? <ToggleRight size={28} color="var(--accent-emerald)" /> : <ToggleLeft size={28} color="var(--text-muted)" />}
+                  </button>
+                  <Button variant="secondary" onClick={() => setEditingWorkflow(workflow)} style={{ padding: '8px' }}>
+                    <Edit2 size={16} />
+                  </Button>
+                  <Button variant="danger" onClick={() => handleDelete(workflow.id)} style={{ padding: '8px' }}>
+                    <Trash2 size={16} />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button onClick={() => handleToggleActive(workflow)}>
-                  {workflow.isActive ? <ToggleRight className="w-6 h-6 text-green-500" /> : <ToggleLeft className="w-6 h-6 text-gray-300" />}
-                </button>
-                <button onClick={() => setEditingWorkflow(workflow)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button onClick={() => handleDelete(workflow.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-          {workflows.length === 0 && (
-            <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-              <p className="text-gray-500">No workflows found. Create your first automated journey!</p>
-            </div>
+            ))
           )}
         </div>
       )}
