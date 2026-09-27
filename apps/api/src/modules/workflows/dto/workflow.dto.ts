@@ -1,4 +1,4 @@
-import { IsString, IsArray, IsBoolean, IsOptional } from 'class-validator';
+import { IsString, IsArray, IsBoolean, IsOptional, IsObject } from 'class-validator';
 
 export class CreateWorkflowDto {
   @IsString()
@@ -16,7 +16,16 @@ export class CreateWorkflowDto {
   @IsString()
   semanticIntent?: string;
 
-  // By completely omitting class-validator decorators for nodes except IsOptional, 
-  // wait, if I omit it, it strips it. 
-  // Let's explicitly NOT strip it by making it a string, then JSON.parsing it in the service!
+  @IsArray()
+  nodes: any[];
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isDraft?: boolean;
 }
+
+export class UpdateWorkflowDto extends CreateWorkflowDto {}
