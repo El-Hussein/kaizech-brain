@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Cpu, Database, Wrench, Clock, Sparkles } from 'lucide-react';
-import axios from 'axios';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Bot, User, Sparkles, Cpu, Clock, Database, Wrench } from 'lucide-react';
 import { FormattedMessage } from './FormattedMessage';
 import { Button } from './ui/Button';
+import axios from 'axios';
 
 interface PlaygroundProps {
   apiKey: string;
 }
 
 export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
+  const [messages, setMessages] = useState<Array<{ role: string; content: string; interactive?: any }>>([
     { role: 'assistant', content: 'Hello! I am your AI Agent. Ask me anything or test an operation.' },
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -17,7 +17,6 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
   const [lastDebugInfo, setLastDebugInfo] = useState<any>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -27,11 +26,11 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     scrollToBottom();
   }, [messages, sending]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || sending) return;
+  const handleSend = async (e?: React.FormEvent, overrideText?: string) => {
+    if (e) e.preventDefault();
+    const userText = overrideText || inputMessage;
+    if (!userText.trim() || sending) return;
 
-    const userText = inputMessage;
     setInputMessage('');
     setMessages((prev) => [...prev, { role: 'user', content: userText }]);
     setSending(true);
@@ -43,20 +42,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
     if (apiBase === undefined || apiBase === null) {
       apiBase = (import.meta as any).env?.VITE_API_URL || '';
     }
-    const streamUrl = apiBase
-      ? `${apiBase.replace(/\/$/, '')}/api/v1/playground/chat-stream`
-      : '/api/v1/playground/chat-stream';
-
-    let currentTenantSlug = '';
-    try {
-      const saved = localStorage.getItem('kaizech_tenant_session');
-      if (saved) {
-        const session = JSON.parse(saved);
-        if (session?.tenant?.slug) {
-          currentTenantSlug = session.tenant.slug;
-        }
-      }
-    } catch (e) {}
+    const streamUrl = `${apiBase}/api/v1/channels/chat-stream`;
 
     try {
       const response = await fetch(streamUrl, {
@@ -64,13 +50,16 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'x-tenant-slug': currentTenantSlug,
         },
-        body: JSON.stringify({ message: userText }),
+        body: JSON.stringify({
+          message: userText,
+          sessionId: 'dashboard-preview',
+          channel: 'web',
+        }),
       });
 
       if (!response.ok) {
-        // Fallback to standard POST endpoint if streaming route is not available (e.g., 404/405)
+        // Fallback to standard POST endpoint if streaming fails
         const res = await axios.post(
           '/api/v1/playground/chat',
           { message: userText },
@@ -79,52 +68,55 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         const data = res.data;
         setMessages((prev) => {
           const newArr = [...prev];
-          newArr[newArr.length - 1] = { role: 'assistant', content: data.response };
+          newArr[newArr.length - 1] = { role: 'assistant', content: data.response, interactive: data.metadata?.interactive || data.interactive };
           return newArr;
         });
         setLastDebugInfo(data);
-        return;
-      }
+      } else {
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let assistantContent = '';
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = '';
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-      if (reader) {
-        let buffer = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+            const chunkStr = decoder.decode(value, { stream: true });
+            const lines = chunkStr.split('\n');
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith('data: ')) {
-              const rawJson = trimmed.slice(6);
-              try {
-                const parsed = JSON.parse(rawJson);
-                if (parsed.chunk) {
-                  assistantContent += parsed.chunk;
-                  setMessages((prev) => {
-                    const newArr = [...prev];
-                    newArr[newArr.length - 1] = { role: 'assistant', content: assistantContent };
-                    return newArr;
-                  });
-                } else if (parsed.event === 'DONE' && parsed.meta) {
-                  setLastDebugInfo(parsed.meta);
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('data: ')) {
+                const rawJson = trimmed.slice(6);
+                try {
+                  const parsed = JSON.parse(rawJson);
+                  if (parsed.chunk) {
+                    assistantContent += parsed.chunk;
+                    setMessages((prev) => {
+                      const newArr = [...prev];
+                      newArr[newArr.length - 1] = { ...newArr[newArr.length - 1], role: 'assistant', content: assistantContent };
+                      return newArr;
+                    });
+                  } else if (parsed.event === 'DONE' && parsed.meta) {
+                    setLastDebugInfo(parsed.meta);
+                    if (parsed.meta.metadata?.interactive) {
+                      setMessages((prev) => {
+                        const newArr = [...prev];
+                        newArr[newArr.length - 1].interactive = parsed.meta.metadata.interactive;
+                        return newArr;
+                      });
+                    }
+                  }
+                } catch {
+                  // Ignore incomplete parse
                 }
-              } catch {
-                // Ignore incomplete frame JSON parse errors
               }
             }
           }
         }
       }
     } catch (err: any) {
-      // If streaming fails, try standard endpoint fallback
       try {
         const res = await axios.post(
           '/api/v1/playground/chat',
@@ -134,7 +126,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         const data = res.data;
         setMessages((prev) => {
           const newArr = [...prev];
-          newArr[newArr.length - 1] = { role: 'assistant', content: data.response };
+          newArr[newArr.length - 1] = { role: 'assistant', content: data.response, interactive: data.metadata?.interactive };
           return newArr;
         });
         setLastDebugInfo(data);
@@ -147,20 +139,21 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
       }
     } finally {
       setSending(false);
-      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div>
-        <h2 style={{ fontSize: '24px', fontWeight: 800 }}>AI Playground</h2>
-        <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+    <div style={{ animation: 'fade-in 0.4s ease-out' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+          AI Playground
+        </h2>
+        <p style={{ color: 'var(--text-muted)' }}>
           Test your AI Agent live with instant prompt, RAG, tool call, and token usage inspection.
         </p>
       </div>
 
-      <div className="responsive-split-view" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px', height: '650px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', height: 'calc(100vh - 200px)' }}>
         {/* Chat Window */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -181,7 +174,7 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
                 }}
               >
                 {msg.role === 'assistant' && (
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--gradient-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--gradient-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Bot size={16} color="#fff" />
                   </div>
                 )}
@@ -195,33 +188,77 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
                     color: msg.role === 'user' ? '#ffffff' : 'var(--text-main)',
                     border: msg.role === 'user' ? 'none' : '1px solid var(--border-glass)',
                     boxShadow: msg.role === 'user' ? 'var(--glow-primary)' : 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}
                 >
                   <FormattedMessage content={msg.content} />
+                  
+                  {/* RENDER BUTTONS HERE */}
+                  {msg.interactive?.buttons && msg.interactive.buttons.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                      {msg.interactive.buttons.map((btn: any, i: number) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSend(undefined, btn.payload)}
+                          style={{
+                            padding: '10px 16px',
+                            background: 'var(--bg-surface-elevated)',
+                            border: '1px solid var(--accent-primary)',
+                            borderRadius: '10px',
+                            color: 'var(--accent-primary)',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            textAlign: 'center',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'var(--accent-primary)';
+                            e.currentTarget.style.color = '#fff';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'var(--bg-surface-elevated)';
+                            e.currentTarget.style.color = 'var(--accent-primary)';
+                          }}
+                        >
+                          {btn.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {msg.role === 'user' && (
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <User size={16} color="#fff" />
                   </div>
                 )}
               </div>
             ))}
             {sending && (
-              <div style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '44px' }}>
                 <Sparkles size={14} className="animate-spin" /> Thinking & executing decision flow...
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSend} style={{ padding: '16px', borderTop: '1px solid var(--border-glass)', display: 'flex', gap: '10px' }}>
+          <form onSubmit={(e) => handleSend(e)} style={{ padding: '16px', borderTop: '1px solid var(--border-glass)', display: 'flex', gap: '10px' }}>
             <input
-              ref={inputRef}
               type="text"
-              className="input-field"
-              placeholder="Ask a question or request a business operation..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Ask a question or request a business operation..."
+              style={{
+                flex: 1,
+                background: 'var(--bg-surface-elevated)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '8px',
+                padding: '10px 16px',
+                color: 'var(--text-main)',
+                fontSize: '14px',
+              }}
+              disabled={sending}
             />
             <Button type="submit" variant="primary" loading={sending} icon={!sending && <Send size={16} />} />
           </form>
