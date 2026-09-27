@@ -170,9 +170,31 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', height: 'calc(100vh - 200px)' }}>
+      <style>
+        {`
+          .playground-container {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            height: calc(100vh - 200px);
+          }
+          @media (max-width: 900px) {
+            .playground-container {
+              grid-template-columns: 1fr;
+              height: auto;
+              min-height: calc(100vh - 200px);
+            }
+            .playground-chat-window {
+              height: 65vh;
+              margin-bottom: 24px;
+            }
+          }
+        `}
+      </style>
+
+      <div className="playground-container">
         {/* Chat Window */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="glass-card playground-chat-window" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bot size={20} color="var(--accent-primary)" />
             <span style={{ fontWeight: 700 }}>Interactive Chat Debugger</span>
