@@ -17,6 +17,7 @@ import { IndustriesModule } from './modules/industries/industries.module';
 import { LearningsModule } from './modules/learnings/learnings.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { VoiceOnboardingModule } from './modules/voice-onboarding/voice-onboarding.module';
+import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DocsController } from './docs.controller';
 
@@ -53,6 +54,7 @@ import * as path from 'path';
     LearningsModule,
     ContactModule,
     VoiceOnboardingModule,
+    WorkflowsModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [DocsController],

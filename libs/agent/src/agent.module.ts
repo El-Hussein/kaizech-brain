@@ -10,15 +10,24 @@ import { AIProviderFactory } from './providers/ai-provider.factory';
 import { AgentOrchestratorService } from './agent-orchestrator.service';
 import { RagAgentDagService } from './rag-agent-dag.service';
 
+import { HttpModule } from '@nestjs/axios';
+import { CacheModule } from '@nestjs/cache-manager';
+import { DecisionTreeService } from './decision-tree.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { WorkflowEntity } from '@kaizech/database/entities/workflow.entity';
+
 @Module({
   imports: [
+    TypeOrmModule.forFeature([WorkflowEntity]),
     ConfigModule,
+    HttpModule,
+    CacheModule.register(),
     PromptsModule,
     MemoryModule,
     ToolsModule,
     RAGModule,
   ],
-  providers: [OpenAIProvider, GroqProvider, AIProviderFactory, AgentOrchestratorService, RagAgentDagService],
-  exports: [AgentOrchestratorService, AIProviderFactory, OpenAIProvider, GroqProvider, MemoryModule, RagAgentDagService],
+  providers: [OpenAIProvider, GroqProvider, AIProviderFactory, AgentOrchestratorService, RagAgentDagService, DecisionTreeService],
+  exports: [AgentOrchestratorService, AIProviderFactory, OpenAIProvider, GroqProvider, MemoryModule, RagAgentDagService, DecisionTreeService],
 })
 export class AgentModule {}

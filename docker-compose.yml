@@ -46,16 +46,9 @@ services:
     env_file:
       - .env
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: kaizech
-      DB_PASSWORD: kaizech_secret_2024
-      DB_DATABASE: kaizech_brain
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -64,6 +57,8 @@ services:
     build:
       context: .
       dockerfile: apps/dashboard/Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:3000
     container_name: kaizech-dashboard
     restart: unless-stopped
     ports:
@@ -76,6 +71,8 @@ services:
     build:
       context: .
       dockerfile: apps/admin/Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:3000
     container_name: kaizech-admin
     restart: unless-stopped
     ports:
@@ -88,6 +85,8 @@ services:
     build:
       context: .
       dockerfile: apps/landing/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:3000
     container_name: kaizech-landing
     restart: unless-stopped
     ports:

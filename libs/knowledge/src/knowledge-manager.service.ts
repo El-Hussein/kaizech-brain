@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KnowledgeSourceEntity, KnowledgeChunkEntity, TenantEntity, KnowledgeNodeEntity, KnowledgeEdgeEntity } from '@kaizech/database';
 import { VectorSearchService } from '@kaizech/rag';
-import { AIProviderFactory } from '@kaizech/agent';
+import { AIProviderFactory } from '../../agent/src/providers/ai-provider.factory';
 import { DocumentParserService } from './document-parser.service';
 import { WebsiteCrawlerService } from './website-crawler.service';
 import { KnowledgeSourceType, KnowledgeStatus, KnowledgeProcessingException } from '@kaizech/shared';

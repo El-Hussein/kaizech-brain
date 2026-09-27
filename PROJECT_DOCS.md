@@ -288,40 +288,57 @@ Your tenant customer panel provides a unified control center for your AI Assista
 ```mermaid
 graph LR
     A[Tenant Dashboard] --> B[📊 Overview]
-    A --> C[📚 Knowledge Base]
-    A --> D[✍️ Prompt Builder]
-    A --> E[🛠️ Tools]
-    A --> F[🔑 Settings]
-    A --> G[🧪 Playground]
-    A --> H[💬 Conversations]
+    A --> C[🎙️ Voice Onboarding]
+    A --> D[📚 Knowledge Base]
+    A --> E[🧠 AI Memory & Rules]
+    A --> F[✍️ Prompt Builder]
+    A --> G[🛠️ Tools & Tester]
+    A --> H[🎨 Web Widget]
+    A --> I[💬 Live Inbox]
+    A --> J[🧪 Playground]
+    A --> K[🔑 Settings]
 
     B --> B1[Total Messages & Cost Tracking]
     B --> B2[Resolution Rate & Latency]
     B --> B3[Agent System Health Status]
 
-    C --> C1[Document Upload PDF/DOCX/XLSX/MD]
-    C --> C2[FAQ Key-Value Pair Importer]
-    C --> C3[Website Content Crawler]
-    C --> C4[Chunk Viewer Modal]
+    C --> C1[AI-Guided Voice Interview]
+    C --> C2[Arabic & English Speech-to-Text]
+    C --> C3[AI Readiness Scoring 0-100%]
+    C --> C4[Freestyle Quick Voice Notes]
 
-    D --> D1[Identity & Role Configuration]
-    D --> D2[Business Policies & Safety Rules]
-    D --> D3[Tone of Voice & Presets]
-    D --> D4[Live compiled Prompt Preview]
+    D --> D1[Document Upload PDF/DOCX/TXT/CSV]
+    D --> D2[FAQ Key-Value Pair Importer]
+    D --> D3[Website Content Crawler]
+    D --> D4[Semantic Chunks & pgvector]
 
-    E --> E1[Register Tool Manifests]
-    E --> E2[Interactive API Tool Tester]
-    E --> E3[Active Tools Grid]
+    E --> E1[Continuous Autonomous Learning]
+    E --> E2[Unhandled Intent Detection]
+    E --> E3[Human-in-the-Loop Rule Approvals]
+    E --> E4[Batch AI Extraction Engine]
 
-    F --> F1[API Key Generator & Revocation]
-    F --> F2[WhatsApp Webhook Config & HMAC Secret]
-    F --> F3[Direct REST API Documentation]
+    F --> F1[Identity & Role Configuration]
+    F --> F2[Business Policies & Safety Rules]
+    F --> F3[Tone of Voice & Presets]
+    F --> F4[Live Compiled Prompt Preview]
 
-    G --> G1[Live Sandbox Chat Interface]
-    G --> G2[RAG Chunks & Tool Execution Inspector]
+    G --> G1[Register Custom API Manifests]
+    G --> G2[Interactive API Tool Tester]
+    G --> G3[Auto-fill Sample Payloads]
 
-    H --> H1[Conversation History Logs]
-    H --> H2[Human Handoff Tickets Tracking]
+    H --> H1[Shadow DOM 16KB Script Generator]
+    H --> H2[Brand Color & Avatar Customizer]
+
+    I --> I1[Real-Time Omnichannel Inbox]
+    I --> I2[Human Takeover & Handoff Routing]
+    I --> I3[Canned Quick Replies]
+
+    J --> J1[Live Sandbox Chat Interface]
+    J --> J2[RAG Chunks & Tool Execution Inspector]
+
+    K --> K1[API Key Generator & Revocation]
+    K --> K2[WhatsApp Webhook Config & HMAC Secret]
+    K --> K3[Direct REST & SSE API Reference]
 ```
 
 ---

@@ -9,16 +9,21 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.0",
-    "@nestjs/config": "^3.2.0",
-    "@kaizech/shared": "workspace:*",
     "@kaizech/database": "workspace:*",
-    "openai": "^4.52.0",
+    "@kaizech/shared": "workspace:*",
     "@langchain/core": "^0.3.0",
     "@langchain/langgraph": "^0.2.0",
     "@langchain/openai": "^0.3.0",
-    "zod": "^3.23.8",
+    "@nestjs/axios": "^12.0.1",
+    "@nestjs/cache-manager": "^12.0.0",
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/config": "^3.2.0",
     "@nestjs/typeorm": "^10.0.2",
-    "typeorm": "^0.3.20"
+    "axios": "^1.7.2",
+    "cache-manager": "^7.2.9",
+    "openai": "^4.52.0",
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.20",
+    "zod": "^3.23.8"
   }
 }

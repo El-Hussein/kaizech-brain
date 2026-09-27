@@ -17,6 +17,7 @@ import {
   BrainCircuit,
   Menu,
   X,
+  GitMerge,
 } from 'lucide-react';
 import axios from 'axios';
 import { LoginPage } from './components/LoginPage';
@@ -29,6 +30,7 @@ import { ConversationsTab } from './components/ConversationsTab';
 import { SettingsTab } from './components/SettingsTab';
 import { WidgetConfiguratorTab } from './components/WidgetConfiguratorTab';
 import { LearningsTab } from './components/LearningsTab';
+import { WorkflowsTab } from './components/WorkflowsTab';
 import { Button } from './components/ui/Button';
 
 interface LearningRule {
@@ -147,7 +149,7 @@ class ErrorBoundary extends React.Component<
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'embed' | 'conversations' | 'settings' | 'learnings'
+    'overview' | 'prompt' | 'knowledge' | 'tools' | 'playground' | 'embed' | 'conversations' | 'workflows' | 'settings' | 'learnings'
   >('overview');
 
   // Mobile Menu State
@@ -341,6 +343,12 @@ export const App: React.FC = () => {
             <MessageSquare size={18} /> Conversations & Support
           </li>
           <li
+            className={`nav-item ${activeTab === 'workflows' ? 'active' : ''}`}
+            onClick={() => handleTabClick('workflows' as any)}
+          >
+            <GitMerge size={18} /> FlowStudio
+          </li>
+          <li
             className={`nav-item ${activeTab === 'learnings' ? 'active' : ''}`}
             onClick={() => handleTabClick('learnings')}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
@@ -417,6 +425,7 @@ export const App: React.FC = () => {
             <WidgetConfiguratorTab apiKey={tenant.apiKey} tenantName={tenant.name} />
           )}
           {activeTab === 'conversations' && <ConversationsTab apiKey={tenant.apiKey} />}
+          {activeTab === 'workflows' && <WorkflowsTab apiKey={tenant.apiKey} tenantId={tenant.slug} />}
           {activeTab === 'learnings' && <LearningsTab />}
           {activeTab === 'settings' && <SettingsTab apiKey={tenant.apiKey} />}
         </ErrorBoundary>

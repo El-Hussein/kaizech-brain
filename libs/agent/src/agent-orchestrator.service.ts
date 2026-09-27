@@ -7,6 +7,7 @@ import { VectorSearchService } from '@kaizech/rag';
 import { RagAgentDagService } from './rag-agent-dag.service';
 import { AIProviderFactory } from './providers/ai-provider.factory';
 import { ChatMessage, MessageRole, ToolCall, ConversationStatus, ChatCompletionResult } from '@kaizech/shared';
+import { DecisionTreeService } from './decision-tree.service';
 
 export interface AgentProcessInput {
   tenant: TenantEntity;
@@ -23,6 +24,7 @@ export interface AgentProcessResult {
   status: string;
   toolCallsExecuted: Array<{ name: string; args: any; result: any }>;
   knowledgeSourcesUsed: number;
+  metadata?: any;
   tokenUsage: {
     promptTokens: number;
     completionTokens: number;
@@ -130,11 +132,30 @@ export class AgentOrchestratorService {
     private readonly toolExecutor: ToolExecutorService,
     private readonly vectorSearch: VectorSearchService,
     private readonly ragAgentDag: RagAgentDagService,
+    private readonly decisionTreeService: DecisionTreeService,
   ) {}
 
   async processMessage(input: AgentProcessInput): Promise<AgentProcessResult> {
     const startTime = Date.now();
     const { tenant, channelType, channelUserId, userMessage, displayName, metadata } = input;
+
+    const treeResponse = await this.decisionTreeService.handleMessage(tenant, {
+      text: userMessage,
+      payload: metadata?.payload
+    });
+
+    if (treeResponse.handled) {
+      return {
+        response: treeResponse.response,
+        conversationId: 'menu-flow',
+        status: 'completed',
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        metadata: { interactive: treeResponse.interactive }
+      };
+    }
 
     this.logger.log(`Processing message for tenant '${tenant.name}' user '${channelUserId}' via '${channelType}'`);
 
@@ -527,6 +548,25 @@ export class AgentOrchestratorService {
   ): Promise<AgentProcessResult> {
     const startTime = Date.now();
     const { tenant, channelType, channelUserId, userMessage, displayName, metadata } = input;
+
+    const treeResponse = await this.decisionTreeService.handleMessage(tenant, {
+      text: userMessage,
+      payload: metadata?.payload
+    });
+
+    if (treeResponse.handled) {
+      if (typeof onChunk === 'function') onChunk(treeResponse.response);
+      return {
+        response: treeResponse.response,
+        conversationId: 'menu-flow',
+        status: 'completed',
+        toolCallsExecuted: [],
+        knowledgeSourcesUsed: 0,
+        tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        responseTimeMs: Date.now() - startTime,
+        metadata: { interactive: treeResponse.interactive }
+      };
+    }
 
     // Execute initial DB operations in parallel ⚡
     const [userProfile, conversation, toolDefinitions] = await Promise.all([

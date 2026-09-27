@@ -20,6 +20,7 @@ import { ContactRequest } from './entities/contact-request.entity';
 import { InterviewQuestionEntity } from './entities/interview-question.entity';
 import { BusinessInterviewEntity } from './entities/business-interview.entity';
 import { InterviewResponseEntity } from './entities/interview-response.entity';
+import { WorkflowEntity } from './entities/workflow.entity';
 
 const entities = [
   TenantEntity,
@@ -41,6 +42,7 @@ const entities = [
   InterviewQuestionEntity,
   BusinessInterviewEntity,
   InterviewResponseEntity,
+  WorkflowEntity,
 ];
 
 @Global()

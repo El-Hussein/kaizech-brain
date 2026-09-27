@@ -131,6 +131,7 @@ export class ToolExecutorService {
       url: targetUrl,
       headers,
       timeout: tool?.timeoutMs || 30000,
+      validateStatus: (status) => status < 500, // allow 4xx responses to return data to LLM
     };
 
     if (requestConfig.method === 'GET') {

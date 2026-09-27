@@ -6,6 +6,7 @@ import { KnowledgeSourceEntity } from './knowledge-source.entity';
 import { ToolManifestEntity } from './tool-manifest.entity';
 import { PromptTemplateEntity } from './prompt-template.entity';
 import { IndustryEntity } from './industry.entity';
+import type { WorkflowEntity } from './workflow.entity';
 
 @Entity('tenants')
 export class TenantEntity extends BaseEntity {
@@ -46,6 +47,15 @@ export class TenantEntity extends BaseEntity {
     workingHours?: string;
   };
 
+  @Column({ type: 'jsonb', nullable: true, name: 'menu_config' })
+  menuConfig: {
+    isMenuEnabled: boolean;
+    welcomeMessage: string;
+    apiBaseUrl: string;
+    apiKey?: string;
+    cacheTtlMinutes: number;
+  };
+
   @Column({ type: 'text', nullable: true, name: 'business_description' })
   businessDescription: string;
 
@@ -78,4 +88,7 @@ export class TenantEntity extends BaseEntity {
     inverseJoinColumn: { name: 'industry_id', referencedColumnName: 'id' },
   })
   relatedIndustries: IndustryEntity[];
+
+  @OneToMany('WorkflowEntity', 'tenant')
+  workflows: WorkflowEntity[];
 }

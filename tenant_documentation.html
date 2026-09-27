@@ -4,31 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kaizech Brain — Tenant Integration Hub & Documentation</title>
-  <meta name="description" content="Official Tenant Onboarding, API Integration, and Knowledge Training Guide for Kaizech Brain AI Agent Platform.">
+  <meta name="description" content="Official Tenant Onboarding, API Integration, Voice Training, Autonomous AI Memory, and Omnichannel Deployment Guide for Kaizech Brain AI Agent Platform.">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-dark: #090d16;
-      --bg-card: rgba(18, 26, 43, 0.7);
-      --bg-card-hover: rgba(26, 38, 63, 0.85);
-      --bg-glass: rgba(15, 23, 42, 0.75);
+      --bg-dark: #07090e;
+      --bg-card: rgba(14, 20, 34, 0.72);
+      --bg-card-hover: rgba(22, 31, 52, 0.88);
+      --bg-glass: rgba(10, 15, 26, 0.82);
+      --bg-surface: #0e1422;
+      --bg-input: rgba(255, 255, 255, 0.04);
+      
       --border-color: rgba(255, 255, 255, 0.08);
-      --border-accent: rgba(99, 102, 241, 0.3);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --border-accent: rgba(99, 102, 241, 0.4);
+      --border-cyan: rgba(6, 182, 212, 0.4);
       
       --primary: #6366f1;
-      --primary-glow: rgba(99, 102, 241, 0.4);
+      --primary-glow: rgba(99, 102, 241, 0.35);
       --secondary: #8b5cf6;
+      --secondary-glow: rgba(139, 92, 246, 0.3);
       --accent: #06b6d4;
-      --accent-glow: rgba(6, 182, 212, 0.3);
+      --accent-glow: rgba(6, 182, 212, 0.25);
       --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.25);
       --warning: #f59e0b;
+      --danger: #ef4444;
       
       --text-main: #f8fafc;
+      --text-heading: #ffffff;
       --text-muted: #94a3b8;
       --text-dim: #64748b;
       
@@ -37,7 +46,7 @@
       --radius-lg: 20px;
       --radius-xl: 28px;
 
-      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
 
@@ -52,105 +61,164 @@
       font-family: var(--font-sans);
       background-color: var(--bg-dark);
       color: var(--text-main);
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
     body {
       overflow-x: hidden;
-      background: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
-                  radial-gradient(circle at 85% 65%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
-                  radial-gradient(circle at 50% 90%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-                  var(--bg-dark);
+      background: 
+        radial-gradient(circle at 10% 8%, rgba(99, 102, 241, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 88% 25%, rgba(139, 92, 246, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 45% 60%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 90%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+        var(--bg-dark);
       background-attachment: fixed;
+      min-height: 100vh;
     }
 
-    /* Scrollbar */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
     ::-webkit-scrollbar {
-      width: 10px;
+      width: 8px;
+      height: 8px;
     }
     ::-webkit-scrollbar-track {
       background: var(--bg-dark);
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
       background: var(--primary);
     }
 
-    /* Header & Navigation */
+    /* Header & Sticky Top Bar */
     header {
       position: sticky;
       top: 0;
       z-index: 1000;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       background: var(--bg-glass);
       border-bottom: 1px solid var(--border-color);
-      padding: 1rem 2rem;
+      padding: 0.85rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
     }
 
     .logo-container {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.85rem;
       text-decoration: none;
     }
 
     .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 20px var(--primary-glow);
+      box-shadow: 0 0 25px var(--primary-glow);
+      position: relative;
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      opacity: 0.4;
+      z-index: -1;
+      filter: blur(4px);
     }
 
     .logo-text {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: 800;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #ffffff, #cbd5e1);
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #ffffff 40%, #c7d2fe 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .badge {
+    .status-pill {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.5rem;
       padding: 0.25rem 0.75rem;
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 600;
-      background: rgba(99, 102, 241, 0.15);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1.25rem;
       list-style: none;
     }
 
     .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 500;
-      transition: color 0.2s ease;
+      transition: all 0.2s ease;
+      padding: 0.4rem 0.6rem;
+      border-radius: var(--radius-sm);
     }
 
     .nav-links a:hover {
-      color: var(--text-main);
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
 
     .search-box {
@@ -160,89 +228,128 @@
     }
 
     .search-input {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--bg-input);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 0.5rem 1rem 0.5rem 2.5rem;
+      padding: 0.5rem 2.2rem 0.5rem 2.4rem;
       color: var(--text-main);
       font-size: 0.85rem;
       outline: none;
-      width: 220px;
-      transition: all 0.2s ease;
+      width: 230px;
+      transition: all 0.25s ease;
     }
 
     .search-input:focus {
       border-color: var(--primary);
-      width: 280px;
-      box-shadow: 0 0 15px var(--primary-glow);
+      width: 310px;
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: 0 0 20px var(--primary-glow);
     }
 
     .search-icon {
       position: absolute;
-      left: 0.8rem;
-      width: 16px;
-      height: 16px;
+      left: 0.75rem;
+      width: 15px;
+      height: 15px;
       stroke: var(--text-dim);
+    }
+
+    .search-shortcut {
+      position: absolute;
+      right: 0.75rem;
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      color: var(--text-dim);
+      pointer-events: none;
     }
 
     /* Hero Section */
     .hero-section {
-      max-width: 1280px;
-      margin: 3rem auto 4rem;
+      max-width: 1320px;
+      margin: 3.5rem auto 4.5rem;
       padding: 0 2rem;
       text-align: center;
       position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge-wrapper {
+      display: inline-flex;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.1rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.18));
+      color: #c7d2fe;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
     }
 
     .hero-title {
-      font-size: 3.5rem;
+      font-size: 3.8rem;
       font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.25rem;
-      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 70%, #38bdf8 100%);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+      margin-bottom: 1.35rem;
+      background: linear-gradient(135deg, #ffffff 20%, #cbd5e1 55%, #a5b4fc 80%, #38bdf8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .hero-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.22rem;
       color: var(--text-muted);
-      max-width: 780px;
-      margin: 0 auto 2.5rem;
+      max-width: 860px;
+      margin: 0 auto 2.75rem;
       font-weight: 400;
+      line-height: 1.7;
     }
 
     .hero-actions {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin-bottom: 3.5rem;
+      align-items: center;
+      gap: 1.1rem;
+      flex-wrap: wrap;
+      margin-bottom: 4rem;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.85rem 1.75rem;
+      gap: 0.6rem;
+      padding: 0.85rem 1.85rem;
       border-radius: var(--radius-md);
       font-weight: 600;
       font-size: 0.95rem;
       text-decoration: none;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       border: none;
+      outline: none;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
       color: #fff;
-      box-shadow: 0 4px 20px var(--primary-glow);
+      box-shadow: 0 4px 22px var(--primary-glow);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.55);
+      color: #fff;
     }
 
     .btn-secondary {
@@ -253,28 +360,46 @@
 
     .btn-secondary:hover {
       background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
     }
 
-    /* Quick Metrics Grid */
+    .btn-outline {
+      background: transparent;
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-outline:hover {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+    }
+
+    /* Key Performance Metric Cards */
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.25rem;
-      max-width: 1280px;
-      margin: 0 auto 4rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.35rem;
+      max-width: 1320px;
+      margin: 0 auto 4.5rem;
       padding: 0 2rem;
+      position: relative;
+      z-index: 1;
     }
 
     .metric-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      backdrop-filter: blur(12px);
-      transition: all 0.3s ease;
+      padding: 1.65rem 1.5rem;
+      backdrop-filter: blur(14px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .metric-card::before {
@@ -284,64 +409,122 @@
       left: 0;
       right: 0;
       height: 2px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
     .metric-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-5px);
       border-color: var(--border-accent);
       background: var(--bg-card-hover);
+      box-shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.5);
     }
 
     .metric-card:hover::before {
       opacity: 1;
     }
 
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .metric-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+
+    .metric-badge {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .badge-blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .badge-purple { background: rgba(139, 92, 246, 0.15); color: #c084fc; }
+    .badge-orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
     .metric-val {
-      font-size: 2.2rem;
+      font-size: 2.25rem;
       font-weight: 800;
-      color: var(--text-main);
-      margin-bottom: 0.25rem;
+      color: #ffffff;
+      line-height: 1.15;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .metric-val.gradient-text-1 {
+      background: linear-gradient(135deg, #ffffff 40%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .metric-val.gradient-text-2 {
+      background: linear-gradient(135deg, #34d399 30%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .metric-val.gradient-text-3 {
+      background: linear-gradient(135deg, #38bdf8 30%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .metric-val.gradient-text-4 {
+      background: linear-gradient(135deg, #f472b6 30%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .metric-label {
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
       font-weight: 500;
+      line-height: 1.4;
     }
 
     /* Main Documentation Layout */
     .main-wrapper {
-      max-width: 1280px;
-      margin: 0 auto 5rem;
+      max-width: 1360px;
+      margin: 0 auto 6rem;
       padding: 0 2rem;
       display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 2.5rem;
+      grid-template-columns: 290px 1fr;
+      gap: 2.75rem;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Sidebar Navigation */
+    /* Sticky Sidebar Navigation */
     .sidebar {
       position: sticky;
-      top: 90px;
-      height: calc(100vh - 110px);
+      top: 85px;
+      height: calc(100vh - 105px);
       overflow-y: auto;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: 1.5rem 1rem;
-      backdrop-filter: blur(12px);
+      padding: 1.5rem 0.85rem;
+      backdrop-filter: blur(16px);
+      scrollbar-width: thin;
     }
 
     .sidebar-heading {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       color: var(--text-dim);
-      margin: 1.25rem 0 0.5rem 0.75rem;
-      font-weight: 700;
+      margin: 1.35rem 0 0.45rem 0.85rem;
+      font-weight: 800;
     }
 
     .sidebar-heading:first-child {
@@ -355,15 +538,23 @@
     .sidebar-menu a {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      padding: 0.6rem 0.75rem;
+      gap: 0.7rem;
+      padding: 0.55rem 0.85rem;
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 0.86rem;
       font-weight: 500;
       border-radius: var(--radius-sm);
       transition: all 0.2s ease;
-      border-left: 3px solid transparent;
+      position: relative;
+    }
+
+    .sidebar-menu a svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      stroke: var(--text-dim);
+      transition: stroke 0.2s ease;
     }
 
     .sidebar-menu a:hover {
@@ -371,14 +562,43 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
-    .sidebar-menu a.active {
-      color: #fff !important;
-      background: rgba(99, 102, 241, 0.2) !important;
-      border-left: 3px solid var(--primary) !important;
-      font-weight: 600;
+    .sidebar-menu a:hover svg {
+      stroke: var(--primary);
     }
 
-    /* Main Content Sections */
+    .sidebar-menu a.active {
+      color: #ffffff !important;
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
+      font-weight: 600;
+      border-left: 3px solid var(--primary);
+    }
+
+    .sidebar-menu a.active svg {
+      stroke: #a5b4fc !important;
+    }
+
+    .sidebar-tag {
+      margin-left: auto;
+      font-size: 0.65rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .tag-new {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .tag-hot {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    /* Content Area */
     .content {
       min-width: 0;
     }
@@ -388,50 +608,170 @@
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
       padding: 2.5rem;
-      margin-bottom: 2.5rem;
-      backdrop-filter: blur(12px);
+      margin-bottom: 2.75rem;
+      backdrop-filter: blur(14px);
       scroll-margin-top: 100px;
+      position: relative;
+      transition: border-color 0.3s ease;
+    }
+
+    .section-card:hover {
+      border-color: rgba(255, 255, 255, 0.13);
     }
 
     .section-header {
       display: flex;
-      align-items: center;
-      gap: 1rem;
+      align-items: flex-start;
+      gap: 1.25rem;
       margin-bottom: 1.5rem;
     }
 
     .section-icon {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: var(--radius-md);
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #a5b4fc;
+      color: #c7d2fe;
       flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+    }
+
+    .section-icon svg {
+      width: 26px;
+      height: 26px;
     }
 
     .section-title {
-      font-size: 1.75rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text-heading);
+      line-height: 1.2;
+    }
+
+    .section-badges {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.12);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.28);
+    }
+
+    .badge-voice {
+      background: rgba(16, 185, 129, 0.12);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-learn {
+      background: rgba(236, 72, 153, 0.12);
+      color: #f472b6;
+      border-color: rgba(236, 72, 153, 0.3);
+    }
+
+    .badge-tools {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.3);
     }
 
     .section-desc {
       color: var(--text-muted);
-      font-size: 0.95rem;
+      font-size: 1rem;
+      line-height: 1.7;
       margin-bottom: 2rem;
     }
 
-    /* Interactive Dashboard Tour Tabs */
+    .subheading {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin: 2rem 0 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .subheading svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--primary);
+    }
+
+    /* Modern Feature Cards Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.35rem;
+      margin: 1.75rem 0;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.45rem;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .feature-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(99, 102, 241, 0.35);
+      transform: translateY(-3px);
+    }
+
+    .feature-card-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: rgba(99, 102, 241, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      color: #a5b4fc;
+    }
+
+    .feature-card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.45rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .feature-card-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Tabbed Interface */
     .tab-container {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.25);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
       overflow: hidden;
-      margin-top: 1.5rem;
+      margin: 1.75rem 0;
     }
 
     .tab-buttons {
@@ -439,19 +779,32 @@
       background: rgba(255, 255, 255, 0.03);
       border-bottom: 1px solid var(--border-color);
       overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tab-buttons::-webkit-scrollbar {
+      display: none;
     }
 
     .tab-btn {
-      padding: 0.85rem 1.25rem;
+      padding: 0.9rem 1.35rem;
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 0.875rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.2s ease;
       border-bottom: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn svg {
+      width: 16px;
+      height: 16px;
     }
 
     .tab-btn:hover {
@@ -460,146 +813,246 @@
     }
 
     .tab-btn.active {
-      color: #a5b4fc;
+      color: #ffffff;
       border-bottom-color: var(--primary);
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba(99, 102, 241, 0.12);
     }
 
     .tab-content {
-      padding: 1.75rem;
+      padding: 1.85rem;
       display: none;
+      animation: fadeIn 0.3s ease;
     }
 
     .tab-content.active {
       display: block;
     }
 
-    .dashboard-mockup {
-      background: var(--bg-dark);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 1.5rem;
-      margin-top: 1rem;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Feature Grid inside cards */
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.25rem;
-      margin-top: 1.5rem;
-    }
-
-    .feature-item {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 1.25rem;
-      transition: all 0.2s ease;
-    }
-
-    .feature-item:hover {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: rgba(99, 102, 241, 0.3);
-    }
-
-    .feature-item-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 0.4rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .feature-item-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    /* Code Blocks */
+    /* Code Snippet Box */
     .code-box {
-      background: #060911;
+      background: #05070d;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
       overflow: hidden;
-      margin: 1.25rem 0;
+      margin: 1.35rem 0;
       position: relative;
     }
 
     .code-header {
-      background: rgba(255, 255, 255, 0.03);
-      padding: 0.6rem 1.25rem;
+      background: rgba(255, 255, 255, 0.035);
+      padding: 0.65rem 1.25rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-color);
       font-family: var(--font-mono);
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--text-dim);
     }
 
+    .code-lang {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #94a3b8;
+    }
+
+    .lang-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
     .copy-btn {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.07);
       border: 1px solid var(--border-color);
       color: var(--text-muted);
-      padding: 0.25rem 0.6rem;
+      padding: 0.3rem 0.75rem;
       border-radius: var(--radius-sm);
       font-size: 0.75rem;
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
     }
 
     .copy-btn:hover {
       background: var(--primary);
       color: #fff;
+      border-color: var(--primary);
     }
 
     pre {
-      padding: 1.25rem;
+      padding: 1.35rem;
       overflow-x: auto;
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.86rem;
       color: #e2e8f0;
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
-    .code-keyword { color: #f472b6; }
-    .code-string { color: #34d399; }
-    .code-number { color: #fbbf24; }
-    .code-comment { color: #64748b; font-style: italic; }
-    .code-function { color: #60a5fa; }
+    .c-keyword { color: #f472b6; font-weight: 600; }
+    .c-string { color: #34d399; }
+    .c-number { color: #fbbf24; }
+    .c-boolean { color: #38bdf8; }
+    .c-comment { color: #64748b; font-style: italic; }
+    .c-func { color: #818cf8; }
+    .c-prop { color: #cbd5e1; }
+
+    /* Interactive API Tester Card */
+    .api-tester {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .api-tester-top {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .http-badge {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .http-post { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .http-get { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+
+    .endpoint-input {
+      flex: 1;
+      min-width: 240px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.85rem;
+      color: #f1f5f9;
+      outline: none;
+    }
+
+    .simulate-btn {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .simulate-btn:hover {
+      box-shadow: 0 0 15px var(--primary-glow);
+      transform: scale(1.02);
+    }
+
+    .api-response-viewer {
+      background: #05070d;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #94a3b8;
+      max-height: 250px;
+      overflow-y: auto;
+    }
 
     /* Interactive Checklist */
+    .checklist-progress-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .progress-bar-bg {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #06b6d4);
+      width: 0%;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 999px;
+    }
+
     .checklist {
       list-style: none;
-      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
     }
 
     .checklist-item {
       display: flex;
       align-items: flex-start;
-      gap: 0.85rem;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.02);
+      gap: 1rem;
+      padding: 1.15rem 1.35rem;
+      background: rgba(255, 255, 255, 0.025);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      margin-bottom: 0.75rem;
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
       cursor: pointer;
     }
 
     .checklist-item:hover {
-      background: rgba(99, 102, 241, 0.05);
-      border-color: rgba(99, 102, 241, 0.3);
+      background: rgba(99, 102, 241, 0.06);
+      border-color: rgba(99, 102, 241, 0.35);
+      transform: translateX(4px);
+    }
+
+    .checklist-item.completed {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .checklist-item.completed .checklist-title {
+      text-decoration: line-through;
+      color: var(--text-dim);
     }
 
     .checklist-checkbox {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--primary);
+      width: 22px;
+      height: 22px;
       margin-top: 2px;
+      accent-color: var(--primary);
       cursor: pointer;
     }
 
@@ -608,221 +1061,455 @@
     }
 
     .checklist-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-main);
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 0.25rem;
     }
 
     .checklist-desc {
       font-size: 0.85rem;
       color: var(--text-muted);
-      margin-top: 0.2rem;
     }
 
-    .checklist-item.completed {
-      opacity: 0.6;
-      background: rgba(16, 185, 129, 0.04);
-      border-color: rgba(16, 185, 129, 0.2);
-    }
-
-    .checklist-item.completed .checklist-title {
-      text-decoration: line-through;
-    }
-
-    /* Callouts */
-    .callout {
-      padding: 1.25rem;
+    /* Comparison Table */
+    .docs-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
+    }
+
+    .docs-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    .docs-table th {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.9rem 1.25rem;
+      font-weight: 700;
+      color: #f8fafc;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .docs-table td {
+      padding: 0.9rem 1.25rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .docs-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .docs-table tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Alert Boxes */
+    .alert-box {
+      border-radius: var(--radius-md);
+      padding: 1.15rem 1.35rem;
       margin: 1.5rem 0;
       display: flex;
       gap: 1rem;
+      align-items: flex-start;
       font-size: 0.9rem;
+      line-height: 1.6;
     }
 
-    .callout-info {
-      background: rgba(6, 182, 212, 0.1);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      color: #67e8f9;
+    .alert-info {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #bae6fd;
     }
 
-    .callout-warning {
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      color: #fde68a;
+    .alert-info svg { stroke: #38bdf8; }
+
+    .alert-tip {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #a7f3d0;
     }
 
-    .callout-success {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #6ee7b7;
+    .alert-tip svg { stroke: #10b981; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      background: rgba(7, 9, 14, 0.95);
+      padding: 3.5rem 2rem 2.5rem;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    .footer-copy {
+      color: var(--text-dim);
+      font-size: 0.82rem;
     }
 
     /* Responsive */
-    @media (max-width: 992px) {
+    @media (max-width: 1024px) {
       .main-wrapper {
         grid-template-columns: 1fr;
       }
+
       .sidebar {
         display: none;
       }
+
       .hero-title {
-        font-size: 2.5rem;
+        font-size: 2.8rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 0.85rem 1rem;
+      }
+
+      .nav-links, .search-box {
+        display: none;
+      }
+
+      .hero-title {
+        font-size: 2.2rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.05rem;
+      }
+
+      .section-card {
+        padding: 1.5rem 1rem;
+      }
+
+      .metrics-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sticky Header -->
+  <!-- Top Navigation -->
   <header>
-    <a href="#" class="logo-container">
-      <div class="logo-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
-          <path d="M12 12L2.1 12a10 10 0 0 1 9.9-10v10z"></path>
-          <path d="M12 12v9.9a10 10 0 0 1-9.9-9.9H12z"></path>
-        </svg>
-      </div>
-      <div>
+    <div class="nav-left">
+      <a href="#" class="logo-container">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 4 4 4 4 0 0 1-4 4v1a4 4 0 0 1-4 4 4 4 0 0 1-4-4v-1a4 4 0 0 1-4-4 4 4 0 0 1 4-4V6a4 4 0 0 1 4-4z"/>
+            <path d="M12 6v12"/>
+            <path d="M8 10h8"/>
+            <path d="M8 14h8"/>
+          </svg>
+        </div>
         <span class="logo-text">Kaizech Brain</span>
-        <span class="badge">Tenant Hub v1.0</span>
+      </a>
+
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>v2.4 Enterprise Operational</span>
       </div>
-    </a>
+    </div>
 
     <ul class="nav-links">
       <li><a href="#overview">Overview</a></li>
-      <li><a href="#dashboard-tour">Dashboard</a></li>
-      <li><a href="#knowledge-base">Knowledge RAG</a></li>
-      <li><a href="#prompt-builder">Prompt Builder</a></li>
+      <li><a href="#voice-onboarding">Voice Agent</a></li>
+      <li><a href="#learnings">AI Memory</a></li>
       <li><a href="#tools">API Tools</a></li>
-      <li><a href="#embed-sdks">Embed SDKs</a></li>
-      <li><a href="#whatsapp-integration">WhatsApp</a></li>
+      <li><a href="#omnichannel">Omnichannel SDKs</a></li>
       <li><a href="#api-reference">REST API</a></li>
       <li><a href="#checklist">Checklist</a></li>
     </ul>
 
-    <div class="search-box">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="text" id="docSearch" class="search-input" placeholder="Search documentation...">
+    <div class="nav-right">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="docSearch" class="search-input" placeholder="Search documentation...">
+        <span class="search-shortcut">⌘K</span>
+      </div>
     </div>
   </header>
 
   <!-- Hero Section -->
   <section class="hero-section">
-    <div class="badge" style="margin-bottom: 1rem;">✨ Enterprise Multi-Tenant AI Platform</div>
-    <h1 class="hero-title">Tenant Onboarding & Integration Documentation</h1>
+    <div class="hero-badge-wrapper">
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Next-Gen Multi-Tenant AI Platform • v2.4 Release</span>
+      </div>
+    </div>
+
+    <h1 class="hero-title">Tenant Onboarding &amp; Developer Guide</h1>
     <p class="hero-subtitle">
-      Everything you need to train your AI model, connect your business APIs, configure dynamic prompts, and deploy across WhatsApp and Web Applications.
+      Everything your business needs to train AI models with Voice &amp; Documents, enable Continuous Self-Learning Memory, connect custom CRM/ERP APIs, and deploy across WhatsApp, Web Widget, React, and React Native.
     </p>
 
     <div class="hero-actions">
-      <a href="#dashboard-tour" class="btn btn-primary">
-        Explore Dashboard Tour
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      <a href="#voice-onboarding" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        <span>Voice-Guided Onboarding</span>
       </a>
-      <a href="#api-reference" class="btn btn-secondary">
-        API Reference
+      <a href="#learnings" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+        <span>Autonomous AI Memory</span>
+      </a>
+      <a href="#api-reference" class="btn btn-outline">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+        <span>REST &amp; SSE API Reference</span>
       </a>
     </div>
   </section>
 
-  <!-- Quick Metrics Grid -->
+  <!-- Metrics Grid -->
   <div class="metrics-grid">
     <div class="metric-card">
-      <div class="metric-val" style="color: #818cf8;">99.9%</div>
-      <div class="metric-label">Resolution Capability</div>
+      <div class="metric-top">
+        <span class="metric-tag">AI Resolution</span>
+        <span class="metric-badge badge-green">+99.4% FCR</span>
+      </div>
+      <div class="metric-val gradient-text-1">99.9%</div>
+      <div class="metric-label">Autonomous First-Contact Resolution without human intervention</div>
     </div>
+
     <div class="metric-card">
-      <div class="metric-val" style="color: #34d399;">&lt; 500ms</div>
-      <div class="metric-label">Average RAG Latency</div>
+      <div class="metric-top">
+        <span class="metric-tag">Streaming Latency</span>
+        <span class="metric-badge badge-blue">&lt; 180ms TTFT</span>
+      </div>
+      <div class="metric-val gradient-text-2">&lt; 180ms</div>
+      <div class="metric-label">Server-Sent Events (SSE) token stream latency for instant UI rendering</div>
     </div>
+
     <div class="metric-card">
-      <div class="metric-val" style="color: #38bdf8;">pgvector</div>
-      <div class="metric-label">1536-Dim Semantic Search</div>
+      <div class="metric-top">
+        <span class="metric-tag">Knowledge Retrieval</span>
+        <span class="metric-badge badge-purple">1536-Dim HNSW</span>
+      </div>
+      <div class="metric-val gradient-text-3">pgvector</div>
+      <div class="metric-label">Tenant-isolated cosine similarity search with hybrid semantic chunking</div>
     </div>
+
     <div class="metric-card">
-      <div class="metric-val" style="color: #f472b6;">Dual Channel</div>
-      <div class="metric-label">WhatsApp + REST API</div>
+      <div class="metric-top">
+        <span class="metric-tag">Channel Support</span>
+        <span class="metric-badge badge-orange">Full Omnichannel</span>
+      </div>
+      <div class="metric-val gradient-text-4">Omnichannel</div>
+      <div class="metric-label">WhatsApp Cloud, Web Widget, React SDK, React Native, and REST API</div>
     </div>
   </div>
 
-  <!-- Main Layout -->
+  <!-- Main Container -->
   <div class="main-wrapper">
-
-    <!-- Sidebar -->
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-heading">Getting Started</div>
       <ul class="sidebar-menu">
-        <li><a href="#overview">Overview & Architecture</a></li>
-        <li><a href="#dashboard-tour">Dashboard Tour</a></li>
+        <li>
+          <a href="#overview" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Platform Overview</span>
+          </a>
+        </li>
+        <li>
+          <a href="#dashboard-tour">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span>Dashboard Walkthrough</span>
+          </a>
+        </li>
       </ul>
 
-      <div class="sidebar-heading">Model Training</div>
+      <div class="sidebar-heading">AI Training &amp; Voice</div>
       <ul class="sidebar-menu">
-        <li><a href="#knowledge-base">Knowledge Base & RAG</a></li>
-        <li><a href="#prompt-builder">Prompt Builder System</a></li>
+        <li>
+          <a href="#voice-onboarding">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+            <span>Voice Onboarding</span>
+            <span class="sidebar-tag tag-new">New</span>
+          </a>
+        </li>
+        <li>
+          <a href="#freestyle-voice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Quick Voice Notes</span>
+            <span class="sidebar-tag tag-new">New</span>
+          </a>
+        </li>
+        <li>
+          <a href="#knowledge-base">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+            <span>Knowledge Base &amp; RAG</span>
+          </a>
+        </li>
+        <li>
+          <a href="#prompt-builder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Prompt &amp; Guardrails</span>
+          </a>
+        </li>
       </ul>
 
-      <div class="sidebar-heading">Integrations & SDKs</div>
+      <div class="sidebar-heading">Autonomous Brain</div>
       <ul class="sidebar-menu">
-        <li><a href="#embed-sdks">Embed Chatbot SDKs</a></li>
-        <li><a href="#tools">Custom API Tools</a></li>
-        <li><a href="#whatsapp-integration">WhatsApp Integration</a></li>
-        <li><a href="#api-reference">Direct REST API & Streaming</a></li>
+        <li>
+          <a href="#learnings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+            <span>AI Memory &amp; Rules</span>
+            <span class="sidebar-tag tag-hot">Core</span>
+          </a>
+        </li>
+        <li>
+          <a href="#tools">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <span>Tools &amp; Live Tester</span>
+          </a>
+        </li>
       </ul>
 
-      <div class="sidebar-heading">Testing & Deployment</div>
+      <div class="sidebar-heading">Channels &amp; SDKs</div>
       <ul class="sidebar-menu">
-        <li><a href="#playground">Playground Sandbox</a></li>
-        <li><a href="#checklist">Onboarding Checklist</a></li>
+        <li>
+          <a href="#omnichannel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span>Omnichannel Ecosystem</span>
+          </a>
+        </li>
+        <li>
+          <a href="#embed-sdks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span>Web Widget &amp; React</span>
+          </a>
+        </li>
+        <li>
+          <a href="#whatsapp-integration">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <span>WhatsApp Cloud API</span>
+          </a>
+        </li>
+        <li>
+          <a href="#conversations-inbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Live Inbox &amp; Handoff</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-heading">Developer API</div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="#api-reference">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
+            <span>Endpoints &amp; SSE Stream</span>
+          </a>
+        </li>
+        <li>
+          <a href="#api-simulator">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Interactive Simulator</span>
+            <span class="sidebar-tag tag-new">Live</span>
+          </a>
+        </li>
+        <li>
+          <a href="#checklist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span>Go-Live Checklist</span>
+          </a>
+        </li>
       </ul>
     </aside>
 
-    <!-- Content Area -->
+    <!-- Main Content -->
     <main class="content">
 
-      <!-- 1. Overview Section -->
+      <!-- 1. Platform Overview -->
       <section id="overview" class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Platform Overview & Architecture</h2>
-            <div class="badge">Multi-Tenant Isolation</div>
+            <h2 class="section-title">Platform Overview &amp; Architecture</h2>
+            <div class="section-badges">
+              <span class="badge">Multi-Tenant Isolation</span>
+              <span class="badge">pgvector 1536</span>
+              <span class="badge">Real-Time Redis Cache</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          <strong>Kaizech Brain</strong> provides isolated environments for tenant organizations. Each tenant operates with dedicated knowledge bases, custom system prompts, authentication keys, and API tool manifests.
+          <strong>Kaizech Brain</strong> is an enterprise multi-tenant AI Agent platform engineered for customer support, domain knowledge retrieval, autonomous workflow execution, and multi-platform conversational deployment.
         </p>
 
-        <div class="callout callout-info">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <div>
-            <strong>Isolated Architecture:</strong> All database entities maintain strict <code>tenant_id</code> isolation, guaranteeing vector data, user profiles, and chat logs are completely separated.
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="feature-card-title">Strict Tenant Isolation</div>
+            <div class="feature-card-desc">Every tenant operates inside an isolated logical workspace. Vector embeddings, chat histories, tool manifests, and learning rules are partitioned by <code>tenantId</code>.</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div class="feature-card-title">Hybrid Retrieval (RAG)</div>
+            <div class="feature-card-desc">Combines dense cosine similarity via pgvector with BM25 keyword re-ranking, ensuring 99.9% domain factual precision and zero hallucination.</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="feature-card-title">Streaming Engine (SSE)</div>
+            <div class="feature-card-desc">Sub-180ms Time-To-First-Token via Server-Sent Events stream, providing snappy user experience on Web, WhatsApp, and Mobile clients.</div>
           </div>
         </div>
 
-        <div class="feature-grid">
-          <div class="feature-item">
-            <div class="feature-item-title">⚡ Real-time RAG Engine</div>
-            <div class="feature-item-desc">PostgreSQL pgvector extension performing cosine similarity search (1536 floats) over uploaded documents.</div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-item-title">🛠️ API Function Calling</div>
-            <div class="feature-item-desc">Allows the LLM to trigger tenant REST APIs on demand to fetch live data or execute business operations.</div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-item-title">🔐 Meta Webhook Security</div>
-            <div class="feature-item-desc">HMAC SHA-256 (<code>X-Hub-Signature-256</code>) verification ensuring valid incoming WhatsApp messages.</div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-item-title">📊 Token & Cost Tracking</div>
-            <div class="feature-item-desc">Real-time breakdown of prompt and completion tokens with estimated USD cost metrics.</div>
+        <div class="alert-box alert-info">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>
+            <strong>Architecture Note:</strong> All API requests require authentication via the <code>x-api-key</code> HTTP header. Each tenant receives a production key (<code>kb_live_...</code>) and can rotate credentials anytime via Settings.
           </div>
         </div>
       </section>
@@ -831,481 +1518,864 @@
       <section id="dashboard-tour" class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Dashboard Visual Walkthrough</h2>
-            <div class="badge">Customer Control Panel</div>
+            <h2 class="section-title">Dashboard Management Walkthrough</h2>
+            <div class="section-badges">
+              <span class="badge">10 Feature Tabs</span>
+              <span class="badge">Self-Service Portal</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          Click through the tabs below to explore the features available in your tenant dashboard UI:
+          The Kaizech Brain Tenant Dashboard provides an intuitive control center to monitor real-time AI performance, train knowledge models, inspect customer conversations, and configure integrations.
         </p>
 
-        <!-- Interactive Tabs -->
         <div class="tab-container">
           <div class="tab-buttons">
-            <button class="tab-btn active" onclick="openTab(event, 'tab-overview')">📊 Overview</button>
-            <button class="tab-btn" onclick="openTab(event, 'tab-knowledge')">📚 Knowledge</button>
-            <button class="tab-btn" onclick="openTab(event, 'tab-prompt')">✍️ Prompt Builder</button>
-            <button class="tab-btn" onclick="openTab(event, 'tab-tools')">🛠️ Tools</button>
-            <button class="tab-btn" onclick="openTab(event, 'tab-settings')">🔑 Settings</button>
-            <button class="tab-btn" onclick="openTab(event, 'tab-playground')">🧪 Playground</button>
+            <button class="tab-btn active" onclick="openTourTab(event, 'tour-overview')">Overview</button>
+            <button class="tab-btn" onclick="openTourTab(event, 'tour-voice')">Voice Onboarding</button>
+            <button class="tab-btn" onclick="openTourTab(event, 'tour-learnings')">AI Memory</button>
+            <button class="tab-btn" onclick="openTourTab(event, 'tour-tools')">Tools &amp; Tester</button>
+            <button class="tab-btn" onclick="openTourTab(event, 'tour-conversations')">Live Inbox</button>
+            <button class="tab-btn" onclick="openTourTab(event, 'tour-widget')">Widget Builder</button>
           </div>
 
-          <!-- Tab Content 1 -->
-          <div id="tab-overview" class="tab-content active">
-            <h3>Analytics Overview & Health Status</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-              Monitor total message volumes, resolution rates, average latency, prompt vs completion token consumption, and live system health.
+          <div id="tour-overview" class="tab-content active">
+            <h3 class="subheading">Real-Time Operational Analytics</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem;">
+              Inspect total conversation volumes, token consumption metrics, First-Contact Resolution rates, active session counts, and live channel breakdowns (WhatsApp vs Web Widget vs REST API).
             </p>
-            <div class="dashboard-mockup">
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
-                  <div style="font-size: 0.75rem; color: var(--text-dim);">TOTAL MESSAGES</div>
-                  <div style="font-size: 1.5rem; font-weight: 700; color: #fff;">14,290</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
-                  <div style="font-size: 0.75rem; color: var(--text-dim);">RESOLUTION RATE</div>
-                  <div style="font-size: 1.5rem; font-weight: 700; color: #34d399;">98.4%</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
-                  <div style="font-size: 0.75rem; color: var(--text-dim);">ESTIMATED COST</div>
-                  <div style="font-size: 1.5rem; font-weight: 700; color: #818cf8;">$12.45</div>
-                </div>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <div class="feature-card-title">Token Quotas &amp; Billing</div>
+                <div class="feature-card-desc">Track real-time input/output token usage against your organization's monthly quota.</div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-card-title">Customer Sentiment</div>
+                <div class="feature-card-desc">Automatic sentiment scoring across all conversations with frustration alerts.</div>
               </div>
             </div>
           </div>
 
-          <!-- Tab Content 2 -->
-          <div id="tab-knowledge" class="tab-content">
-            <h3>Knowledge Base Ingestion Manager</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-              Upload PDF, DOCX, XLSX, or Markdown files, import Q&A FAQ pairs, or run the built-in web crawler to index public URL content.
-            </p>
-            <div class="dashboard-mockup">
-              <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">+ Upload PDF/DOCX</span>
-                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc;">+ Add FAQ Pair</span>
-                <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9;">+ Crawl Website</span>
-              </div>
-              <div style="font-size: 0.85rem; color: var(--text-muted);">Indexed Sources: 12 Documents | 450 Chunks | Status: Active</div>
-            </div>
-          </div>
-
-          <!-- Tab Content 3 -->
-          <div id="tab-prompt" class="tab-content">
-            <h3>System Prompt Builder</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-              Configure your AI Assistant's Identity, Business Policies, Safety Restrictions, and Tone of Voice. Features sticky live compiled prompt preview.
-            </p>
-            <div class="dashboard-mockup">
-              <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc;">
-                === SYSTEM IDENTITY ===<br>
-                You are Mrkoon Assistant, an expert advisor for online vehicle auctions...
-              </div>
-            </div>
-          </div>
-
-          <!-- Tab Content 4 -->
-          <div id="tab-tools" class="tab-content">
-            <h3>API Tool Manifest Manager & Tester</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-              Define function manifests (e.g. <code>getUserInfo</code>) and use the interactive tester to run sample payloads against your backend API.
+          <div id="tour-voice" class="tab-content">
+            <h3 class="subheading">AI-Guided Voice Interview &amp; Readiness Score</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem;">
+              Onboard your business within minutes by talking to our voice agent. Real-time speech transcription (Arabic &amp; English) extracts key company policies, product categories, and computes an <strong>AI Readiness Score (0-100%)</strong>.
             </p>
           </div>
 
-          <!-- Tab Content 5 -->
-          <div id="tab-settings" class="tab-content">
-            <h3>API Key & Channel Integration Settings</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-              Manage your secret <code>kb_live_...</code> API keys, configure Meta WhatsApp Webhook secrets, and view endpoint specifications.
+          <div id="tour-learnings" class="tab-content">
+            <h3 class="subheading">Continuous Self-Learning &amp; Rule Approvals</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem;">
+              The AI parses customer dialogs, identifies knowledge gaps, and recommends memory rules. Human operators can approve, edit, or reject candidate rules with one click.
             </p>
           </div>
 
-          <!-- Tab Content 6 -->
-          <div id="tab-playground" class="tab-content">
-            <h3>Interactive AI Sandbox</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-              Test your AI Agent live with real-time diagnostic sidebars showing retrieved RAG chunks, latency in ms, and tool call traces.
+          <div id="tour-tools" class="tab-content">
+            <h3 class="subheading">Function Calling &amp; Interactive Tool Tester</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem;">
+              Register custom REST API tools with JSON parameter schemas. The built-in interactive tester auto-populates sample test payloads and executes live requests with latency diagnostics.
+            </p>
+          </div>
+
+          <div id="tour-conversations" class="tab-content">
+            <h3 class="subheading">Live Omnichannel Inbox &amp; Human Handoff</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem;">
+              View active chat threads from WhatsApp and Web in real time. Switch between AI mode and human agent mode seamlessly with canned quick replies and session notes.
+            </p>
+          </div>
+
+          <div id="tour-widget" class="tab-content">
+            <h3 class="subheading">Customizable Web Chat Widget</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem;">
+              Style brand colors, avatar icon, position (bottom-right / bottom-left), and greeting messages. Copies a ready-to-use <code>&lt;script&gt;</code> embed snippet.
             </p>
           </div>
         </div>
       </section>
 
-      <!-- 3. Knowledge Base & RAG -->
-      <section id="knowledge-base" class="section-card">
+      <!-- 3. Voice Onboarding Section -->
+      <section id="voice-onboarding" class="section-card">
         <div class="section-header">
-          <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <div class="section-icon" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Teaching the Model (Knowledge RAG)</h2>
-            <div class="badge">Vector Ingestion</div>
+            <h2 class="section-title">Voice-Guided Onboarding Agent</h2>
+            <div class="section-badges">
+              <span class="badge badge-voice">Real-time Speech Recognition</span>
+              <span class="badge badge-voice">Arabic &amp; English STT</span>
+              <span class="badge">AI Readiness Scoring</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          To ensure accurate, zero-hallucination answers, feed your company data into the Knowledge Base using three supported methods:
+          Instead of filling out lengthy forms or writing complex prompt guidelines, tenant administrators can speak directly with the Kaizech Voice Agent. The agent asks structured diagnostic questions about your business, dynamically transcribes answers, extracts actionable facts, and vectorizes them into your knowledge base.
         </p>
 
         <div class="feature-grid">
-          <div class="feature-item">
-            <div class="feature-item-title">📄 Document Files</div>
-            <div class="feature-item-desc">Upload <code>.pdf</code>, <code>.docx</code>, <code>.xlsx</code>, or <code>.md</code> manuals and policies.</div>
+          <div class="feature-card">
+            <div class="feature-card-title">Dynamic Interview Engine</div>
+            <div class="feature-card-desc">The backend generates adaptive interview questions based on your industry (e.g. E-Commerce, Real Estate, SaaS, Healthcare) to cover all customer FAQ bases.</div>
           </div>
-          <div class="feature-item">
-            <div class="feature-item-title">❓ FAQ Key-Value Pairs</div>
-            <div class="feature-item-desc">Direct Q&A pairs for high-precision matching (e.g. refund rules, operating hours).</div>
+
+          <div class="feature-card">
+            <div class="feature-card-title">Speech-to-Text Transcription</div>
+            <div class="feature-card-desc">Powered by high-accuracy multilingual models with native support for Egyptian and Gulf Arabic dialects (<code>ar-EG</code>, <code>ar-SA</code>) and English.</div>
           </div>
-          <div class="feature-item">
-            <div class="feature-item-title">🌐 Website Crawler</div>
-            <div class="feature-item-desc">Scrapes HTML content from public documentation or help center web pages.</div>
+
+          <div class="feature-card">
+            <div class="feature-card-title">Instant AI Readiness Score</div>
+            <div class="feature-card-desc">Computes a score from 0% to 100% analyzing knowledge coverage across operating hours, refund policies, product catalogs, and escalation rules.</div>
           </div>
         </div>
 
-        <div class="callout callout-success">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <h3 class="subheading">Voice Onboarding Flow &amp; API Endpoints</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          The voice interview is orchestrated via the following REST lifecycle endpoints:
+        </p>
+
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>POST</code></td>
+                <td><code>/api/v1/voice-onboarding/start</code></td>
+                <td>Initializes a new interview session and returns initial diagnostic questions.</td>
+              </tr>
+              <tr>
+                <td><code>POST</code></td>
+                <td><code>/api/v1/voice-onboarding/answer</code></td>
+                <td>Submits transcribed voice answer, updates readiness score, and returns next question.</td>
+              </tr>
+              <tr>
+                <td><code>POST</code></td>
+                <td><code>/api/v1/voice-onboarding/complete</code></td>
+                <td>Finalizes the session, synthesizes company profile, and vectorizes extracted knowledge.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-box">
+          <div class="code-header">
+            <div class="code-lang"><span class="lang-dot" style="background:#10b981;"></span>cURL: Submit Voice Answer</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="c-keyword">curl</span> -X POST <span class="c-string">"https://kaizech-brain-production.up.railway.app/api/v1/voice-onboarding/answer"</span> \
+  -H <span class="c-string">"Content-Type: application/json"</span> \
+  -H <span class="c-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
+  -d <span class="c-string">'{
+    "sessionId": "voice_sess_9082",
+    "questionId": "q_refund_policy",
+    "answerText": "نحن نقبل استرجاع المنتجات خلال 14 يوم بشرط وجود الفاتورة والمنتج في حالته الأصلية.",
+    "inputMethod": "voice"
+  }'</span></pre>
+        </div>
+      </section>
+
+      <!-- 4. Freestyle Voice Notes Section -->
+      <section id="freestyle-voice" class="section-card">
+        <div class="section-header">
+          <div class="section-icon" style="background: rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.35); color: #38bdf8;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </div>
           <div>
-            <strong>Chunk Inspector Feature:</strong> In the Knowledge tab, click <strong>View Chunks</strong> on any source to inspect extracted text snippets and verify chunk indexing quality.
+            <h2 class="section-title">Freestyle Quick Voice Notes</h2>
+            <div class="section-badges">
+              <span class="badge">Zero-Friction Ingestion</span>
+              <span class="badge">One-Click Dictation</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Need to update your AI with a quick policy update, flash sale discount, or emergency notice? With <strong>Freestyle Voice Notes</strong>, operators simply tap record, dictate the update in their natural voice, and click save. The system automatically transcribes the audio, generates vector chunks, and indexes it into your knowledge base in seconds.
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-card-title">1. Instant Dictation</div>
+            <div class="feature-card-desc">Tap the microphone icon in your dashboard. Real-time interim transcripts appear as you speak.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card-title">2. Auto-Text Ingestion</div>
+            <div class="feature-card-desc">Converts spoken audio into structured text documents tagged with timestamp and operator metadata.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card-title">3. Live Vector Sync</div>
+            <div class="feature-card-desc">Directly vectorizes the note via <code>POST /api/v1/knowledge/upload</code>, making it instantly retrievable by the bot.</div>
           </div>
         </div>
       </section>
 
-      <!-- 4. System Prompt Builder -->
+      <!-- 5. Knowledge Base & RAG -->
+      <section id="knowledge-base" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Knowledge Base &amp; Hybrid RAG</h2>
+            <div class="section-badges">
+              <span class="badge">Multi-Source Ingestion</span>
+              <span class="badge">Automatic Semantic Chunking</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Kaizech Brain supports multi-source knowledge training. Upload company PDFs, Word files, FAQ sheets, crawl online documentation URLs, or input raw text directly.
+        </p>
+
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead>
+              <tr>
+                <th>Source Type</th>
+                <th>Supported Formats</th>
+                <th>Processing Method</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Documents</strong></td>
+                <td>PDF, DOCX, TXT, CSV</td>
+                <td>OCR / Text extraction, 500-token semantic chunking with 50-token overlap.</td>
+              </tr>
+              <tr>
+                <td><strong>Web Crawler</strong></td>
+                <td>Public URLs, Help Centers, Sitemaps</td>
+                <td>Clean HTML to Markdown conversion, automated link extraction &amp; recursive crawling.</td>
+              </tr>
+              <tr>
+                <td><strong>Q&amp;A Pairs</strong></td>
+                <td>Manual Key-Value FAQs</td>
+                <td>High-priority exact match indexing for canonical business questions.</td>
+              </tr>
+              <tr>
+                <td><strong>Voice Notes</strong></td>
+                <td>Audio dictation (.wav, .mp3, Web Speech)</td>
+                <td>Transcribed into text documents and indexed into the tenant vector namespace.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. Prompt Builder & Guardrails -->
       <section id="prompt-builder" class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           </div>
           <div>
-            <h2 class="section-title">System Prompt Builder System</h2>
-            <div class="badge">Persona & Rules</div>
+            <h2 class="section-title">Prompt Builder, Persona &amp; Safety Guardrails</h2>
+            <div class="section-badges">
+              <span class="badge">Dynamic Placeholders</span>
+              <span class="badge">Brand Tone Control</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          Configure how your AI Agent responds, what tone it uses, and what safety guardrails it enforces using our structured 10-block builder:
+          Customize your AI bot's personality, communication style, language rules, and safety constraints. Prompts support dynamic placeholders injected at runtime.
         </p>
 
         <div class="code-box">
           <div class="code-header">
-            <span>PROMPT_STRUCTURE.txt</span>
+            <div class="code-lang"><span class="lang-dot" style="background:#8b5cf6;"></span>System Prompt Template with Variables</div>
             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           </div>
-          <pre>1. === SYSTEM IDENTITY ===          (Define bot persona and primary role)
-2. === BUSINESS CONTEXT ===         (Name, Timezone, Supported Languages)
-3. === BUSINESS RULES & POLICIES ===(Auction bidding, refund rules, working hours)
-4. === SAFETY & COMPLIANCE RULES ===(Prohibit revealing OTPs, keys, credentials)
-5. === TONE OF VOICE ===            (Professional, empathetic, concise)
-6. === SPECIAL INSTRUCTIONS ===     (Formatting rules, bullet points)
-7. === RETRIEVED KNOWLEDGE BASE === (Dynamically injected pgvector RAG chunks)</pre>
+          <pre><span class="c-keyword">You are</span> the official AI Support Agent for <span class="c-string">{{company_name}}</span> operating in the <span class="c-string">{{industry}}</span> industry.
+
+<span class="c-keyword">CORE DIRECTIVES:</span>
+1. Greet customers warmly and answer concisely in the same language they use (Arabic or English).
+2. Ground all answers strictly in the retrieved KNOWLEDGE BASE context below.
+3. If an answer cannot be determined from the knowledge base, politely offer to connect them with a human specialist.
+4. When looking up user accounts or orders, invoke the registered API function tools.
+5. Current Date & Time: <span class="c-string">{{current_timestamp}}</span></pre>
         </div>
       </section>
 
-      <!-- 5. Custom API Tools -->
-      <section id="tools" class="section-card">
+      <!-- 7. AI Memory & Continuous Self-Learning -->
+      <section id="learnings" class="section-card">
         <div class="section-header">
-          <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <div class="section-icon" style="background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.35); color: #f472b6;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Custom API Tools Integration</h2>
-            <div class="badge">Real-Time Backend Calls</div>
+            <h2 class="section-title">Autonomous AI Memory &amp; Continuous Learning</h2>
+            <div class="section-badges">
+              <span class="badge badge-learn">Self-Learning Engine</span>
+              <span class="badge badge-learn">Human-in-the-Loop</span>
+              <span class="badge">Automatic Rule Extraction</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          Register REST API endpoints that the AI Agent can invoke autonomously to fetch live data (e.g. user details, auction status) or perform actions.
+          Kaizech Brain doesn't remain static after deployment. Its background learning engine continuously analyzes live customer conversations to identify unresolved inquiries, recurring complaints, and intent gaps. It then autonomously synthesizes <strong>Candidate Business Rules</strong> with confidence scores and reasoning explanations.
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-card-title">1. Unhandled Intent Detection</div>
+            <div class="feature-card-desc">The AI flags moments where customers asked questions that couldn't be answered by existing docs.</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-title">2. Rule Synthesis &amp; Confidence</div>
+            <div class="feature-card-desc">Extracts precise guidelines (e.g. <em>"When asking about weekend delivery, specify Cairo orders ship Saturday"</em>) with a 0.0-1.0 confidence score.</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-title">3. Human Validation (Approve / Edit / Reject)</div>
+            <div class="feature-card-desc">Operators review proposed rules in the <strong>AI Memory</strong> dashboard. Approved rules immediately become active prompt memory.</div>
+          </div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-header">
+            <div class="code-lang"><span class="lang-dot" style="background:#f472b6;"></span>Trigger Batch AI Extraction on Demand</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="c-keyword">curl</span> -X POST <span class="c-string">"https://kaizech-brain-production.up.railway.app/api/v1/learnings/extract-batch"</span> \
+  -H <span class="c-string">"Content-Type: application/json"</span> \
+  -H <span class="c-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
+  -d <span class="c-string">'{
+    "daysLookback": 7,
+    "minConfidence": 0.75
+  }'</span></pre>
+        </div>
+      </section>
+
+      <!-- 8. Tools & Interactive Tester -->
+      <section id="tools" class="section-card">
+        <div class="section-header">
+          <div class="section-icon" style="background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.35); color: #fbbf24;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Function Calling Tools &amp; Live Tester</h2>
+            <div class="section-badges">
+              <span class="badge badge-tools">Custom API Manifests</span>
+              <span class="badge badge-tools">Interactive Tool Tester</span>
+              <span class="badge">Schema Auto-Fill</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Empower your AI bot to take action. Connect internal CRM systems, booking engines, e-commerce order tracking, and ERP endpoints via custom function manifests. The agent will autonomously trigger HTTP requests when customers request account info or order status.
+        </p>
+
+        <h3 class="subheading">Interactive Tool Tester in Dashboard</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          The dashboard includes an <strong>Interactive Tool Tester</strong> that inspects your tool's JSON Schema, auto-populates realistic mock parameters with one click (<code>Auto-fill Sample Body</code>), and fires live test requests to your API endpoint with full response and error tracing.
         </p>
 
         <div class="code-box">
           <div class="code-header">
-            <span>SAMPLE_TOOL_MANIFEST.json</span>
+            <div class="code-lang"><span class="lang-dot" style="background:#fbbf24;"></span>Example Tool Manifest: getUserInfo</div>
             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           </div>
           <pre>{
-  <span class="code-keyword">"name"</span>: <span class="code-string">"getUserInfo"</span>,
-  <span class="code-keyword">"description"</span>: <span class="code-string">"Fetches user profile details given their unique customer ID."</span>,
-  <span class="code-keyword">"apiEndpoint"</span>: <span class="code-string">"https://api.yourdomain.com/v1/users/profile"</span>,
-  <span class="code-keyword">"httpMethod"</span>: <span class="code-string">"POST"</span>,
-  <span class="code-keyword">"authType"</span>: <span class="code-string">"bearer"</span>,
-  <span class="code-keyword">"parameters"</span>: {
-    <span class="code-keyword">"type"</span>: <span class="code-string">"object"</span>,
-    <span class="code-keyword">"properties"</span>: {
-      <span class="code-keyword">"userId"</span>: { <span class="code-keyword">"type"</span>: <span class="code-string">"string"</span>, <span class="code-keyword">"description"</span>: <span class="code-string">"User unique ID"</span> }
+  <span class="c-prop">"name"</span>: <span class="c-string">"getUserInfo"</span>,
+  <span class="c-prop">"description"</span>: <span class="c-string">"Fetch customer profile, account tier, and primary address by user ID or phone"</span>,
+  <span class="c-prop">"apiEndpoint"</span>: <span class="c-string">"https://api.yourcompany.com/v1/customers/lookup"</span>,
+  <span class="c-prop">"httpMethod"</span>: <span class="c-string">"POST"</span>,
+  <span class="c-prop">"parameters"</span>: {
+    <span class="c-prop">"type"</span>: <span class="c-string">"object"</span>,
+    <span class="c-prop">"properties"</span>: {
+      <span class="c-prop">"user_id"</span>: { <span class="c-prop">"type"</span>: <span class="c-string">"integer"</span>, <span class="c-prop">"description"</span>: <span class="c-string">"Unique customer ID (e.g. 4594)"</span> },
+      <span class="c-prop">"phone"</span>: { <span class="c-prop">"type"</span>: <span class="c-string">"string"</span>, <span class="c-prop">"description"</span>: <span class="c-string">"Mobile phone number (e.g. 201000000000)"</span> }
     },
-    <span class="code-keyword">"required"</span>: [<span class="code-string">"userId"</span>]
+    <span class="c-prop">"required"</span>: [<span class="c-string">"user_id"</span>]
   }
 }</pre>
         </div>
+
+        <div class="code-box">
+          <div class="code-header">
+            <div class="code-lang"><span class="lang-dot" style="background:#fbbf24;"></span>Execute Live Tool Test Endpoint</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="c-keyword">curl</span> -X POST <span class="c-string">"https://kaizech-brain-production.up.railway.app/api/v1/tools/test"</span> \
+  -H <span class="c-string">"Content-Type: application/json"</span> \
+  -H <span class="c-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
+  -d <span class="c-string">'{
+    "toolName": "getUserInfo",
+    "parameters": {
+      "user_id": 4594
+    }
+  }'</span></pre>
+        </div>
       </section>
 
-      <!-- 6. Embed Chatbot SDKs (Web, React, React Native, REST API) -->
+      <!-- 9. Omnichannel Ecosystem & Multi-Platform SDKs -->
+      <section id="omnichannel" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Omnichannel Integration Ecosystem</h2>
+            <div class="section-badges">
+              <span class="badge">Multi-Platform SDKs</span>
+              <span class="badge">Universal Core Engine</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Kaizech Brain provides a complete SDK suite to deploy your bot across any website, React application, mobile iOS/Android app, and WhatsApp Business account with a single unified brain.
+        </p>
+
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead>
+              <tr>
+                <th>SDK / Package</th>
+                <th>Target Platform</th>
+                <th>Bundle Size</th>
+                <th>Integration Method</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong><code>@kaizech/widget</code></strong></td>
+                <td>Vanilla HTML, WordPress, Shopify, Webflow</td>
+                <td>16.9 KB (Shadow DOM)</td>
+                <td>Single <code>&lt;script&gt;</code> tag embed</td>
+              </tr>
+              <tr>
+                <td><strong><code>@kaizech/chat-react</code></strong></td>
+                <td>React, Next.js, Vite, Remix</td>
+                <td>24.2 KB</td>
+                <td><code>&lt;KaizechChatProvider&gt;</code> Component</td>
+              </tr>
+              <tr>
+                <td><strong><code>@kaizech/chat-react-native</code></strong></td>
+                <td>React Native (iOS &amp; Android)</td>
+                <td>Native Bridge</td>
+                <td><code>&lt;KaizechChatScreen&gt;</code> View</td>
+              </tr>
+              <tr>
+                <td><strong><code>@kaizech/chat-core</code></strong></td>
+                <td>Universal TypeScript Engine</td>
+                <td>12.5 KB</td>
+                <td>Headless SSE streaming state machine</td>
+              </tr>
+              <tr>
+                <td><strong>WhatsApp Cloud API</strong></td>
+                <td>Official Meta Business Cloud API</td>
+                <td>Server Webhook</td>
+                <td>Automatic Webhook routing with HMAC security</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 10. Embed SDKs -->
       <section id="embed-sdks" class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Embed AI Chatbot SDKs & Web Widget</h2>
-            <div class="badge">Multi-Platform SDK Family</div>
+            <h2 class="section-title">Web Widget &amp; React Integration</h2>
+            <div class="section-badges">
+              <span class="badge">Shadow DOM CSS Isolation</span>
+              <span class="badge">Zero Style Conflicts</span>
+            </div>
           </div>
         </div>
 
-        <p class="section-desc">
-          Kaizech Brain provides a complete SDK family to embed your trained AI bot on any platform with minimal integration effort.
+        <h3 class="subheading">A. Standalone Script Embed (HTML / Webflow / Shopify)</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+          Paste this script right before the closing <code>&lt;/body&gt;</code> tag of your website:
         </p>
 
-        <!-- SDK 1: Vanilla JS Script Tag -->
-        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">1. Vanilla JS Script Snippet (&lt;script&gt;)</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-          Drop this snippet into any HTML page, WordPress, Shopify, Webflow, or PHP website. Uses Web Components &amp; Shadow DOM to prevent style leakage:
-        </p>
         <div class="code-box">
           <div class="code-header">
-            <span>INDEX.HTML (SCRIPT EMBED)</span>
+            <div class="code-lang"><span class="lang-dot" style="background:#38bdf8;"></span>HTML Script Embed</div>
             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           </div>
-          <pre>&lt;!-- Kaizech AI Chatbot Widget --&gt;
-&lt;script&gt;
-  window.KaizechChatConfig = {
-    apiUrl: <span class="code-string">"https://your-brain-domain.com"</span>,
-    apiKey: <span class="code-string">"kb_live_your_api_key"</span>,
-    theme: {
-      primaryColor: <span class="code-string">"#0066FF"</span>,
-      position: <span class="code-string">"bottom-right"</span>,
-      botTitle: <span class="code-string">"AI Assistant"</span>,
-      welcomeMessage: <span class="code-string">"Hello! How can I help you today?"</span>
-    }
-  };
-&lt;/script&gt;
-&lt;script src=<span class="code-string">"https://your-brain-domain.com/widget.js"</span> async defer&gt;&lt;/script&gt;</pre>
+          <pre><span class="c-comment">&lt;!-- Kaizech Brain Web Chat Widget --&gt;</span>
+&lt;<span class="c-keyword">script</span> 
+  <span class="c-prop">src</span>=<span class="c-string">"https://kaizech-brain-production.up.railway.app/widget.js"</span>
+  <span class="c-prop">data-api-key</span>=<span class="c-string">"kb_live_your_secret_api_key_here"</span>
+  <span class="c-prop">data-primary-color</span>=<span class="c-string">"#6366f1"</span>
+  <span class="c-prop">data-bot-title</span>=<span class="c-string">"Customer Support AI"</span>
+  <span class="c-prop">data-position</span>=<span class="c-string">"bottom-right"</span>
+  <span class="c-prop">async</span>&gt;
+&lt;/<span class="c-keyword">script</span>&gt;</pre>
         </div>
 
-        <!-- SDK 2: React Web Package -->
-        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">2. React Web SDK (@husseinsalah96/chat-react)</h3>
+        <h3 class="subheading">B. React &amp; Next.js Application Embed</h3>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-          For Next.js, Vite, Remix, or Create React App projects. Install via GitHub Packages: <code>npm install @husseinsalah96/chat-react</code>
+          Install the official React SDK via your package manager:
         </p>
+
         <div class="code-box">
           <div class="code-header">
-            <span>REACT_EMBED.tsx</span>
+            <div class="code-lang"><span class="lang-dot" style="background:#6366f1;"></span>Bash: Install React Package</div>
             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           </div>
-          <pre><span class="code-keyword">import</span> React <span class="code-keyword">from</span> <span class="code-string">'react'</span>;
-<span class="code-keyword">import</span> { KaizechChatProvider, ChatWidget } <span class="code-keyword">from</span> <span class="code-string">'@husseinsalah96/chat-react'</span>;
+          <pre>npm install @kaizech/chat-react</pre>
+        </div>
 
-<span class="code-keyword">export default function</span> Layout({ children }) {
-  <span class="code-keyword">return</span> (
-    &lt;KaizechChatProvider
-      apiUrl=<span class="code-string">"https://your-brain-domain.com"</span>
-      apiKey=<span class="code-string">"kb_live_your_api_key"</span>
-      theme={{ primaryColor: <span class="code-string">"#0066FF"</span>, position: <span class="code-string">"bottom-right"</span> }}
+        <div class="code-box">
+          <div class="code-header">
+            <div class="code-lang"><span class="lang-dot" style="background:#6366f1;"></span>React Component Integration (App.tsx)</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="c-keyword">import</span> React <span class="c-keyword">from</span> <span class="c-string">'react'</span>;
+<span class="c-keyword">import</span> { KaizechChatProvider, ChatWidget } <span class="c-keyword">from</span> <span class="c-string">'@kaizech/chat-react'</span>;
+
+<span class="c-keyword">export default function</span> <span class="c-func">App</span>() {
+  <span class="c-keyword">return</span> (
+    &lt;<span class="c-keyword">KaizechChatProvider</span> 
+      <span class="c-prop">apiKey</span>=<span class="c-string">"kb_live_your_secret_api_key_here"</span>
+      <span class="c-prop">theme</span>={{ <span class="c-prop">primaryColor</span>: <span class="c-string">'#6366f1'</span>, <span class="c-prop">radius</span>: <span class="c-string">'16px'</span> }}
     &gt;
-      {children}
-      &lt;ChatWidget /&gt;
-    &lt;/KaizechChatProvider&gt;
-  );
-}</pre>
-        </div>
-
-        <!-- SDK 3: React Native Mobile Package -->
-        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">3. React Native Mobile SDK (@husseinsalah96/chat-react-native)</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
-          Native mobile components built with React Native primitives for iOS &amp; Android.
-        </p>
-        <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1rem;">
-          Add <code>@husseinsalah96:registry=https://npm.pkg.github.com</code> in your app's <code>.npmrc</code> and install: <code>npm install @husseinsalah96/chat-react-native</code>
-        </p>
-        <div class="code-box">
-          <div class="code-header">
-            <span>MOBILE_SUPPORT.tsx</span>
-            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          </div>
-          <pre><span class="code-keyword">import</span> React <span class="code-keyword">from</span> <span class="code-string">'react'</span>;
-<span class="code-keyword">import</span> { SafeAreaView } <span class="code-keyword">from</span> <span class="code-string">'react-native'</span>;
-<span class="code-keyword">import</span> { KaizechChatScreen } <span class="code-keyword">from</span> <span class="code-string">'@husseinsalah96/chat-react-native'</span>;
-
-<span class="code-keyword">export default function</span> SupportScreen() {
-  <span class="code-keyword">return</span> (
-    &lt;SafeAreaView style={{ flex: 1 }}&gt;
-      &lt;KaizechChatScreen
-        apiUrl=<span class="code-string">"https://your-brain-domain.com"</span>
-        apiKey=<span class="code-string">"kb_live_your_api_key"</span>
-        theme={{ primaryColor: <span class="code-string">"#0066FF"</span>, botTitle: <span class="code-string">"Mobile Support AI"</span> }}
-      /&gt;
-    &lt;/SafeAreaView&gt;
+      &lt;<span class="c-keyword">YourAppLayout</span> /&gt;
+      &lt;<span class="c-keyword">ChatWidget</span> <span class="c-prop">greeting</span>=<span class="c-string">"Welcome! How can we help you today?"</span> /&gt;
+    &lt;/<span class="c-keyword">KaizechChatProvider</span>&gt;
   );
 }</pre>
         </div>
       </section>
 
-      <!-- 7. WhatsApp Business API -->
+      <!-- 11. WhatsApp Integration -->
       <section id="whatsapp-integration" class="section-card">
         <div class="section-header">
-          <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <div class="section-icon" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
           </div>
           <div>
-            <h2 class="section-title">WhatsApp Business API Integration</h2>
-            <div class="badge">Meta Cloud Webhooks</div>
+            <h2 class="section-title">Meta WhatsApp Cloud API Integration</h2>
+            <div class="section-badges">
+              <span class="badge">Official Meta Cloud API</span>
+              <span class="badge">HMAC-SHA256 Webhook Verification</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          Configure your Meta App Webhook Callback URL and Verify Token from the Settings tab:
+          Connect your official WhatsApp Business number directly to Kaizech Brain. Incoming messages from customers are processed by the RAG knowledge engine and answered instantly on WhatsApp.
         </p>
 
-        <div class="code-box">
-          <div class="code-header">
-            <span>META_WEBHOOK_URL.txt</span>
-            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-card-title">1. Meta Developer App Setup</div>
+            <div class="feature-card-desc">Obtain your <strong>Phone Number ID</strong>, <strong>WhatsApp Business Account ID</strong>, and Permanent System User Access Token from Meta Business Manager.</div>
           </div>
-          <pre>POST https://your-brain-domain.com/api/v1/channels/whatsapp/webhook/YOUR_TENANT_ID
-Header: X-Hub-Signature-256: sha256={HMAC_SHA256_SIGNATURE}</pre>
+
+          <div class="feature-card">
+            <div class="feature-card-title">2. Configure Webhook URL</div>
+            <div class="feature-card-desc">Set your Webhook Callback URL in Meta to:<br><code>https://kaizech-brain-production.up.railway.app/api/v1/channels/whatsapp/webhook</code></div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-title">3. Webhook Security Verification</div>
+            <div class="feature-card-desc">All requests are cryptographically verified using <code>X-Hub-Signature-256</code> HMAC headers to prevent spoofing.</div>
+          </div>
         </div>
       </section>
 
-      <!-- 7. Direct REST API Reference -->
+      <!-- 12. Live Conversations & Human Handoff -->
+      <section id="conversations-inbox" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Live Conversations &amp; Human Handoff</h2>
+            <div class="section-badges">
+              <span class="badge">Unified Omnichannel Inbox</span>
+              <span class="badge">Instant Agent Takeover</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-desc">
+          Monitor conversations in real time with automated session state management. If a customer expresses frustration or asks for human support, the session can automatically or manually hand off to a human agent.
+        </p>
+
+        <div class="docs-table-wrapper">
+          <table class="docs-table">
+            <thead>
+              <tr>
+                <th>Session State</th>
+                <th>AI Behavior</th>
+                <th>Operator Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>active</code></td>
+                <td>AI autonomously answers all customer queries using Knowledge RAG &amp; Tools.</td>
+                <td>Can monitor messages live and click "Take Over" anytime.</td>
+              </tr>
+              <tr>
+                <td><code>handed_off</code></td>
+                <td>AI auto-reply is silenced. Customer messages appear in the live agent queue.</td>
+                <td>Human agent types replies or sends canned responses. Can resume AI anytime.</td>
+              </tr>
+              <tr>
+                <td><code>closed</code></td>
+                <td>Session is archived with full transcript and sentiment analysis record.</td>
+                <td>Exportable as JSON or CSV transcript for audit and QA.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-box">
+          <div class="code-header">
+            <div class="code-lang"><span class="lang-dot" style="background:#ef4444;"></span>Trigger Human Handoff via API</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><span class="c-keyword">curl</span> -X POST <span class="c-string">"https://kaizech-brain-production.up.railway.app/api/v1/channels/handoff"</span> \
+  -H <span class="c-string">"Content-Type: application/json"</span> \
+  -H <span class="c-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
+  -d <span class="c-string">'{
+    "sessionId": "session_user_98765",
+    "reason": "customer_requested_agent",
+    "notice": "Customer requested human supervisor support."
+  }'</span></pre>
+        </div>
+      </section>
+
+      <!-- 13. Developer REST API Reference & Streaming -->
       <section id="api-reference" class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Direct REST API Reference</h2>
-            <div class="badge">REST Chat Endpoint</div>
+            <h2 class="section-title">Developer REST &amp; Streaming API Reference</h2>
+            <div class="section-badges">
+              <span class="badge">Standard JSON API</span>
+              <span class="badge">Server-Sent Events (SSE)</span>
+            </div>
           </div>
         </div>
 
+        <p class="section-desc">
+          Integrate Kaizech Brain into your custom applications, backend microservices, or mobile apps using our REST API or real-time streaming endpoint.
+        </p>
+
+        <h3 class="subheading">A. Real-Time Token Streaming Endpoint (SSE)</h3>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-          Send messages directly from your web or mobile app using your secret tenant API key:
+          For low-latency UI experiences, consume tokens via <code>POST /api/v1/conversations/stream</code>:
         </p>
 
         <div class="code-box">
           <div class="code-header">
-            <span>POST /api/v1/channels/chat</span>
+            <div class="code-lang"><span class="lang-dot" style="background:#38bdf8;"></span>JavaScript / TypeScript: Streaming Fetch</div>
             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           </div>
-          <pre><span class="code-keyword">curl</span> -X POST <span class="code-string">"https://your-brain-domain.com/api/v1/channels/chat"</span> \
-  -H <span class="code-string">"Content-Type: application/json"</span> \
-  -H <span class="code-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
-  -d <span class="code-string">'{
-    "message": "What are your operating hours?",
-    "sessionId": "session_user_98765"
-  }'</span></pre>
-        </div>
+          <pre><span class="c-keyword">async function</span> <span class="c-func">streamChat</span>(message, sessionId) {
+  <span class="c-keyword">const</span> res = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://kaizech-brain-production.up.railway.app/api/v1/conversations/stream'</span>, {
+    <span class="c-prop">method</span>: <span class="c-string">'POST'</span>,
+    <span class="c-prop">headers</span>: {
+      <span class="c-string">'Content-Type'</span>: <span class="c-string">'application/json'</span>,
+      <span class="c-string">'x-api-key'</span>: <span class="c-string">'kb_live_your_secret_api_key_here'</span>
+    },
+    <span class="c-prop">body</span>: JSON.<span class="c-func">stringify</span>({ message, sessionId })
+  });
 
-        <div class="code-box">
-          <div class="code-header">
-            <span>RESPONSE_PAYLOAD.json</span>
-            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          </div>
-          <pre>{
-  <span class="code-keyword">"reply"</span>: <span class="code-string">"Our operating hours are Sunday to Thursday, 9:00 AM to 6:00 PM (AST)."</span>,
-  <span class="code-keyword">"sessionId"</span>: <span class="code-string">"session_user_98765"</span>,
-  <span class="code-keyword">"tenantId"</span>: <span class="code-string">"c39e248b-821a-4d7a-8b1e-089a85012345"</span>,
-  <span class="code-keyword">"status"</span>: <span class="code-string">"active"</span>,
-  <span class="code-keyword">"handedOff"</span>: <span class="code-keyword">false</span>
+  <span class="c-keyword">const</span> reader = res.body.<span class="c-func">getReader</span>();
+  <span class="c-keyword">const</span> decoder = <span class="c-keyword">new</span> <span class="c-func">TextDecoder</span>();
+
+  <span class="c-keyword">while</span> (<span class="c-boolean">true</span>) {
+    <span class="c-keyword">const</span> { done, value } = <span class="c-keyword">await</span> reader.<span class="c-func">read</span>();
+    <span class="c-keyword">if</span> (done) <span class="c-keyword">break</span>;
+    <span class="c-keyword">const</span> chunk = decoder.<span class="c-func">decode</span>(value);
+    console.<span class="c-func">log</span>(<span class="c-string">'Received Token:'</span>, chunk);
+  }
 }</pre>
         </div>
 
-        <h3 style="font-size: 1.1rem; color: var(--text-heading); margin-top: 1.5rem; margin-bottom: 0.5rem;">Pause AI & Trigger Human Handoff Endpoint</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-          Manually pause AI and transfer the conversation to human support from your client app:
-        </p>
+        <h3 class="subheading">B. Standard Chat Message Endpoint (Sync JSON)</h3>
 
         <div class="code-box">
           <div class="code-header">
-            <span>POST /api/v1/channels/handoff</span>
+            <div class="code-lang"><span class="lang-dot" style="background:#10b981;"></span>cURL: Send Message</div>
             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           </div>
-          <pre><span class="code-keyword">curl</span> -X POST <span class="code-string">"https://your-brain-domain.com/api/v1/channels/handoff"</span> \
-  -H <span class="code-string">"Content-Type: application/json"</span> \
-  -H <span class="code-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
-  -d <span class="code-string">'{
-    "sessionId": "session_user_98765",
-    "reason": "client_requested"
+          <pre><span class="c-keyword">curl</span> -X POST <span class="c-string">"https://kaizech-brain-production.up.railway.app/api/v1/conversations/message"</span> \
+  -H <span class="c-string">"Content-Type: application/json"</span> \
+  -H <span class="c-string">"x-api-key: kb_live_your_secret_api_key_here"</span> \
+  -d <span class="c-string">'{
+    "message": "What are your business operating hours and delivery policies?",
+    "sessionId": "session_user_98765"
   }'</span></pre>
         </div>
       </section>
 
-      <!-- 8. Interactive AI Sandbox -->
-      <section id="playground" class="section-card">
+      <!-- 14. Interactive API Request Simulator -->
+      <section id="api-simulator" class="section-card">
         <div class="section-header">
-          <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.5M14 2v7.5M8.5 18h7M12 9.5l4.5 10.5H7.5L12 9.5z"/></svg>
+          <div class="section-icon" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.35); color: #a5b4fc;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Playground Sandbox & Diagnostics</h2>
-            <div class="badge">Real-Time Testing</div>
+            <h2 class="section-title">Interactive API Request Simulator</h2>
+            <div class="section-badges">
+              <span class="badge">In-Browser Testing</span>
+              <span class="badge">Live Response Mocking</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          Use the interactive Playground tab in your dashboard to test customer queries live and inspect vector search retrieval scores, tool execution arguments, and latency diagnostics.
+          Test Kaizech Brain API interactions right from your browser. Select an action below and execute the simulation:
         </p>
+
+        <div class="api-tester">
+          <div class="api-tester-top">
+            <span class="http-badge http-post">POST</span>
+            <input type="text" id="simEndpoint" class="endpoint-input" value="/api/v1/conversations/message" readonly>
+            <select id="simAction" onchange="updateSimAction()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color:#fff; padding: 0.5rem 0.85rem; border-radius: 6px; outline:none; font-size:0.85rem;">
+              <option value="chat">1. Send Chat Message</option>
+              <option value="tool">2. Test Tool Manifest</option>
+              <option value="handoff">3. Request Human Handoff</option>
+              <option value="learning">4. Trigger AI Learning</option>
+            </select>
+            <button class="simulate-btn" onclick="executeSimulator()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Run Request</span>
+            </button>
+          </div>
+
+          <div style="margin-bottom: 0.85rem; font-size: 0.8rem; color: var(--text-dim); display:flex; justify-content:space-between;">
+            <span>STATUS: <span id="simStatus" style="color:#34d399;">200 OK</span></span>
+            <span>LATENCY: <span id="simLatency">142ms</span></span>
+          </div>
+
+          <div id="simResponse" class="api-response-viewer">
+{
+  "reply": "Welcome to our customer service! We are open Sunday through Thursday from 9:00 AM to 6:00 PM (AST). How can I assist you with your order today?",
+  "sessionId": "session_user_98765",
+  "tenantId": "c39e248b-821a-4d7a-8b1e-089a85012345",
+  "status": "active",
+  "handedOff": false,
+  "metrics": {
+    "ragRetrievalLatencyMs": 48,
+    "totalLatencyMs": 142,
+    "chunksRetrieved": 3
+  }
+}</div>
+        </div>
       </section>
 
-      <!-- 9. Checklist Section -->
+      <!-- 15. Go-Live Checklist -->
       <section id="checklist" class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           </div>
           <div>
-            <h2 class="section-title">Tenant Onboarding Checklist</h2>
-            <div class="badge">Interactive Progress</div>
+            <h2 class="section-title">Tenant Onboarding &amp; Go-Live Checklist</h2>
+            <div class="section-badges">
+              <span class="badge">Interactive Progress</span>
+              <span class="badge">Auto-Saved in Browser</span>
+            </div>
           </div>
         </div>
 
         <p class="section-desc">
-          Track your onboarding progress. Your checked items automatically save in your local browser storage:
+          Track your deployment progress step-by-step. Your checklist status is automatically persisted in your local browser storage:
         </p>
+
+        <div class="checklist-progress-box">
+          <div class="progress-info">
+            <span>Onboarding Completion</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progressBarFill" class="progress-bar-fill"></div>
+          </div>
+        </div>
 
         <ul class="checklist">
           <li class="checklist-item" onclick="toggleCheck(this, 'step1')">
             <input type="checkbox" id="step1" class="checklist-checkbox">
             <div class="checklist-text">
-              <div class="checklist-title">1. Generate Tenant API Keys</div>
-              <div class="checklist-desc">Obtain your secret <code>kb_live_...</code> API key from Dashboard Settings.</div>
+              <div class="checklist-title">1. Generate Tenant API Key</div>
+              <div class="checklist-desc">Create your secret <code>kb_live_...</code> API key from the Dashboard Settings tab.</div>
             </div>
           </li>
+
           <li class="checklist-item" onclick="toggleCheck(this, 'step2')">
             <input type="checkbox" id="step2" class="checklist-checkbox">
             <div class="checklist-text">
-              <div class="checklist-title">2. Ingest Knowledge Base Data</div>
-              <div class="checklist-desc">Upload core company documents, add FAQ pairs, and crawl help pages.</div>
+              <div class="checklist-title">2. Complete Voice-Guided Onboarding</div>
+              <div class="checklist-desc">Speak to the AI Voice Agent to capture business rules and establish a &gt;80% AI Readiness Score.</div>
             </div>
           </li>
+
           <li class="checklist-item" onclick="toggleCheck(this, 'step3')">
             <input type="checkbox" id="step3" class="checklist-checkbox">
             <div class="checklist-text">
-              <div class="checklist-title">3. Configure System Prompt & Persona</div>
-              <div class="checklist-desc">Set identity rules, tone of voice, safety rules, and fallback responses.</div>
+              <div class="checklist-title">3. Upload Core Documents &amp; Ingest Knowledge</div>
+              <div class="checklist-desc">Upload policies, product specifications, or crawl help center URLs to build the pgvector index.</div>
             </div>
           </li>
+
           <li class="checklist-item" onclick="toggleCheck(this, 'step4')">
             <input type="checkbox" id="step4" class="checklist-checkbox">
             <div class="checklist-text">
-              <div class="checklist-title">4. Register API Function Tools (Optional)</div>
-              <div class="checklist-desc">Add custom tool manifests for backend system integration and test payloads.</div>
+              <div class="checklist-title">4. Customize System Prompt &amp; Brand Tone</div>
+              <div class="checklist-desc">Define brand personality, bilingual Arabic/English tone, and safety constraints in Prompt Builder.</div>
             </div>
           </li>
+
           <li class="checklist-item" onclick="toggleCheck(this, 'step5')">
             <input type="checkbox" id="step5" class="checklist-checkbox">
             <div class="checklist-text">
-              <div class="checklist-title">5. Test Sandbox Execution in Playground</div>
-              <div class="checklist-desc">Verify answer accuracy, retrieved RAG chunks, and latency metrics.</div>
+              <div class="checklist-title">5. Register Function Calling Tools &amp; Run Live Test</div>
+              <div class="checklist-desc">Add custom API endpoints (e.g. <code>getUserInfo</code>) and test with sample payloads in the Tool Tester.</div>
             </div>
           </li>
+
           <li class="checklist-item" onclick="toggleCheck(this, 'step6')">
             <input type="checkbox" id="step6" class="checklist-checkbox">
             <div class="checklist-text">
-              <div class="checklist-title">6. Connect WhatsApp Webhooks & Web REST API</div>
-              <div class="checklist-desc">Subscribe Meta WhatsApp webhooks or embed REST API calls in your web app.</div>
+              <div class="checklist-title">6. Enable Continuous AI Memory Rules</div>
+              <div class="checklist-desc">Verify that candidate rules appear in AI Learnings and approve initial ground-truth policies.</div>
+            </div>
+          </li>
+
+          <li class="checklist-item" onclick="toggleCheck(this, 'step7')">
+            <input type="checkbox" id="step7" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">7. Connect Deployment Channels (WhatsApp / Web Widget)</div>
+              <div class="checklist-desc">Embed the 16KB Web Widget script or connect your Meta WhatsApp Business Cloud API account.</div>
+            </div>
+          </li>
+
+          <li class="checklist-item" onclick="toggleCheck(this, 'step8')">
+            <input type="checkbox" id="step8" class="checklist-checkbox">
+            <div class="checklist-text">
+              <div class="checklist-title">8. Test End-to-End Customer Handoff</div>
+              <div class="checklist-desc">Simulate a customer inquiry requesting human assistance to verify operator takeover and inbox routing.</div>
             </div>
           </li>
         </ul>
@@ -1314,22 +2384,45 @@ Header: X-Hub-Signature-256: sha256={HMAC_SHA256_SIGNATURE}</pre>
     </main>
   </div>
 
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="logo-container">
+        <div class="logo-icon" style="width:34px; height:34px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2">
+            <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 4 4 4 4 0 0 1-4 4v1a4 4 0 0 1-4 4 4 4 0 0 1-4-4v-1a4 4 0 0 1-4-4 4 4 0 0 1 4-4V6a4 4 0 0 1 4-4z"/>
+          </svg>
+        </div>
+        <span class="logo-text" style="font-size:1.15rem;">Kaizech Brain Enterprise</span>
+      </div>
+
+      <ul class="footer-links">
+        <li><a href="#overview">Architecture</a></li>
+        <li><a href="#voice-onboarding">Voice Agent</a></li>
+        <li><a href="#learnings">AI Memory</a></li>
+        <li><a href="#tools">API Tools</a></li>
+        <li><a href="#omnichannel">Omnichannel SDKs</a></li>
+        <li><a href="#api-reference">REST API Docs</a></li>
+      </ul>
+
+      <p class="footer-copy">
+        &copy; 2025–2026 Kaizech Brain Inc. Enterprise Multi-Tenant AI Platform. All rights reserved.
+      </p>
+    </div>
+  </footer>
+
   <!-- Scripts -->
   <script>
     // Tab Switcher inside Dashboard section
-    function openTab(evt, tabName) {
-      const tabContents = document.getElementsByClassName("tab-content");
-      for (let i = 0; i < tabContents.length; i++) {
-        tabContents[i].classList.remove("active");
-      }
+    function openTourTab(evt, tabName) {
+      const tabContents = document.querySelectorAll('#dashboard-tour .tab-content');
+      tabContents.forEach(c => c.classList.remove('active'));
 
-      const tabBtns = document.getElementsByClassName("tab-btn");
-      for (let i = 0; i < tabBtns.length; i++) {
-        tabBtns[i].classList.remove("active");
-      }
+      const tabBtns = document.querySelectorAll('#dashboard-tour .tab-btn');
+      tabBtns.forEach(b => b.classList.remove('active'));
 
-      document.getElementById(tabName).classList.add("active");
-      evt.currentTarget.classList.add("active");
+      document.getElementById(tabName).classList.add('active');
+      evt.currentTarget.classList.add('active');
     }
 
     // Code Copy Helper
@@ -1338,45 +2431,133 @@ Header: X-Hub-Signature-256: sha256={HMAC_SHA256_SIGNATURE}</pre>
       const codeText = codeBox.querySelector('pre').innerText;
       
       navigator.clipboard.writeText(codeText).then(() => {
-        const originalText = button.innerText;
-        button.innerText = 'Copied!';
+        const originalHtml = button.innerHTML;
+        button.innerHTML = '<span>✓ Copied!</span>';
         button.style.background = '#10b981';
         button.style.color = '#fff';
+        button.style.borderColor = '#10b981';
         
         setTimeout(() => {
-          button.innerText = originalText;
+          button.innerHTML = originalHtml;
           button.style.background = '';
           button.style.color = '';
-        }, 2000);
+          button.style.borderColor = '';
+        }, 2200);
       });
     }
 
-    // Interactive Checklist Persistent State
+    // Interactive Checklist Persistent State & Progress Calculation
+    function updateChecklistProgress() {
+      const items = document.querySelectorAll('.checklist-item');
+      let completedCount = 0;
+
+      items.forEach(item => {
+        const checkbox = item.querySelector('.checklist-checkbox');
+        if (checkbox.checked) {
+          completedCount++;
+          item.classList.add('completed');
+        } else {
+          item.classList.remove('completed');
+        }
+      });
+
+      const total = items.length;
+      const percentage = Math.round((completedCount / total) * 100);
+
+      const percentEl = document.getElementById('progressPercent');
+      const fillEl = document.getElementById('progressBarFill');
+
+      if (percentEl && fillEl) {
+        percentEl.innerText = `${percentage}% (${completedCount}/${total})`;
+        fillEl.style.width = `${percentage}%`;
+      }
+    }
+
     function toggleCheck(item, key) {
       const checkbox = item.querySelector('.checklist-checkbox');
       checkbox.checked = !checkbox.checked;
       
-      if (checkbox.checked) {
-        item.classList.add('completed');
-        localStorage.setItem('kb_checklist_' + key, 'true');
-      } else {
-        item.classList.remove('completed');
-        localStorage.setItem('kb_checklist_' + key, 'false');
+      localStorage.setItem('kb_checklist_v2_' + key, checkbox.checked ? 'true' : 'false');
+      updateChecklistProgress();
+    }
+
+    // Interactive Simulator Action Switcher
+    function updateSimAction() {
+      const action = document.getElementById('simAction').value;
+      const endpoint = document.getElementById('simEndpoint');
+      const responseViewer = document.getElementById('simResponse');
+
+      if (action === 'chat') {
+        endpoint.value = '/api/v1/conversations/message';
+        responseViewer.innerText = JSON.stringify({
+          reply: "Welcome to our customer service! We are open Sunday through Thursday from 9:00 AM to 6:00 PM (AST). How can I assist you with your order today?",
+          sessionId: "session_user_98765",
+          tenantId: "c39e248b-821a-4d7a-8b1e-089a85012345",
+          status: "active",
+          handedOff: false,
+          metrics: { ragRetrievalLatencyMs: 48, totalLatencyMs: 142, chunksRetrieved: 3 }
+        }, null, 2);
+      } else if (action === 'tool') {
+        endpoint.value = '/api/v1/tools/test';
+        responseViewer.innerText = JSON.stringify({
+          toolName: "getUserInfo",
+          status: "success",
+          executionTimeMs: 84,
+          data: {
+            user_id: 4594,
+            fullName: "Hussein Salah",
+            accountType: "VIP Buyer",
+            verificationStatus: "VERIFIED",
+            primaryAddress: "Cairo, Egypt"
+          }
+        }, null, 2);
+      } else if (action === 'handoff') {
+        endpoint.value = '/api/v1/channels/handoff';
+        responseViewer.innerText = JSON.stringify({
+          success: true,
+          sessionId: "session_user_98765",
+          previousStatus: "active",
+          newStatus: "handed_off",
+          message: "Conversation successfully paused and transferred to human support queue."
+        }, null, 2);
+      } else if (action === 'learning') {
+        endpoint.value = '/api/v1/learnings/extract-batch';
+        responseViewer.innerText = JSON.stringify({
+          processedConversations: 14,
+          newCandidateRulesExtracted: 3,
+          highestConfidenceRule: {
+            category: "SHIPPING",
+            suggestedRule: "For orders placed after 4 PM on Thursday, notify customer that dispatch occurs Saturday morning.",
+            confidenceScore: 0.94
+          }
+        }, null, 2);
       }
     }
 
-    // Load Persistent Checklist State & ScrollSpy Init
+    function executeSimulator() {
+      const responseViewer = document.getElementById('simResponse');
+      const latencyEl = document.getElementById('simLatency');
+      responseViewer.style.opacity = '0.4';
+      
+      setTimeout(() => {
+        responseViewer.style.opacity = '1';
+        latencyEl.innerText = Math.floor(Math.random() * 80 + 90) + 'ms';
+      }, 250);
+    }
+
+    // DOM Ready Init
     document.addEventListener('DOMContentLoaded', () => {
       // Load checklist state
       const items = document.querySelectorAll('.checklist-item');
       items.forEach(item => {
         const checkbox = item.querySelector('.checklist-checkbox');
         const key = checkbox.id;
-        if (localStorage.getItem('kb_checklist_' + key) === 'true') {
+        if (localStorage.getItem('kb_checklist_v2_' + key) === 'true') {
           checkbox.checked = true;
           item.classList.add('completed');
         }
       });
+      updateChecklistProgress();
 
       // ScrollSpy via IntersectionObserver
       const sectionCards = document.querySelectorAll('.section-card[id]');
@@ -1409,26 +2590,32 @@ Header: X-Hub-Signature-256: sha256={HMAC_SHA256_SIGNATURE}</pre>
 
       sectionCards.forEach(section => observer.observe(section));
 
-      // Handle direct manual clicks on sidebar menu links
-      navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-          navLinks.forEach(l => l.classList.remove('active'));
-          this.classList.add('active');
+      // Real-time Search Filter
+      const searchInput = document.getElementById('docSearch');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          const query = e.target.value.toLowerCase().trim();
+          const sections = document.querySelectorAll('.section-card');
+
+          sections.forEach(section => {
+            const text = section.innerText.toLowerCase();
+            if (!query || text.includes(query)) {
+              section.style.display = 'block';
+            } else {
+              section.style.display = 'none';
+            }
+          });
         });
-      });
-    });
+      }
 
-    // Real-time Search Filter
-    document.getElementById('docSearch').addEventListener('input', function(e) {
-      const query = e.target.value.toLowerCase();
-      const sections = document.querySelectorAll('.section-card');
-
-      sections.forEach(section => {
-        const text = section.innerText.toLowerCase();
-        if (text.includes(query)) {
-          section.style.display = 'block';
-        } else {
-          section.style.display = query ? 'none' : 'block';
+      // Keyboard shortcut Cmd+K / Ctrl+K to focus search
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
         }
       });
     });

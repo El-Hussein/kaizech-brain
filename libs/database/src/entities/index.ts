@@ -18,3 +18,4 @@ export * from './contact-request.entity';
 export * from './interview-question.entity';
 export * from './business-interview.entity';
 export * from './interview-response.entity';
+export * from './workflow.entity';

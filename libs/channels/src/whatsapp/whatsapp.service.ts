@@ -84,14 +84,26 @@ export class WhatsAppService {
         return;
       }
 
-      // 4. Validate message object and text body presence
-      if (!message || message.type !== 'text' || !message.text?.body) {
-        console.log(`⚠️ Non-text message type (${message?.type}) in WhatsApp payload. Skipping response.`);
+      // 4. Extract userText based on message type (text or interactive button/list)
+      let userText = '';
+      let payloadId = '';
+      
+      if (message.type === 'text' && message.text?.body) {
+        userText = message.text.body.trim();
+      } else if (message.type === 'interactive') {
+        if (message.interactive.type === 'button_reply') {
+          payloadId = message.interactive.button_reply.id;
+          userText = message.interactive.button_reply.title || payloadId;
+        } else if (message.interactive.type === 'list_reply') {
+          payloadId = message.interactive.list_reply.id;
+          userText = message.interactive.list_reply.title || payloadId;
+        }
+      } else {
+        console.log(`⚠️ Unsupported message type (${message?.type}) in WhatsApp payload. Skipping response.`);
         return;
       }
 
       // 5. Check if the message is empty or whitespace only
-      const userText = message.text.body.trim();
       if (!userText || userText.length === 0) {
         console.log('⚠️ Empty message received in WhatsApp payload. Skipping response.');
         return;
@@ -110,7 +122,7 @@ export class WhatsAppService {
         channelUserId: fromNumber,
         userMessage: userText,
         displayName: contactName,
-        metadata: { whatsappMessageId: message.id, phoneNumberId },
+        metadata: { whatsappMessageId: message.id, phoneNumberId, payload: payloadId },
       });
 
       if (agentResult.handedOff || !agentResult.response) {

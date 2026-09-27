@@ -224,6 +224,7 @@ export class ChannelsController {
       required: ['message', 'sessionId'],
       properties: {
         message: { type: 'string', example: 'What is the current bid for auction #42?' },
+        payload: { type: 'string', example: 'CAT_123', description: 'Optional interactive payload ID' },
         sessionId: { type: 'string', example: 'user-abc-123' },
         channel: {
           type: 'string',
@@ -237,17 +238,17 @@ export class ChannelsController {
   })
   async chat(
     @Req() req: any,
-    @Body() body: { message: string; sessionId: string; channel?: string; displayName?: string },
+    @Body() body: { message: string; payload?: string; sessionId: string; channel?: string; displayName?: string },
   ) {
     const tenantContext = req.tenant; // injected by ApiKeyGuard
 
-    if (!body.message || !body.message.trim()) {
+    if (!body.message && !body.payload) {
       return {
         reply: null,
         sessionId: body.sessionId,
         tenantId: tenantContext?.tenantId ?? null,
         skipped: true,
-        reason: 'Message content is empty',
+        reason: 'Message and payload are both empty',
       };
     }
 
@@ -262,9 +263,9 @@ export class ChannelsController {
       tenant,
       channelType,
       channelUserId: body.sessionId,
-      userMessage: body.message.trim(),
+      userMessage: body.message ? body.message.trim() : '',
       displayName: body.displayName ?? body.sessionId,
-      metadata: { apiKeyId: tenantContext.apiKeyId },
+      metadata: { apiKeyId: tenantContext.apiKeyId, payload: body.payload },
     });
 
     return {
