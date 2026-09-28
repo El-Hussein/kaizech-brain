@@ -171,14 +171,19 @@ export class DecisionTreeService {
       // Formatting Interactive Elements
       if (node.displayType === 'list') {
         response.interactiveType = 'list';
-        response.buttons = Array.isArray(safeData) ? safeData.slice(0, 10).map((item: any) => ({
-          // Using title from nested objects like name.en or name.ar-SA if needed
-          title: item.name?.en || item.name?.['ar-SA'] || item.name || item.title || 'Option',
-          // Payload links to the NEXT node defined in the current node
-          payload: node.onSelectNextNode 
-            ? `WF_${workflow.id}_NODE_${node.onSelectNextNode}_PAYLOAD_${item.id}` 
-            : `UNKNOWN`
-        })) : [];
+        response.buttons = Array.isArray(safeData) ? safeData.slice(0, 10).map((item: any) => {
+          let resolvedTitle = item.title || 'Option';
+          if (item.name) {
+            if (typeof item.name === 'string') resolvedTitle = item.name;
+            else resolvedTitle = item.name.en || item.name['ar-SA'] || item.name.ar || item.name.fr || resolvedTitle;
+          }
+          return {
+            title: resolvedTitle,
+            payload: node.onSelectNextNode 
+              ? `WF_${workflow.id}_NODE_${node.onSelectNextNode}_PAYLOAD_${item.id}` 
+              : `UNKNOWN`
+          };
+        }) : [];
       } else if (node.displayType === 'button' && node.buttons) {
         response.interactiveType = 'button';
         response.buttons = node.buttons.map((btn: any) => ({
