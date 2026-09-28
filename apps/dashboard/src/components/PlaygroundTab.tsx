@@ -236,34 +236,54 @@ export const PlaygroundTab: React.FC<PlaygroundProps> = ({ apiKey }) => {
                   {/* RENDER BUTTONS HERE */}
                   {msg.interactive?.buttons && msg.interactive.buttons.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-                      {msg.interactive.buttons.map((btn: any, i: number) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSend(undefined, btn.payload, btn.title)}
-                          style={{
-                            padding: '10px 16px',
-                            background: 'var(--bg-surface-elevated)',
-                            border: '1px solid var(--accent-primary)',
-                            borderRadius: '10px',
-                            color: 'var(--accent-primary)',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            textAlign: 'center',
-                            transition: 'all 0.2s',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.background = 'var(--accent-primary)';
-                            e.currentTarget.style.color = '#fff';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.background = 'var(--bg-surface-elevated)';
-                            e.currentTarget.style.color = 'var(--accent-primary)';
-                          }}
-                        >
-                          {btn.title}
-                        </button>
-                      ))}
+                      {msg.interactive.buttons.map((btn: any, i: number) => {
+                        const isWebUrl = btn.type === 'web_url' && btn.url;
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              if (isWebUrl) {
+                                window.open(btn.url, '_blank', 'noopener,noreferrer');
+                              } else {
+                                handleSend(undefined, btn.payload, btn.title);
+                              }
+                            }}
+                            style={{
+                              padding: '10px 16px',
+                              background: 'var(--bg-surface-elevated)',
+                              border: '1px solid var(--accent-primary)',
+                              borderRadius: '10px',
+                              color: 'var(--accent-primary)',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              textAlign: 'center',
+                              transition: 'all 0.2s',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.background = 'var(--accent-primary)';
+                              e.currentTarget.style.color = '#fff';
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.background = 'var(--bg-surface-elevated)';
+                              e.currentTarget.style.color = 'var(--accent-primary)';
+                            }}
+                          >
+                            {btn.title}
+                            {isWebUrl && (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                              </svg>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
