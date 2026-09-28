@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 export interface WebhookIncomingMessage {
   text?: string;
   payload?: string;
+  userId?: string;
 }
 
 @Injectable()
@@ -44,8 +45,12 @@ export class DecisionTreeService {
         // Increment execution count asynchronously
         this.workflowRepo.increment({ id: workflow.id }, 'executionCount', 1).catch(() => {});
         
+        if (message.userId) {
+          this.cacheManager.del(`wf_state_${tenant.id}_${message.userId}`).catch(() => {});
+        }
+        
         // Execute the first node of the workflow
-        return this.executeWorkflowNode(tenant, workflow, workflow.nodes[0]);
+        return this.executeWorkflowNode(tenant, workflow, workflow.nodes[0], undefined, message.userId);
       }
     }
 
@@ -86,7 +91,7 @@ export class DecisionTreeService {
       }
 
       // If all checks pass, execute safely!
-      return this.executeWorkflowNode(tenant, workflow, nextNode, userSelection);
+      return this.executeWorkflowNode(tenant, workflow, nextNode, userSelection, message.userId);
     }
 
     return null; // Fallback to AI
@@ -95,15 +100,47 @@ export class DecisionTreeService {
   /**
    * Executes a specific node in a Dynamic Workflow
    */
-  private async executeWorkflowNode(tenant: TenantEntity, workflow: WorkflowEntity, node: any, userSelection?: string) {
-    if (node.type === 'api_fetch' && node.endpoint) {
-      let url = node.endpoint;
+  private async executeWorkflowNode(tenant: TenantEntity, workflow: WorkflowEntity, node: any, userSelection?: string, userId?: string) {
+    let context: any = {};
+    const stateKey = userId ? `wf_state_${tenant.id}_${userId}` : null;
+    
+    if (stateKey) {
+      context = (await this.cacheManager.get(stateKey)) || {};
+    }
+
+    if (userSelection && node.storeAs) {
+      context[node.storeAs] = userSelection;
+      if (stateKey) {
+        await this.cacheManager.set(stateKey, context, 3600000);
+      }
+    }
+
+    const applyContext = (str: string) => {
+      if (!str || typeof str !== 'string') return str;
+      let res = str;
       if (userSelection) {
-        url = url.replace('{{user_selection}}', encodeURIComponent(userSelection));
+        res = res.replace(/{{user_selection}}/g, encodeURIComponent(userSelection));
+      }
+      res = res.replace(/{{context\.([^}]+)}}/g, (match, key) => {
+        return context[key] !== undefined ? encodeURIComponent(context[key]) : match;
+      });
+      return res;
+    };
+
+    if (node.type === 'api_fetch' && node.endpoint) {
+      let url = applyContext(node.endpoint);
+
+      const headers = { ...node.headers };
+      if (node.headers) {
+        for (const [k, v] of Object.entries(node.headers)) {
+          if (typeof v === 'string') {
+            headers[k] = applyContext(v);
+          }
+        }
       }
 
       // Execute HTTP Fetch
-      let rawData = await this.fetchExternalData(tenant, url, `wf_${workflow.id}_node_${node.id}_${userSelection || 'default'}`, node.headers);
+      let rawData = await this.fetchExternalData(tenant, url, `wf_${workflow.id}_node_${node.id}_${userSelection || 'default'}`, headers);
       
       // Resolve data path if the API wraps it (e.g. data.tags or data.data)
       let data = rawData;

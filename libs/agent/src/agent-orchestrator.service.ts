@@ -141,7 +141,8 @@ export class AgentOrchestratorService {
 
     const treeResponse = await this.decisionTreeService.handleMessage(tenant, {
       text: userMessage,
-      payload: metadata?.payload
+      payload: metadata?.payload,
+      userId: channelUserId
     });
 
     if (treeResponse) {
@@ -551,7 +552,8 @@ export class AgentOrchestratorService {
 
     const treeResponse = await this.decisionTreeService.handleMessage(tenant, {
       text: userMessage,
-      payload: metadata?.payload
+      payload: metadata?.payload,
+      userId: channelUserId
     });
 
     if (treeResponse) {
