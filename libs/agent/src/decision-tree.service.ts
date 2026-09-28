@@ -152,17 +152,34 @@ export class DecisionTreeService {
       let replyMessage = node.message || '';
       const safeData = data || []; // fallback to empty if fetch fails
       
+      const evaluateCondition = (value: any) => {
+        if (value === null || value === undefined || value === '' || value === 0 || value === '0' || value === false) return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        return true;
+      };
+
+      const processConditionals = (text: string) => {
+        if (!text || typeof text !== 'string') return text;
+        return text.replace(/{{#if\s+data\.([^}]+)}}(.*?){{\/if}}/gs, (match: string, p1: string, content: string) => {
+          const value = p1.split('.').reduce((acc: any, part: string) => acc && acc[part], safeData);
+          return evaluateCondition(value) ? content : '';
+        });
+      };
+
       const replacePlaceholders = (text: string) => {
         if (!text || typeof text !== 'string') return text;
         return text.replace(/{{data\.([^}]+)}}/g, (match: string, p1: string) => {
           // Resolve deep properties (e.g. name.en or name.ar-SA)
           const value = p1.split('.').reduce((acc: any, part: string) => acc && acc[part], safeData);
+          // Return empty string if falsy, instead of leaving the raw placeholder
+          if (!evaluateCondition(value)) return '';
           return value !== undefined ? value : match;
         });
       };
 
       // Basic {{data.field.subfield}} template replacement for object responses
       if (!Array.isArray(safeData) && typeof safeData === 'object') {
+        replyMessage = processConditionals(replyMessage);
         replyMessage = replacePlaceholders(replyMessage);
       }
 
