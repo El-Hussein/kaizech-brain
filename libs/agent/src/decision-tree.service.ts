@@ -177,10 +177,11 @@ export class DecisionTreeService {
             if (typeof item.name === 'string') resolvedTitle = item.name;
             else resolvedTitle = item.name.en || item.name['ar-SA'] || item.name.ar || item.name.fr || resolvedTitle;
           }
+          const payloadValue = node.payloadField ? item[node.payloadField] : item.id;
           return {
             title: resolvedTitle,
             payload: node.onSelectNextNode 
-              ? `WF_${workflow.id}_NODE_${node.onSelectNextNode}_PAYLOAD_${item.id}` 
+              ? `WF_${workflow.id}_NODE_${node.onSelectNextNode}_PAYLOAD_${payloadValue}` 
               : `UNKNOWN`
           };
         }) : [];
