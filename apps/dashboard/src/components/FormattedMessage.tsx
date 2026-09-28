@@ -6,7 +6,7 @@ import React from 'react';
 function parseInlineMarkdown(text: string): React.ReactNode[] {
   if (!text) return [];
 
-  const regex = /(\*\*(.*?)\*\*|__(.*?)__|`([^`]+)`|\*(.*?)\*|_(.*?)_|\[(.*?)\]\((.*?)\))/g;
+  const regex = /(!\[(.*?)\]\((.*?)\)|\*\*(.*?)\*\*|__(.*?)__|`([^`]+)`|\*(.*?)\*|_(.*?)_|\[(.*?)\]\((.*?)\))/g;
   const elements: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -17,15 +17,31 @@ function parseInlineMarkdown(text: string): React.ReactNode[] {
     }
 
     const fullMatch = match[0];
-    if (fullMatch.startsWith('**') || fullMatch.startsWith('__')) {
-      const content = match[2] ?? match[3] ?? '';
+    if (fullMatch.startsWith('![')) {
+      const altText = match[2] ?? '';
+      const imgUrl = match[3] ?? '';
+      if (imgUrl) {
+        elements.push(
+          <img
+            key={match.index}
+            src={imgUrl}
+            alt={altText}
+            style={{ maxWidth: '100%', borderRadius: '8px', margin: '8px 0', display: 'block' }}
+          />,
+        );
+      } else {
+        // Fallback if URL is empty
+        elements.push(<span key={match.index}>{fullMatch}</span>);
+      }
+    } else if (fullMatch.startsWith('**') || fullMatch.startsWith('__')) {
+      const content = match[4] ?? match[5] ?? '';
       elements.push(
         <strong key={match.index} style={{ fontWeight: 700, color: 'inherit' }}>
           {parseInlineMarkdown(content)}
         </strong>,
       );
     } else if (fullMatch.startsWith('`')) {
-      const content = match[4] ?? '';
+      const content = match[6] ?? '';
       elements.push(
         <code
           key={match.index}
@@ -41,15 +57,15 @@ function parseInlineMarkdown(text: string): React.ReactNode[] {
         </code>,
       );
     } else if (fullMatch.startsWith('*') || fullMatch.startsWith('_')) {
-      const content = match[5] ?? match[6] ?? '';
+      const content = match[7] ?? match[8] ?? '';
       elements.push(
         <em key={match.index} style={{ fontStyle: 'italic' }}>
           {parseInlineMarkdown(content)}
         </em>,
       );
     } else if (fullMatch.startsWith('[')) {
-      const linkText = match[7] ?? '';
-      const linkUrl = match[8] ?? '';
+      const linkText = match[9] ?? '';
+      const linkUrl = match[10] ?? '';
       elements.push(
         <a
           key={match.index}
