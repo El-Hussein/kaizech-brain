@@ -32,6 +32,7 @@ export function WorkflowsTab({ tenantId, apiKey }: Props) {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
   
   // Local string state for the text area so it doesn't snap back on invalid JSON
   const [jsonText, setJsonText] = useState("[]");
@@ -190,13 +191,71 @@ export function WorkflowsTab({ tenantId, apiKey }: Props) {
             </div>
             
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Nodes (JSON Format for MVP)</label>
-              <textarea
-                className="input-field"
-                style={{ fontFamily: 'var(--font-mono)', minHeight: '300px', fontSize: '13px' }}
-                value={jsonText}
-                onChange={e => setJsonText(e.target.value)}
-              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Nodes (JSON Format for MVP)</label>
+                <button onClick={() => setShowGuide(!showGuide)} style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>
+                  {showGuide ? 'Hide Guide' : 'View JSON Guide'}
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                <textarea
+                  className="input-field"
+                  style={{ fontFamily: 'var(--font-mono)', minHeight: '300px', fontSize: '13px', flex: showGuide ? 1 : '1 1 100%' }}
+                  value={jsonText}
+                  onChange={e => setJsonText(e.target.value)}
+                />
+                {showGuide && (
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)', overflowY: 'auto', maxHeight: '500px' }}>
+                    <h4 style={{ color: 'var(--text-main)', marginBottom: '8px', fontWeight: 600 }}>Workflow JSON Cheatsheet</h4>
+                    <p style={{ marginBottom: '12px' }}>FlowStudio supports dynamic API fetches, conditional rendering, and interactive buttons.</p>
+                    
+                    <strong style={{ color: 'var(--accent-primary)' }}>1. Basic Interactive Buttons</strong>
+                    <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginBottom: '12px', color: '#e2e8f0' }}>{`[
+  {
+    "id": "start",
+    "type": "message",
+    "message": "How can I help you today?",
+    "displayType": "button",
+    "buttons": [
+      { "title": "Pricing", "payload": "WF_1_NODE_pricing_PAYLOAD_clicked" },
+      { "title": "Support", "url": "https://help.example.com", "type": "web_url" }
+    ]
+  }
+]`}</pre>
+
+                    <strong style={{ color: 'var(--accent-primary)' }}>2. API Fetch & Lists</strong>
+                    <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginBottom: '12px', color: '#e2e8f0' }}>{`[
+  {
+    "id": "fetch_users",
+    "type": "api_fetch",
+    "endpoint": "/api/users",
+    "dataPath": "data.items",
+    "message": "Select a user:",
+    "displayType": "list",
+    "payloadField": "id",
+    "onSelectNextNode": "user_details",
+    "storeAs": "selectedUserId"
+  }
+]`}</pre>
+
+                    <strong style={{ color: 'var(--accent-primary)' }}>3. Placeholders & Conditionals</strong>
+                    <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginBottom: '12px', color: '#e2e8f0' }}>{`[
+  {
+    "id": "user_details",
+    "type": "api_fetch",
+    "endpoint": "/api/users/{{context.selectedUserId}}",
+    "message": "Name: {{data.name}} \\n{{#if data.isAdmin}}Admin Privileges Granted{{/if}}"
+  }
+]`}</pre>
+                    <p style={{ fontSize: '12px', marginTop: '12px' }}>
+                      Available placeholders:<br/>
+                      <code style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>{`{{data.field}}`}</code> - Data from API<br/>
+                      <code style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>{`{{context.key}}`}</code> - Stored via storeAs<br/>
+                      <code style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>{`{{user_selection}}`}</code> - The raw payload string
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>

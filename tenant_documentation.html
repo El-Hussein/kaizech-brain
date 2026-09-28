@@ -1252,7 +1252,9 @@
       <li><a href="#voice-onboarding">Voice Agent</a></li>
       <li><a href="#learnings">AI Memory</a></li>
       <li><a href="#tools">API Tools</a></li>
-      <li><a href="#omnichannel">Omnichannel SDKs</a></li>
+      <li><a href="#flowstudio">FlowStudio</a></li>
+      <li><a href="#flowstudio">FlowStudio</a></li>
+        <li><a href="#omnichannel">Omnichannel SDKs</a></li>
       <li><a href="#api-reference">REST API</a></li>
       <li><a href="#checklist">Checklist</a></li>
     </ul>
@@ -1407,6 +1409,12 @@
 
       <div class="sidebar-heading">Channels &amp; SDKs</div>
       <ul class="sidebar-menu">
+        <li>
+          <a href="#flowstudio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Kaizech FlowStudio</span>
+          </a>
+        </li>
         <li>
           <a href="#omnichannel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1924,6 +1932,65 @@
         </div>
       </section>
 
+
+      <!-- 8.5 Kaizech FlowStudio -->
+      <section id="flowstudio" class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <div>
+            <h2 class="section-title">Kaizech FlowStudio (Dynamic Workflows)</h2>
+            <div class="section-badges">
+              <span class="badge badge-purple">JSON Engine</span>
+              <span class="badge">API Triggers</span>
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-bottom: 1.5rem; color: var(--text-dim);">
+          Design deterministic conversational journeys and connect API steps natively using a dynamic JSON schema. This bypasses standard free-form AI generation when a specific keyword is detected.
+        </p>
+
+        <h3 class="subheading" style="margin-top: 2rem;">Node Structure & Properties</h3>
+        <ul class="steps-list">
+          <li><strong>id:</strong> Unique identifier for the node within the workflow.</li>
+          <li><strong>type:</strong> <code>message</code> (simple text/buttons) or <code>api_fetch</code> (fetches data before responding).</li>
+          <li><strong>message:</strong> The text to reply with. Supports markdown, placeholders, and conditionals.</li>
+          <li><strong>displayType:</strong> Optional UI rendering. Values: <code>button</code>, <code>list</code>.</li>
+          <li><strong>storeAs:</strong> Stores the user's payload selection into context under this key.</li>
+        </ul>
+
+        <h3 class="subheading" style="margin-top: 2rem;">Dynamic Placeholders</h3>
+        <p style="margin-bottom: 1rem; color: var(--text-dim);">
+          Inject dynamic data into messages, endpoints, headers, and button titles.
+        </p>
+        <div class="terminal-block">
+          <div class="terminal-header">Placeholders syntax</div>
+          <pre><code>{{data.field}}          // Resolves from fetched API data
+{{context.key}}         // Resolves from value saved via storeAs
+{{user_selection}}      // Resolves to the raw payload string</code></pre>
+        </div>
+
+        <h3 class="subheading" style="margin-top: 2rem;">Example API Fetch Node</h3>
+        <div class="terminal-block">
+          <div class="terminal-header">Workflow JSON</div>
+          <pre><code>[
+  {
+    "id": "fetch_users",
+    "type": "api_fetch",
+    "endpoint": "/api/users",
+    "dataPath": "data.items",
+    "message": "Select a user:\n{{#if data.isAdmin}}Admin features enabled{{/if}}",
+    "displayType": "list",
+    "payloadField": "id",
+    "onSelectNextNode": "user_details",
+    "storeAs": "selectedUserId"
+  }
+]</code></pre>
+        </div>
+      </section>
+
       <!-- 9. Omnichannel Ecosystem & Multi-Platform SDKs -->
       <section id="omnichannel" class="section-card">
         <div class="section-header">
@@ -2401,6 +2468,8 @@
         <li><a href="#voice-onboarding">Voice Agent</a></li>
         <li><a href="#learnings">AI Memory</a></li>
         <li><a href="#tools">API Tools</a></li>
+        <li><a href="#flowstudio">FlowStudio</a></li>
+      <li><a href="#flowstudio">FlowStudio</a></li>
         <li><a href="#omnichannel">Omnichannel SDKs</a></li>
         <li><a href="#api-reference">REST API Docs</a></li>
       </ul>

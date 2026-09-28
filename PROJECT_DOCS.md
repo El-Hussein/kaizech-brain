@@ -831,4 +831,53 @@ Follow this checklist to get your AI Agent fully operational:
 
 ---
 
+## Kaizech FlowStudio (Dynamic Workflow Engine)
+
+Kaizech FlowStudio allows you to design deterministic conversational journeys and connect API steps natively using a dynamic JSON schema. This bypasses the AI's standard free-form generation and instead forces the conversation down a structured, pre-defined path whenever a trigger keyword is matched.
+
+### Triggering a Workflow
+Workflows are triggered automatically when the user's message exactly matches (case-insensitive) any string in the `triggerKeywords` array of an active workflow.
+
+### Node Structure
+
+A workflow consists of an array of `nodes`. The engine starts at the first node in the array.
+
+#### Common Node Properties
+- `id` (string): Unique identifier for the node within the workflow.
+- `type` (string): `message` (simple text/buttons) or `api_fetch` (fetches data before responding).
+- `message` (string): The text to reply with. Supports markdown, placeholders, and conditionals.
+- `displayType` (string): Optional. Render interactive UI. Values: `button`, `list`.
+- `storeAs` (string): If present, stores the user's payload selection into the context under this key for later use.
+
+#### Interactive Buttons (`displayType: "button"`)
+For static options, define an array of `buttons`:
+- `title` (string): Label of the button.
+- `payload` (string): The payload to send back when clicked.
+- `url` (string): (Optional) A web URL to open.
+- `type` (string): `web_url` (opens link) or `reply` (sends payload).
+
+#### API Fetch Nodes (`type: "api_fetch"`)
+- `endpoint` (string): URL to fetch (supports placeholders). If relative, uses the tenant's base URL.
+- `headers` (object): Custom HTTP headers (supports placeholders).
+- `dataPath` (string): Optional path to extract data from the response (e.g., `data.items`).
+- `displayType: "list"`: Automatically maps the fetched array to interactive buttons.
+- `payloadField` (string): Which field from the array item to use as the payload (defaults to `id`).
+- `onSelectNextNode` (string): The ID of the node to jump to when a list item is selected.
+
+### Dynamic Placeholders
+You can inject dynamic data into `message`, `endpoint`, `headers`, and button `title`/`payload`:
+- `{{data.field}}`: Resolves to `field` from the current node's fetched API data. Supports deep paths (`data.user.name.en`).
+- `{{context.key}}`: Resolves to a value previously saved using `storeAs`.
+- `{{user_selection}}`: Resolves to the raw payload string from the user's previous selection.
+
+### Conditionals
+You can conditionally render text in the `message` based on API data:
+```handlebars
+{{#if data.isAdmin}}
+You have administrative privileges.
+{{/if}}
+```
+
+---
+
 *Kaizech Brain Platform Documentation — Version 1.0*

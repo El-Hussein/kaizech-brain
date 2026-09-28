@@ -26,8 +26,8 @@ const services = [
   },
   {
     icon: <BrainCircuit size={24} />,
-    title: "Custom Rule Engine",
-    description: "Set strict guardrails and memory rules so your AI always behaves exactly according to your business logic."
+    title: "Kaizech FlowStudio",
+    description: "Design deterministic conversational journeys, conditional paths, and connect API steps natively without writing code."
   },
   {
     icon: <ShieldCheck size={24} />,

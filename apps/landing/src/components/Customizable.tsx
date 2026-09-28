@@ -46,7 +46,7 @@ export function Customizable() {
             <h2 className="text-fuchsia-600 font-semibold tracking-wide uppercase text-sm mb-3">Total Control</h2>
             <h3 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">Everything is <br/>100% Customizable</h3>
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              We don't lock you into a black box. Kaizech Brain gives you granular control over the engine, the data, and the economics of your AI agents.
+              We don't lock you into a black box. Kaizech Brain gives you granular control over conversational flows using FlowStudio, as well as the data, guardrails, and the economics of your AI agents.
             </p>
 
             <div className="space-y-8">
