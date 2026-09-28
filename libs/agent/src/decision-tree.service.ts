@@ -115,13 +115,18 @@ export class DecisionTreeService {
       let replyMessage = node.message || '';
       const safeData = data || []; // fallback to empty if fetch fails
       
-      // Basic {{data.field.subfield}} template replacement for object responses
-      if (!Array.isArray(safeData) && typeof safeData === 'object') {
-        replyMessage = replyMessage.replace(/{{data\.([^}]+)}}/g, (match: string, p1: string) => {
+      const replacePlaceholders = (text: string) => {
+        if (!text || typeof text !== 'string') return text;
+        return text.replace(/{{data\.([^}]+)}}/g, (match: string, p1: string) => {
           // Resolve deep properties (e.g. name.en or name.ar-SA)
           const value = p1.split('.').reduce((acc: any, part: string) => acc && acc[part], safeData);
           return value !== undefined ? value : match;
         });
+      };
+
+      // Basic {{data.field.subfield}} template replacement for object responses
+      if (!Array.isArray(safeData) && typeof safeData === 'object') {
+        replyMessage = replacePlaceholders(replyMessage);
       }
 
       const response: any = { reply: replyMessage };
@@ -140,8 +145,10 @@ export class DecisionTreeService {
       } else if (node.displayType === 'button' && node.buttons) {
         response.interactiveType = 'button';
         response.buttons = node.buttons.map((btn: any) => ({
-          title: btn.title,
-          payload: btn.action || btn.payload
+          title: replacePlaceholders(btn.title),
+          payload: replacePlaceholders(btn.action || btn.payload),
+          url: replacePlaceholders(btn.url),
+          type: btn.type || (btn.url ? 'web_url' : 'reply')
         }));
       }
 
