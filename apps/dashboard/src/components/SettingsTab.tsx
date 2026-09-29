@@ -143,7 +143,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [openaiModel, setOpenaiModel] = useState('gpt-4o-mini');
   const [groqApiKey, setGroqApiKey] = useState('');
-  const [groqModel, setGroqModel] = useState('llama-3.3-70b-versatile');
+  const [groqModel, setGroqModel] = useState('openai/gpt-oss-120b');
   const [showOpenAiKey, setShowOpenAiKey] = useState(false);
   const [showGroqKey, setShowGroqKey] = useState(false);
   const [openaiSaved, setOpenaiSaved] = useState(false);
@@ -375,7 +375,11 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             const savedModel = res.data.settings.groqModel;
             // Migrate deprecated model IDs to current equivalents
             const modelMigration: Record<string, string> = {
-              'llama-3.1-8b-instant': 'llama3-8b-8192',
+              'llama-3.1-8b-instant': 'openai/gpt-oss-120b',
+              'llama3-8b-8192': 'openai/gpt-oss-120b',
+              'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+              'llama3-70b-8192': 'openai/gpt-oss-120b',
+              'mixtral-8x7b-32768': 'openai/gpt-oss-120b',
             };
             setGroqModel(modelMigration[savedModel] ?? savedModel);
           }
@@ -842,9 +846,10 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   value={groqModel}
                   onChange={(e) => setGroqModel(e.target.value)}
                 >
-                  <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommended — High Intelligence & Ultra-Fast)</option>
-                  <option value="llama3-8b-8192">Llama 3 8B (Instant 1,200+ tok/sec)</option>
-                  <option value="mixtral-8x7b-32768">Mixtral 8x7B (32k Context Window)</option>
+                  <option value="openai/gpt-oss-120b">GPT-OSS 120B (Recommended — 131K ctx, High Intelligence)</option>
+                  <option value="openai/gpt-oss-20b">GPT-OSS 20B (Fast — 131K ctx)</option>
+                  <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (131K ctx)</option>
+                  <option value="allam-2-7b">Allam 2 7B (Arabic — 4K ctx)</option>
                 </select>
               </div>
             </div>

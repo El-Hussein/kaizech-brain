@@ -49,7 +49,7 @@ export class GroqProvider implements ILLMProvider {
   private defaultModel: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.defaultModel = this.configService.get<string>('GROQ_MODEL', 'llama-3.3-70b-versatile');
+    this.defaultModel = this.configService.get<string>('GROQ_MODEL', 'openai/gpt-oss-120b');
   }
 
   private getClient(customApiKey?: string): OpenAI | null {
