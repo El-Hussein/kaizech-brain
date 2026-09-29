@@ -372,7 +372,12 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
             setGroqApiKey(res.data.settings.groqApiKey);
           }
           if (res.data.settings?.groqModel) {
-            setGroqModel(res.data.settings.groqModel);
+            const savedModel = res.data.settings.groqModel;
+            // Migrate deprecated model IDs to current equivalents
+            const modelMigration: Record<string, string> = {
+              'llama-3.1-8b-instant': 'llama3-8b-8192',
+            };
+            setGroqModel(modelMigration[savedModel] ?? savedModel);
           }
           if (res.data.settings?.whatsappVerifyToken) {
             setVerifyToken(res.data.settings.whatsappVerifyToken);
@@ -784,7 +789,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   />
                 </div>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
-                  Ultra-low latency hardware inference (Llama 3.3 70B & Llama 3.1 8B). Free tier available.
+                  Ultra-low latency hardware inference (Llama 3.3 70B & Llama 3 8B). Free tier available.
                 </p>
               </div>
             </div>
@@ -838,7 +843,7 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                   onChange={(e) => setGroqModel(e.target.value)}
                 >
                   <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommended — High Intelligence & Ultra-Fast)</option>
-                  <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Instant 1,200+ tok/sec)</option>
+                  <option value="llama3-8b-8192">Llama 3 8B (Instant 1,200+ tok/sec)</option>
                   <option value="mixtral-8x7b-32768">Mixtral 8x7B (32k Context Window)</option>
                 </select>
               </div>
