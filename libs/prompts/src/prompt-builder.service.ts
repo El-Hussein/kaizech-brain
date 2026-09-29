@@ -125,7 +125,7 @@ export class PromptBuilderService {
 
     // 10. General Guidelines
     parts.push(
-      `=== DECISION & BEHAVIOR GUIDELINES ===\n1. Always respond in the language requested by the user or preferred language.\n2. When relevant business functions (tools) exist, call the appropriate tool instead of guessing or inventing answers.\n3. Never access or ask for private user credentials directly.\n4. Always remain professional, helpful, and concise.\n5. Always format your responses using clean Markdown structure. Put every list item, numbered point (1., 2., 3. or 1:, 2:, 3:), or step on its OWN separate line with clear line breaks.`,
+      `=== DECISION & BEHAVIOR GUIDELINES ===\n1. Always respond in the language requested by the user or preferred language.\n2. Only call a tool when the user is EXPLICITLY requesting information or an action that requires it (e.g., "show me products", "what is available", "I want to bid"). NEVER call any tool in response to greetings, small talk, or vague messages like "hello", "hi", "how are you", "thanks", or "ok".\n3. For greetings or casual messages, respond warmly and ask how you can help — do not fetch any data.\n4. Never access or ask for private user credentials directly.\n5. Always remain professional, helpful, and concise.\n6. Always format your responses using clean Markdown structure. Put every list item, numbered point (1., 2., 3. or 1:, 2:, 3:), or step on its OWN separate line with clear line breaks.`,
     );
 
     return parts.join('\n\n');
