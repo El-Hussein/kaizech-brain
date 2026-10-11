@@ -95,33 +95,28 @@ export class AgentOrchestratorService {
     ];
     return fallbackPhrases.some((phrase) => lower.includes(phrase));
   }
-  private async isBotResponse(tenant: TenantEntity, userMessage: string): Promise<boolean> {
-    try {
-      const activeProviderName = tenant.settings?.aiProvider || 'openai';
-      const provider = this.providerFactory.getProvider(activeProviderName);
-      const customApiKey = activeProviderName === 'groq'
-        ? (tenant.settings?.groqApiKey || tenant.settings?.openaiApiKey)
-        : tenant.settings?.openaiApiKey;
-      const customModel = activeProviderName === 'groq'
-        ? tenant.settings?.groqModel
-        : tenant.settings?.openaiModel;
+  private isBotResponse(userMessage: string): boolean {
+    if (!userMessage || userMessage.trim().length === 0) return false;
+    const lower = userMessage.toLowerCase().trim();
 
-      const classificationResult = await provider.chatCompletion({
-        messages: [
-          { role: 'system', content: 'Analyze the following message. If it is an automated out-of-office reply, an auto-responder, or a bot-generated automated message, reply strictly with "YES". Otherwise, reply strictly with "NO".' },
-          { role: 'user', content: userMessage }
-        ],
-        model: customModel,
-        temperature: 0.1,
-        apiKey: customApiKey,
-        maxTokens: 5
-      });
+    // Fast heuristic detection for auto-responders and out-of-office automated replies
+    const botPatterns = [
+      /out[\s-]of[\s-]office/i,
+      /auto[\s-]?reply/i,
+      /automatic[\s-]?response/i,
+      /noreply@/i,
+      /do[\s-]not[\s-]reply/i,
+      /this is an automated/i,
+      /mailbox is full/i,
+      /undeliverable/i,
+      /delivery status notification/i,
+      /رد\s*تلقائي/i,
+      /رسالة\s*تلقائية/i,
+      /خارج\s*المكتب/i,
+      /غير\s*متواجد\s*حالياً/i,
+    ];
 
-      return classificationResult.content?.trim().toUpperCase().includes('YES') || false;
-    } catch (error) {
-      this.logger.warn('Failed to classify message for bot detection', error);
-      return false;
-    }
+    return botPatterns.some((pattern) => pattern.test(lower));
   }
 
   constructor(
@@ -160,7 +155,7 @@ export class AgentOrchestratorService {
 
     this.logger.log(`Processing message for tenant '${tenant.name}' user '${channelUserId}' via '${channelType}'`);
 
-    const isBot = await this.isBotResponse(tenant, userMessage);
+    const isBot = this.isBotResponse(userMessage);
     if (isBot) {
       this.logger.log(`Message classified as bot/auto-reply for user '${channelUserId}'. Ignoring.`);
       return {

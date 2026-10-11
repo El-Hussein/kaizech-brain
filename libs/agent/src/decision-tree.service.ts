@@ -110,9 +110,42 @@ export class DecisionTreeService {
 
     if (userSelection && node.storeAs) {
       context[node.storeAs] = userSelection;
-      if (stateKey) {
-        await this.cacheManager.set(stateKey, context, 3600000);
+    }
+
+    // If the node declares storeFields, resolve them from the cached data array
+    // by finding the item whose payloadField matches the userSelection.
+    if (userSelection && node.storeFields && Array.isArray(node.storeFields)) {
+      const cacheKey = `wf_${workflow.id}_node_${node.id}_${userSelection || 'default'}`;
+
+      // Re-use the already-cached response; don't make a new HTTP request.
+      let rawData: any = await this.cacheManager.get(cacheKey);
+      if (rawData) {
+        let items = rawData;
+        if (node.dataPath) {
+          items = node.dataPath.split('.').reduce((acc: any, part: string) => acc && acc[part], rawData);
+        }
+        if (Array.isArray(items)) {
+          const payloadFieldName = node.payloadField || 'id';
+          // Find the item that was selected (compare as string to be safe)
+          const selectedItem = items.find(
+            (item: any) => String(item[payloadFieldName]) === String(userSelection),
+          );
+          if (selectedItem) {
+            for (const field of node.storeFields as Array<{ contextKey: string; itemPath: string }>) {
+              const value = field.itemPath
+                .split('.')
+                .reduce((acc: any, part: string) => acc && acc[part], selectedItem);
+              if (value !== undefined) {
+                context[field.contextKey] = value;
+              }
+            }
+          }
+        }
       }
+    }
+
+    if (stateKey) {
+      await this.cacheManager.set(stateKey, context, 3600000);
     }
 
     const applyContext = (str: string) => {

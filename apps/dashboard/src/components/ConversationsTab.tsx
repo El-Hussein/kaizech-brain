@@ -84,6 +84,79 @@ const QUICK_REPLIES: QuickReplyItem[] = [
   },
 ];
 
+const isSameCalendarDay = (d1: Date, d2: Date): boolean => {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
+
+const formatSmartTimestamp = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  if (isSameCalendarDay(date, now)) {
+    return timeStr;
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameCalendarDay(date, yesterday)) {
+    return `Yesterday, ${timeStr}`;
+  }
+
+  const isCurrentYear = date.getFullYear() === now.getFullYear();
+  const datePart = date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    ...(isCurrentYear ? {} : { year: 'numeric' }),
+  });
+
+  return `${datePart}, ${timeStr}`;
+};
+
+const shouldShowDateSeparator = (currentDateStr?: string, prevDateStr?: string): boolean => {
+  if (!currentDateStr) return false;
+  const current = new Date(currentDateStr);
+  if (isNaN(current.getTime())) return false;
+
+  if (!prevDateStr) return true;
+  const prev = new Date(prevDateStr);
+  if (isNaN(prev.getTime())) return true;
+
+  return !isSameCalendarDay(current, prev);
+};
+
+const formatDateSeparatorLabel = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  if (isSameCalendarDay(date, now)) {
+    return 'Today';
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameCalendarDay(date, yesterday)) {
+    return 'Yesterday';
+  }
+
+  const isCurrentYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    ...(isCurrentYear ? {} : { year: 'numeric' }),
+  });
+};
+
 export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [selectedConv, setSelectedConv] = useState<ConversationItem | null>(null);
@@ -641,7 +714,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
             ) : (
               filteredConversations.map((c) => {
                 const isSelected = selectedConv?.id === c.id;
-                const dateStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                const dateStr = formatSmartTimestamp(c.lastMessageAt);
 
                 return (
                   <div
@@ -725,7 +798,7 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-dim)', marginTop: '8px' }}>
                       <span>{c.messageCount} messages</span>
-                      <span>{dateStr}</span>
+                      <span title={c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString() : ''}>{dateStr}</span>
                     </div>
                   </div>
                 );
@@ -1014,146 +1087,194 @@ export const ConversationsTab: React.FC<ConversationsProps> = ({ apiKey }) => {
                       No messages in this conversation thread yet.
                     </div>
                   ) : (
-                    messages.map((msg) => {
+                    messages.map((msg, index) => {
                       const isUser = msg.role === 'user';
                       const isSystem = msg.role === 'system';
 
-                      if (isSystem) {
-                        return (
-                          <div
-                            key={msg.id}
-                            style={{
-                              alignSelf: 'center',
-                              background: 'rgba(245, 158, 11, 0.12)',
-                              border: '1px solid rgba(245, 158, 11, 0.3)',
-                              color: 'var(--accent-amber)',
-                              padding: '6px 14px',
-                              borderRadius: '20px',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              margin: '8px 0',
-                            }}
-                          >
-                            {msg.content}
-                          </div>
-                        );
-                      }
+                      const prevMsg = index > 0 ? messages[index - 1] : null;
+                      const showDateSeparator = shouldShowDateSeparator(msg.createdAt, prevMsg?.createdAt);
 
                       return (
-                        <div
-                          key={msg.id}
-                          style={{
-                            display: 'flex',
-                            gap: '10px',
-                            alignSelf: isUser ? 'flex-end' : 'flex-start',
-                            maxWidth: '82%',
-                          }}
-                        >
-                          {!isUser && (
+                        <React.Fragment key={msg.id}>
+                          {showDateSeparator && msg.createdAt && (
                             <div
                               style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                background: 'var(--gradient-brand)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                flexShrink: 0,
-                                marginTop: '2px',
+                                margin: '14px 0 6px 0',
+                                position: 'relative',
+                                width: '100%',
                               }}
                             >
-                              <Bot size={16} color="#fff" />
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  left: '10%',
+                                  right: '10%',
+                                  height: '1px',
+                                  background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent)',
+                                  pointerEvents: 'none',
+                                }}
+                              />
+                              <span
+                                style={{
+                                  position: 'relative',
+                                  background: 'rgba(30, 41, 59, 0.85)',
+                                  border: '1px solid var(--border-glass)',
+                                  color: 'var(--text-muted)',
+                                  padding: '3px 14px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  letterSpacing: '0.3px',
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                                  backdropFilter: 'blur(8px)',
+                                  userSelect: 'none',
+                                }}
+                              >
+                                {formatDateSeparatorLabel(msg.createdAt)}
+                              </span>
                             </div>
                           )}
 
-                          <div>
-                              <div
-                                style={{
-                                  padding: '12px 16px',
-                                  borderRadius: '14px',
-                                  fontSize: '14px',
-                                  lineHeight: '1.5',
-                                  background: isUser ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
-                                  color: isUser ? '#ffffff' : 'var(--text-main)',
-                                  border: isUser ? 'none' : '1px solid var(--border-glass)',
-                                  boxShadow: isUser ? 'var(--glow-primary)' : 'none',
-                                }}
-                              >
-                              <FormattedMessage content={msg.content} />
-                            </div>
+                          {isSystem ? (
                             <div
                               style={{
-                                fontSize: '11px',
-                                color: 'var(--text-dim)',
-                                marginTop: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                justifyContent: isUser ? 'flex-end' : 'flex-start',
+                                alignSelf: 'center',
+                                background: 'rgba(245, 158, 11, 0.12)',
+                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                color: 'var(--accent-amber)',
+                                padding: '6px 14px',
+                                borderRadius: '20px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                margin: '8px 0',
                               }}
                             >
-                              {msg.createdAt && (
-                                <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              {msg.content}
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '10px',
+                                alignSelf: isUser ? 'flex-end' : 'flex-start',
+                                maxWidth: '82%',
+                              }}
+                            >
+                              {!isUser && (
+                                <div
+                                  style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '50%',
+                                    background: 'var(--gradient-brand)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0,
+                                    marginTop: '2px',
+                                  }}
+                                >
+                                  <Bot size={16} color="#fff" />
+                                </div>
                               )}
 
-                              {!isUser && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  {msg.status === 'sending' ? (
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--accent-cyan, #38bdf8)', fontWeight: 600 }}>
-                                      <Clock size={11} className="animate-spin" /> Sending...
-                                    </span>
-                                  ) : msg.status === 'failed' ? (
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontWeight: 600 }}>
-                                      <AlertCircle size={11} /> Failed
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRetryMessage(msg)}
-                                        style={{
-                                          background: 'rgba(239, 68, 68, 0.2)',
-                                          border: '1px solid rgba(239, 68, 68, 0.5)',
-                                          color: '#ef4444',
-                                          borderRadius: '4px',
-                                          padding: '1px 6px',
-                                          fontSize: '10px',
-                                          cursor: 'pointer',
-                                          display: 'inline-flex',
-                                          alignItems: 'center',
-                                          gap: '3px',
-                                          fontWeight: 700,
-                                        }}
-                                      >
-                                        <RotateCw size={9} /> Retry
-                                      </button>
-                                    </span>
-                                  ) : (
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: 'var(--accent-emerald, #10b981)', fontWeight: 600 }} title="Sent to database and customer channel">
-                                      <CheckCheck size={13} /> Sent
+                              <div>
+                                <div
+                                  style={{
+                                    padding: '12px 16px',
+                                    borderRadius: '14px',
+                                    fontSize: '14px',
+                                    lineHeight: '1.5',
+                                    background: isUser ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
+                                    color: isUser ? '#ffffff' : 'var(--text-main)',
+                                    border: isUser ? 'none' : '1px solid var(--border-glass)',
+                                    boxShadow: isUser ? 'var(--glow-primary)' : 'none',
+                                  }}
+                                >
+                                  <FormattedMessage content={msg.content} />
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: '11px',
+                                    color: 'var(--text-dim)',
+                                    marginTop: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    justifyContent: isUser ? 'flex-end' : 'flex-start',
+                                  }}
+                                >
+                                  {msg.createdAt && (
+                                    <span
+                                      title={new Date(msg.createdAt).toLocaleString()}
+                                      style={{ cursor: 'help' }}
+                                    >
+                                      {formatSmartTimestamp(msg.createdAt)}
                                     </span>
                                   )}
+
+                                  {!isUser && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      {msg.status === 'sending' ? (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--accent-cyan, #38bdf8)', fontWeight: 600 }}>
+                                          <Clock size={11} className="animate-spin" /> Sending...
+                                        </span>
+                                      ) : msg.status === 'failed' ? (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontWeight: 600 }}>
+                                          <AlertCircle size={11} /> Failed
+                                          <button
+                                            type="button"
+                                            onClick={() => handleRetryMessage(msg)}
+                                            style={{
+                                              background: 'rgba(239, 68, 68, 0.2)',
+                                              border: '1px solid rgba(239, 68, 68, 0.5)',
+                                              color: '#ef4444',
+                                              borderRadius: '4px',
+                                              padding: '1px 6px',
+                                              fontSize: '10px',
+                                              cursor: 'pointer',
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              gap: '3px',
+                                              fontWeight: 700,
+                                            }}
+                                          >
+                                            <RotateCw size={9} /> Retry
+                                          </button>
+                                        </span>
+                                      ) : (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: 'var(--accent-emerald, #10b981)', fontWeight: 600 }} title="Sent to database and customer channel">
+                                          <CheckCheck size={13} /> Sent
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {isUser && (
+                                <div
+                                  style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '50%',
+                                    background: 'var(--accent-cyan)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0,
+                                    marginTop: '2px',
+                                  }}
+                                >
+                                  <User size={16} color="#fff" />
                                 </div>
                               )}
                             </div>
-                          </div>
-
-                          {isUser && (
-                            <div
-                              style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                background: 'var(--accent-cyan)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                                marginTop: '2px',
-                              }}
-                            >
-                              <User size={16} color="#fff" />
-                            </div>
                           )}
-                        </div>
+                        </React.Fragment>
                       );
                     })
                   )}

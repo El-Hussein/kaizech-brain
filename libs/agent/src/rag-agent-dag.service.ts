@@ -94,14 +94,6 @@ export class RagAgentDagService {
     const app = workflow.compile();
 
     let finalSystemPrompt = systemPrompt || tenant.settings?.systemPrompt || "You are a helpful AI assistant. Use the provided tools (vector_search, graph_search) to find information and answer the user's questions based on the retrieved context.";
-
-    try {
-      const { OpenAIEmbeddings } = require('@langchain/openai');
-      const embeddings = new OpenAIEmbeddings({ apiKey: customApiKey, modelName: 'text-embedding-3-small' });
-      const vector = await embeddings.embedQuery(userMessage);
-    } catch (err) {
-      this.logger.warn(`Failed to embed query: ${err.message}`);
-    }
     
     const initialMessages: BaseMessage[] = [
       new SystemMessage(finalSystemPrompt),

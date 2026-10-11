@@ -49,7 +49,8 @@ export class InterviewToKnowledgeService {
     const aiProvider = this.providerFactory.getProvider('openai');
     const response = await aiProvider.chatCompletion({
       messages: [{ role: 'user', content: prompt }],
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
+      maxTokens: 1500,
     });
 
     const generatedMarkdown = response.content || '# Business Overview\\nNo information provided.';

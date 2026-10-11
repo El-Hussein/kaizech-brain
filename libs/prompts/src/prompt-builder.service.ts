@@ -114,9 +114,11 @@ export class PromptBuilderService {
       );
     }
 
-    // 9.5. Learned Rules
+    // 9.5. Learned Rules (Capped to top 10 most confident/recent rules to preserve token budget)
     const learnings = await this.entityManager.find(AgentLearningEntity, {
       where: { tenantId: tenant.id, status: 'approved' as any },
+      order: { confidenceScore: 'DESC', createdAt: 'DESC' },
+      take: 10,
     });
     if (learnings && learnings.length > 0) {
       const rules = learnings.map((l, index) => `${index + 1}. ${l.learningRule}`).join('\n');

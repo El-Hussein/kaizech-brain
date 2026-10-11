@@ -65,7 +65,8 @@ export class QuestionEngineService {
       const aiProvider = this.providerFactory.getProvider('openai');
       const response = await aiProvider.chatCompletion({
         messages: [{ role: 'user', content: prompt }],
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
+        maxTokens: 1000,
       });
 
       const responseContent = response.content || '[]';

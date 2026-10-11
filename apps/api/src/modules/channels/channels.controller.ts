@@ -233,16 +233,17 @@ export class ChannelsController {
           example: 'api',
         },
         displayName: { type: 'string', example: 'Ahmed Al-Mansouri' },
+        handoff: { type: 'boolean', example: false, description: 'If true, flags conversation as handed off to human agent and suppresses AI reply' },
       },
     },
   })
   async chat(
     @Req() req: any,
-    @Body() body: { message: string; payload?: string; sessionId: string; channel?: string; displayName?: string },
+    @Body() body: { message: string; payload?: string; sessionId: string; channel?: string; displayName?: string; handoff?: boolean },
   ) {
     const tenantContext = req.tenant; // injected by ApiKeyGuard
 
-    if (!body.message && !body.payload) {
+    if (!body.message && !body.payload && !body.handoff) {
       return {
         reply: null,
         sessionId: body.sessionId,
@@ -258,6 +259,36 @@ export class ChannelsController {
       body.channel === 'whatsapp'
         ? MessageChannel.WHATSAPP
         : MessageChannel.API;
+
+    if (body.handoff) {
+      const conversation = await this.memoryService.getOrCreateConversation(
+        tenant.id,
+        channelType,
+        body.sessionId,
+      );
+      await this.memoryService.handoverConversation(conversation.id);
+      if (body.message && body.message.trim()) {
+        await this.memoryService.addMessage(
+          conversation.id,
+          'user' as any,
+          body.message.trim(),
+          channelType,
+        );
+      }
+      return {
+        reply: null,
+        sessionId: body.sessionId,
+        conversationId: conversation.id,
+        tenantId: tenantContext.tenantId,
+        status: 'handed_off',
+        limit: 0,
+        messageCount: conversation.messageCount || 0,
+        limitExceeded: false,
+        handedOff: true,
+        tokens: null,
+        interactive: null,
+      };
+    }
 
     const result = await this.agentOrchestrator.processMessage({
       tenant,
@@ -279,6 +310,7 @@ export class ChannelsController {
       limitExceeded: result.limitExceeded ?? false,
       handedOff: result.handedOff ?? false,
       tokens: result.tokenUsage?.totalTokens ?? null,
+      interactive: (result.metadata as any)?.interactive || null,
     };
   }
 

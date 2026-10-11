@@ -98,6 +98,7 @@ export class KnowledgeManagerService {
           const summaryPrompt = `Please read the following document and provide a brief, 1-3 sentence summary of its main topic, context, and purpose. This will be used to provide context for smaller chunks of this document.\n\nDocument:\n${extractedText.substring(0, 50000)}`;
           const summaryResponse = await provider.chatCompletion({
             messages: [{ role: 'user', content: summaryPrompt }],
+            model: 'gpt-4o-mini',
             maxTokens: 150,
             temperature: 0.2,
             apiKey: customApiKey,
@@ -149,6 +150,7 @@ Text:\n${extractedText.substring(0, 30000)}`;
 
         const graphResponse = await provider.chatCompletion({
           messages: [{ role: 'user', content: graphPrompt }],
+          model: 'gpt-4o-mini',
           maxTokens: 1000,
           temperature: 0.1,
           apiKey: customApiKey,
