@@ -1623,9 +1623,16 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Request Headers: x-api-key: &lt;your-api-key&gt;</div>
                 <span style={{ color: '#6ee7b7' }}>POST</span> <span style={{ color: '#93c5fd' }}>/api/v1/channels/chat</span><br />
                 <span style={{ color: '#94a3b8' }}>Body: </span>
-                <span style={{ color: '#fde68a' }}>{`{ "message": "What is the status of bid?", "sessionId": "user-abc-123", "channel": "api" }`}</span>
+                <span style={{ color: '#fde68a' }}>{`{
+  "message": "What is the status of bid?",
+  "sessionId": "user-abc-123",
+  "channel": "whatsapp",
+  "displayName": "Ahmed Al-Mansouri",
+  "payload": "optional_wf_payload_id",
+  "handoff": false
+}`}</span>
                 <br /><br />
-                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Response (Includes Status, Limits, and HandedOff indicators):</div>
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Response (Includes Status, Limits, HandedOff, and Interactive Workflow data):</div>
                 <span style={{ color: '#94a3b8' }}>{'{'}</span><br />
                 <span style={{ color: '#f9a8d4' }}>  "reply"</span>: <span style={{ color: '#6ee7b7' }}>"The highest bid is 185,000 SAR."</span>,<br />
                 <span style={{ color: '#f9a8d4' }}>  "sessionId"</span>: <span style={{ color: '#6ee7b7' }}>"user-abc-123"</span>,<br />
@@ -1635,15 +1642,85 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
                 <span style={{ color: '#f9a8d4' }}>  "messageCount"</span>: <span style={{ color: '#f59e0b' }}>4</span>,<br />
                 <span style={{ color: '#f9a8d4' }}>  "limitExceeded"</span>: <span style={{ color: '#6ee7b7' }}>false</span>,<br />
                 <span style={{ color: '#f9a8d4' }}>  "handedOff"</span>: <span style={{ color: '#6ee7b7' }}>false</span>,<br />
-                <span style={{ color: '#f9a8d4' }}>  "tokens"</span>: <span style={{ color: '#f59e0b' }}>142</span><br />
+                <span style={{ color: '#f9a8d4' }}>  "tokens"</span>: <span style={{ color: '#f59e0b' }}>142</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "interactive"</span>: <span style={{ color: '#94a3b8' }}>null</span> <span style={{ color: '#94a3b8' }}>// Populated when a workflow generates interactive options</span><br />
                 <span style={{ color: '#94a3b8' }}>{'}'}</span>
               </div>
             </div>
 
-            {/* 2. Fetch Conversation & Messages Spec */}
+            {/* 2. Workflow Trigger Spec */}
             <div>
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
-                2. Fetch Conversation & Messages (<code style={{ color: '#93c5fd' }}>GET /api/v1/conversations/by-user/:sessionId</code>)
+                2. Workflow Trigger & Interactive List (<code style={{ color: '#a78bfa' }}>POST /api/v1/channels/chat</code>)
+              </label>
+              <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Step 1: User sends a trigger keyword (e.g. "المزادات" or "list") via Meta WhatsApp</div>
+                <span style={{ color: '#6ee7b7' }}>POST</span> <span style={{ color: '#93c5fd' }}>/api/v1/channels/chat</span><br />
+                <span style={{ color: '#94a3b8' }}>Body: </span>
+                <span style={{ color: '#fde68a' }}>{`{ "message": "المزادات", "sessionId": "+966501234567", "channel": "whatsapp" }`}</span>
+                <br /><br />
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Response: Workflow triggers and returns interactive buttons/list with tracked payloads for Meta WhatsApp:</div>
+                <span style={{ color: '#94a3b8' }}>{'{'}</span><br />
+                <span style={{ color: '#f9a8d4' }}>  "reply"</span>: <span style={{ color: '#6ee7b7' }}>"يرجى اختيار القسم لعرض المزادات المتاحة:"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "sessionId"</span>: <span style={{ color: '#6ee7b7' }}>"+966501234567"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "conversationId"</span>: <span style={{ color: '#6ee7b7' }}>"menu-flow"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "status"</span>: <span style={{ color: '#6ee7b7' }}>"completed"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "interactive"</span>: <span style={{ color: '#94a3b8' }}>{'{'}</span><br />
+                <span style={{ color: '#f9a8d4' }}>    "reply"</span>: <span style={{ color: '#6ee7b7' }}>"يرجى اختيار القسم لعرض المزادات المتاحة:"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>    "interactiveType"</span>: <span style={{ color: '#6ee7b7' }}>"list"</span>, <span style={{ color: '#94a3b8' }}>// "list" | "button"</span><br />
+                <span style={{ color: '#f9a8d4' }}>    "buttons"</span>: [<br />
+                <span style={{ color: '#94a3b8' }}>      {'{'}</span> <span style={{ color: '#f9a8d4' }}>"title"</span>: <span style={{ color: '#6ee7b7' }}>"سيارات ومعدات"</span>, <span style={{ color: '#f9a8d4' }}>"payload"</span>: <span style={{ color: '#6ee7b7' }}>"WF_wf1_NODE_node2_PAYLOAD_cat_cars"</span> <span style={{ color: '#94a3b8' }}>{'}'}</span>,<br />
+                <span style={{ color: '#94a3b8' }}>      {'{'}</span> <span style={{ color: '#f9a8d4' }}>"title"</span>: <span style={{ color: '#6ee7b7' }}>"عقارات وأراضي"</span>, <span style={{ color: '#f9a8d4' }}>"payload"</span>: <span style={{ color: '#6ee7b7' }}>"WF_wf1_NODE_node2_PAYLOAD_cat_realestate"</span> <span style={{ color: '#94a3b8' }}>{'}'}</span><br />
+                <span style={{ color: '#94a3b8' }}>    ]</span><br />
+                <span style={{ color: '#94a3b8' }}>  {'}'}</span><br />
+                <span style={{ color: '#94a3b8' }}>{'}'}</span>
+              </div>
+            </div>
+
+            {/* 3. Workflow Continuation Spec */}
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                3. Workflow Continuation via Payload (<code style={{ color: '#a78bfa' }}>POST /api/v1/channels/chat</code>)
+              </label>
+              <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Step 2: User taps an option in WhatsApp. Pass interactive.list_reply.id in the "payload" property:</div>
+                <span style={{ color: '#6ee7b7' }}>POST</span> <span style={{ color: '#93c5fd' }}>/api/v1/channels/chat</span><br />
+                <span style={{ color: '#94a3b8' }}>Body: </span>
+                <span style={{ color: '#fde68a' }}>{`{ "message": "سيارات ومعدات", "payload": "WF_wf1_NODE_node2_PAYLOAD_cat_cars", "sessionId": "+966501234567", "channel": "whatsapp" }`}</span>
+                <br /><br />
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Response: Brain resumes workflow, fetches API endpoint data, and replies with next step:</div>
+                <span style={{ color: '#94a3b8' }}>{'{'}</span><br />
+                <span style={{ color: '#f9a8d4' }}>  "reply"</span>: <span style={{ color: '#6ee7b7' }}>"المزادات المتاحة في قسم سيارات ومعدات:\n1. شاحنة مرسيدس 2020 - 75,000 ريال\n2. تويوتا هايلوكس 2022 - 50,000 ريال"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "sessionId"</span>: <span style={{ color: '#6ee7b7' }}>"+966501234567"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "conversationId"</span>: <span style={{ color: '#6ee7b7' }}>"menu-flow"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "status"</span>: <span style={{ color: '#6ee7b7' }}>"completed"</span>,<br />
+                <span style={{ color: '#f9a8d4' }}>  "interactive"</span>: <span style={{ color: '#94a3b8' }}>null</span><br />
+                <span style={{ color: '#94a3b8' }}>{'}'}</span>
+              </div>
+            </div>
+
+            {/* 4. Human Hand-off / Pause AI Spec */}
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                4. Human Hand-off & Pause AI (<code style={{ color: '#f59e0b' }}>handoff: true</code> or <code style={{ color: '#f59e0b' }}>POST /api/v1/channels/handoff</code>)
+              </label>
+              <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Option A: Direct inline handoff in Chat endpoint (suppresses AI reply and sets status to handed_off)</div>
+                <span style={{ color: '#6ee7b7' }}>POST</span> <span style={{ color: '#93c5fd' }}>/api/v1/channels/chat</span><br />
+                <span style={{ color: '#94a3b8' }}>Body: </span>
+                <span style={{ color: '#fde68a' }}>{`{ "sessionId": "+966501234567", "message": "أريد التحدث مع خدمة العملاء", "handoff": true, "channel": "whatsapp" }`}</span>
+                <br /><br />
+                <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Option B: Dedicated Handoff API</div>
+                <span style={{ color: '#6ee7b7' }}>POST</span> <span style={{ color: '#93c5fd' }}>/api/v1/channels/handoff</span><br />
+                <span style={{ color: '#94a3b8' }}>Body: </span>
+                <span style={{ color: '#fde68a' }}>{`{ "sessionId": "+966501234567", "reason": "client_requested", "notice": "تم تحويل المحادثة لممثل خدمة العملاء." }`}</span>
+              </div>
+            </div>
+
+            {/* 5. Fetch Conversation & Messages Spec */}
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                5. Fetch Conversation & Messages (<code style={{ color: '#93c5fd' }}>GET /api/v1/conversations/by-user/:sessionId</code>)
               </label>
               <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
                 <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Request Headers: x-api-key: &lt;your-api-key&gt;</div>
@@ -1663,10 +1740,10 @@ export const SettingsTab: React.FC<SettingsProps> = ({ apiKey }) => {
               </div>
             </div>
 
-            {/* 3. Patch Per-Conversation Limit Spec */}
+            {/* 6. Patch Per-Conversation Limit Spec */}
             <div>
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
-                3. Update Per-Conversation Limit (<code style={{ color: '#f59e0b' }}>PATCH /api/v1/conversations/:id/limit</code>)
+                6. Update Per-Conversation Limit (<code style={{ color: '#f59e0b' }}>PATCH /api/v1/conversations/:id/limit</code>)
               </label>
               <div style={{ background: '#0d0d0d', borderRadius: '8px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.7, border: '1px solid var(--border-glass)', overflowX: 'auto' }}>
                 <div style={{ color: '#94a3b8', marginBottom: '4px' }}>// Request Headers: x-api-key: &lt;your-api-key&gt;</div>
